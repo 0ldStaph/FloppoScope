@@ -462,7 +462,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
 <body>
 <div class="shell" data-glean-id="app-shell">
   <header class="topline" data-glean-id="header">
-    <div class="brand"><span class="brandmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3.8h11.8L20 7v13.2H4V3.8h1Z"/><path d="M8 4v6h8V4M8 20v-6h8v6M10 7h4"/></svg></span>FloppoScope <span class="badge">IMAGE ANALYZER</span></div>
+    <div class="brand"><span class="brandmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3.8h11.8L20 7v13.2H4V3.8h1Z"/><path d="M8 4v6h8V4M8 20v-6h8v6M10 7h4"/></svg></span>FloppoScope <span class="badge">IMAGE ANALYZER</span><span class="quiet" id="appVersion" title="FloppoScope version"></span></div>
     <div class="top-actions"><span class="quiet">Local-first · read-only</span><a class="btn" id="githubLink" href="https://github.com/0ldStaph/FloppoScope" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>GitHub</a><button class="btn" id="exportBtn" type="button">Export report</button></div>
   </header>
   <main>
@@ -2931,7 +2931,9 @@ return {detect,convert,parseKFSet,version:'1.1'};
 <script>
 (function(){
   'use strict';
+  const APP_VERSION='0.1.0'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
+  {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
   
   // Navigation & Preview State
@@ -3308,7 +3310,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
     const js='(function(){var st="all",q="";var rows=[].slice.call(document.querySelectorAll("#imgs tbody tr"));function ap(){var n=0;rows.forEach(function(r){var ok=(st==="all"||r.getAttribute("data-st")===st||(st==="problems"&&(r.getAttribute("data-st")==="error"||r.getAttribute("data-st")==="warn")))&&(!q||r.textContent.toLowerCase().indexOf(q)>=0);r.hidden=!ok;if(ok)n++});document.getElementById("cnt").textContent=n+" shown"}'+
       '[].slice.call(document.querySelectorAll("[data-f]")).forEach(function(b){b.onclick=function(){st=b.getAttribute("data-f");[].slice.call(document.querySelectorAll("[data-f]")).forEach(function(x){x.className=x===b?"on":""});ap()}});document.getElementById("q").oninput=function(e){q=e.target.value.toLowerCase();ap()};ap()})();';
     return '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>FloppoScope report — '+E(m.root)+'</title><style>'+css+'</style></head><body>'+
-      '<h1>Disk image analysis report</h1><div class="meta">'+E(m.single?'File: '+m.root:m.root==='Selected files'?'Selected files':'Folder: '+m.root)+' · generated '+E(when)+' by FloppoScope (read-only analysis)</div>'+
+      '<h1>Disk image analysis report</h1><div class="meta">'+E(m.single?'File: '+m.root:m.root==='Selected files'?'Selected files':'Folder: '+m.root)+' · generated '+E(when)+' by FloppoScope v'+E(APP_VERSION)+' (read-only analysis)</div>'+
       '<div class="cards">'+card(s.total,'images in list','')+card(analyzed,'analyzed','')+card(s.error,'with errors','error')+card(s.warn,'with warnings','warn')+card(s.ok,'no problems','ok')+(s.pending?card(s.pending,'not analyzed',''):'')+'</div>'+
       '<div class="two"><div><h2>Problem types</h2><table><thead><tr><th>Problem</th><th>Severity</th><th class="r">Images</th></tr></thead><tbody>'+kindRows+'</tbody></table></div>'+
       '<div><h2>Formats found</h2><table><thead><tr><th>Format / filesystem</th><th class="r">Images</th><th class="r">With problems</th></tr></thead><tbody>'+fsRows+'</tbody></table></div></div>'+
@@ -4954,7 +4956,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
       const f=e.target.closest&&e.target.closest('.diskfield');if(!f)return;
       const fields=zFields(),i=Math.max(0,fields.indexOf(f)),st=Z.s[i]||Z.s[0],r=f.getBoundingClientRect();
       zSet(i,st.k>1.05?{k:1,fx:0,fy:0}:zoomCalc(st,r.width||1,3,e.clientX-r.left,e.clientY-r.top));
-    });
+});
     host.addEventListener('mouseenter',()=>{Z.hover=true});host.addEventListener('mouseleave',()=>{Z.hover=false});
     document.addEventListener('keydown',e=>{
       if(!Z.hover||e.ctrlKey||e.metaKey||e.altKey)return;
