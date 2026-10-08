@@ -463,7 +463,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
 <div class="shell" data-glean-id="app-shell">
   <header class="topline" data-glean-id="header">
     <div class="brand"><span class="brandmark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3.8h11.8L20 7v13.2H4V3.8h1Z"/><path d="M8 4v6h8V4M8 20v-6h8v6M10 7h4"/></svg></span>FloppoScope <span class="badge">IMAGE ANALYZER</span></div>
-    <div class="top-actions"><span class="quiet">Local-first · read-only</span><button class="btn" id="exportBtn" type="button">Export report</button></div>
+    <div class="top-actions"><span class="quiet">Local-first · read-only</span><a class="btn" id="githubLink" href="https://github.com/0ldStaph/FloppoScope" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.6 7.6 0 0 1 4 0c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>GitHub</a><button class="btn" id="exportBtn" type="button">Export report</button></div>
   </header>
   <main>
     <section class="hero" data-glean-id="hero">
@@ -479,8 +479,8 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
           <summary>Supported formats</summary>
           <dl class="fmt-grid">
             <div><dt>PC &amp; generic</dt><dd>FAT12/16/32 (PC, Atari ST, MSX-DOS), TR-DOS</dd></div>
-            <div><dt>Apple</dt><dd>Macintosh MFS/HFS, Apple II DOS 3.3 / ProDOS</dd></div>
-            <div><dt>Unix</dt><dd>SunOS Bar/Tar, NeXT UFS1</dd></div>
+            <div><dt>Apple</dt><dd>Macintosh MFS/HFS, Apple II DOS 3.3 / ProDOS, Apple Lisa PREBOOT</dd></div>
+            <div><dt>Unix</dt><dd>SunOS Bar/Tar, NeXT UFS1, SCO UNIX System V (S5)</dd></div>
             <div><dt>Commodore, Atari, Amiga, Acorn</dt><dd>D64/D71/D81, Atari 8-bit DOS 2, Amiga OFS/FFS, BBC DFS</dd></div>
             <div><dt>Flux &amp; bitstream</dt><dd>SCP, KryoFlux .raw, HFE, WOZ, NIB, G64, IMD — including Macintosh 400K/800K GCR — decoded to sectors with a copy-protection and read-error scan (time-reversed flux from flipped disks, e.g. Apple II side B via <code>gw read --reverse</code>, is detected automatically)</dd></div>
           </dl>
@@ -733,7 +733,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
       </div>
 
     </div>
-    <div class="footer" data-glean-id="footer">FloppoScope parses raw sector images in your browser. It does not modify the image. FAT (including Atari ST and MSX-DOS disks), SunOS Bar/Tar archives, NeXT UFS1, classic Macintosh MFS/HFS, Commodore CBM DOS, Atari DOS 2, AmigaDOS, Apple DOS 3.3/ProDOS, TR-DOS and Acorn DFS are inspected read-only. MSA, ATR, XFD and 2IMG wrappers are unwrapped automatically; flux-level formats (WOZ, NIB, G64, IPF, HFE, SCP) are recognised but not decoded. Macintosh 400K/800K GCR track zones and 1.44MB HD MFM geometry are shown when a supported volume is detected.</div>
+    <div class="footer" data-glean-id="footer">FloppoScope parses raw sector images in your browser. It does not modify the image. FAT (including Atari ST and MSX-DOS disks), SunOS Bar/Tar archives, NeXT UFS1, SCO UNIX System V (S5), classic Macintosh MFS/HFS, Apple Lisa PREBOOT boot-file volumes, Commodore CBM DOS, Atari DOS 2, AmigaDOS, Apple DOS 3.3/ProDOS, TR-DOS and Acorn DFS are inspected read-only. MSA, ATR, XFD and 2IMG wrappers are unwrapped automatically. SCP, KryoFlux, HFE, WOZ (5.25-inch), NIB, G64 and IMD images are decoded to sectors when a supported sector format is found; IPF, DMS, TD0, FDI and Amstrad CPC DSK are recognised but not decoded. Macintosh 400K/800K GCR track zones and 1.44MB HD MFM geometry are shown when a supported volume is detected.</div>
   </main>
 </div>
 <div class="rep-overlay hidden" id="repOverlay" role="dialog" aria-modal="true" aria-label="Analysis report">
@@ -1667,6 +1667,69 @@ function decodeDfs(bytes,name){
 }
 
 /* ---------- Containers/formats that are recognised but not decoded ---------- */
+/* ---------- Apple Lisa PREBOOT / MacWorks boot-file volume (raw 512-byte sectors, Sony 400K / 800K) ---------- */
+/* Sector 0: 68000 boot code. Sector 2 (0x400): volume header + 26-byte catalog records. Each record is
+   10 bytes of fields (…, first sector, end sector (exclusive), …) followed by a Pascal string[15] name.
+   Block numbers are plain sector numbers (no tag bytes in this raw layout). */
+function decodeLisaPreboot(bytes){
+  const len=bytes.length;
+  if(len%512||len<16384||len>2*1048576)return null;
+  const total=len/512;
+  if(total!==800&&total!==1600)return null;
+  const isName=(o,n)=>{if(n<1||n>15)return false;for(let i=0;i<n;i++){const c=bytes[o+i];if(c<0x20||c>0x7e)return false}return true};
+  const DIR=0x400,VOL=DIR+6,REC0=DIR+0x16,RECLEN=26;
+  const vl=bytes[VOL];
+  if(!isName(VOL+1,vl))return null;
+  const volName=String.fromCharCode(...bytes.subarray(VOL+1,VOL+1+vl));
+  const cnt=be16(bytes,DIR+0x10); /* header word at 0x410: number of live records (the Lisa preboot loader scans only this many) */
+  const entries=[];let named=0,o=REC0,idx=0;
+  const lisaKind=nm=>/\.OBJ$/i.test(nm)?'Lisa object file':/\.DATA$/i.test(nm)?'Boot data':/LOADER/i.test(nm)?'Loader':'Boot file';
+  const dirLbas=new Set([2,3]);
+  for(;o+RECLEN<=DIR+1024&&idx<38;o+=RECLEN,idx++){
+    const f=bytes.subarray(o,o+10);
+    const start=be16(f,4),end=be16(f,6),nl=bytes[o+10];
+    if(start===0&&end===0)break;
+    if(start>=end||end>total)break;
+    let nm='',recovered=false;
+    if(nl>0){if(!isName(o+11,nl))break;nm=String.fromCharCode(...bytes.subarray(o+11,o+11+nl));named++}
+    else{ /* length byte 0: recover the name from the leftover string buffer if it begins with an earlier entry's name */
+      let left='';for(let i=0;i<15&&bytes[o+11+i]>=0x20&&bytes[o+11+i]<0x7f;i++)left+=String.fromCharCode(bytes[o+11+i]);
+      const twin=entries.find(e=>e.rawName&&left.startsWith(e.rawName));
+      nm=twin?twin.rawName+(idx>=cnt?' (stale slot '+(idx+1)+')':' (2nd copy)'):'(unnamed #'+(idx+1)+')';recovered=!!twin;
+    }
+    const sectors=end-start,size=sectors*512,full=segName(nm);
+    const chain=[];for(let k=start;k<end;k++)chain.push(k);
+    entries.push({name:full,path:full,size,directory:false,cluster:start,chain,
+      kind:lisaKind(nm)+' · sectors '+start+'–'+(end-1),
+      reader:segReader(bytes,[{off:start*512,len:size}],size),textEnc:'',exportName:full,rawName:nl>0?nm:'',
+      stale:idx>=cnt,
+      note:idx>=cnt?'Beyond the header record count ('+cnt+'): the Lisa preboot loader never scans this slot, so it is a stale/leftover record. Name length is 0 on disk; name recovered from the leftover buffer.':nl===0?(recovered?'Catalog name length is 0 on disk; name recovered from the leftover name buffer, which matches an earlier entry.':'Catalog record has no name (length 0); sector range is still valid.'):''});
+  }
+  if(named<2||entries.length<2)return null;
+  const bootCode=be16(bytes,0)===0x46fc;
+  const zone=c=>12-Math.floor(c/16);
+  const order=[];const heads=total===1600?2:1;
+  for(let c=0;c<80;c++)for(let h=0;h<heads;h++)order.push({cylinder:c,head:h,sectors:zone(c)});
+  const geo=makeGeo({order,label:'Lisa Sony '+(heads===1?'400K':'800K'),badge:'APPLE LISA',hub:'TRACK / SECTOR',
+    facts:[['Format','Apple Lisa PREBOOT boot-file volume'],['Media','3.5-inch Sony, '+heads+' side(s), 80 tracks, 12→8 sectors per track'],['Volume name',volName],['Sector size','512 B (no 12-byte Lisa tags in this image)']],
+    note:'Zoned GCR layout shared with Macintosh 400K/800K: tracks 0–15 have 12 sectors, 16–31 have 11, 32–47 have 10, 48–63 have 9 and 64–79 have 8.',
+    locFmt:p=>'Track '+p.cylinder+(heads>1?' Side '+p.head:'')+' · Sector '+(p.sector-1)});
+  const used=new Set();for(const e of entries)for(const k of e.chain)used.add(k);
+  const first=Math.min(...entries.map(e=>e.cluster)),lastEnd=Math.max(...entries.map(e=>e.cluster+e.chain.length));
+  const regions=regionsFrom(total,[
+    {name:'Boot code (sector 0–1)',kind:'boot',lbas:new Set([0,1])},
+    {name:'PREBOOT catalog',kind:'root',lbas:dirLbas},
+    {name:'Boot files',kind:'data',lbas:used}
+  ],'Unlisted / boot-loader area');
+  let zeroFree=0;for(let k=4;k<total;k++){if(used.has(k))continue;let z=true;for(let q=k*512,e=q+512;q<e;q++)if(bytes[q]){z=false;break}if(z)zeroFree++}
+  const sigOk=bootCode?'68000 boot code (46FC 2700)':'not 46FC';
+  return baseDisk({fsType:'LISA_PREBOOT',formatLabel:'Apple Lisa PREBOOT · '+(heads===1?'400K':'800K')+' · read-only',name:volName,volLabel:volName,bps:512,total,actualSectors:total,usable:total,spt:12,heads,geo,regions,
+    boot:[['0x000','Boot sector',sigOk],['0x400','Catalog header (volume name)',volName],['0x410','Live record count (header)',String(cnt)],['0x416','Catalog records present (26 B each)',String(entries.length)],['—','Files',fmtN(entries.length)],['—','Data span','sectors '+first+'–'+(lastEnd-1)],['—','Image size',sizeStr(len)]],
+    bootFacts:[['Filesystem','Apple Lisa PREBOOT volume'],['Volume name',volName],['Boot code',sigOk],['Catalog','Sector 2 (0x400), 26-byte records']],bootLabel:'Sector 0 (Lisa boot code)',bootNote:'Lisa boot sector; the catalog of boot files (LISABUG, MONITOR, DRIVERS, …) follows at sector 2.',
+    alloc:{free:zeroFree,used:total-zeroFree-4,reserved:4,bad:0},allocNote:'Free = all-zero sectors outside the catalogued files; unlisted non-zero sectors (boot loader code) count as used.',
+    fileEntries:entries,idLabel:'First sector (LBA)',kindLabel:'File type',lbaLabel:l=>'sector '+l});
+}
+
 function sniffUnsupported(bytes,name){
   const s=(o,n)=>String.fromCharCode(...bytes.subarray(o,o+n));
   const ext=extOf(name);
@@ -1681,6 +1744,7 @@ function sniffUnsupported(bytes,name){
     [()=>s(0,3)==='SCP','SuperCard Pro flux image','SCP could not be decoded as a supported sector format.'],
     [()=>s(0,4)==='IMD '||s(0,3)==='IMD','ImageDisk (IMD)','IMD needs track re-assembly; convert to a raw IMG.'],
     [()=>(s(0,2)==='TD'||s(0,2)==='td')&&ext==='td0','Teledisk (TD0)','TD0 is compressed; convert to a raw IMG.'],
+    [()=>{const h=s(0,Math.min(1024,bytes.length));return bytes[0]===0xc3&&/GenRad Service Products/.test(h)&&/\$ROOT/.test(h)},'GenRad / Eurotest Z80 system disk','Z80 boot sector (JP C100h) from GenRad Service Products Division, 1984; it loads $ROOT and $MAIN through a proprietary directory that is not decoded. Data fills the first 80 KiB; the rest is E5-formatted.'],
     [()=>s(0,4)==='FDI\0'||ext==='fdi'&&s(0,3)==='FDI','FDI disk image','FDI stores per-track data; convert to a raw sector image.']
   ];
   for(const [test,label,msg] of table){
@@ -1821,7 +1885,7 @@ function detect(bytes,name,hint){
       regions:[{name:'Image',start:0,sectors:total,kind:'data'}],boot:[['—','Recognised format',sn.label],['—','Note',sn.msg]],
       bootFacts:[['Recognised format',sn.label],['Status','Not decoded'],['Note',sn.msg]],bootLabel:'Image start',bootNote:sn.msg});
   }
-  const tries=[()=>decodeCbm(bytes,name),()=>decodeAmiga(bytes),()=>decodeAtari8(bytes,hint),()=>decodeApple(bytes,name,hint),()=>decodeTrdos(bytes),()=>decodeDfs(bytes,name),()=>decodeSysV(bytes)];
+  const tries=[()=>decodeCbm(bytes,name),()=>decodeAmiga(bytes),()=>decodeAtari8(bytes,hint),()=>decodeApple(bytes,name,hint),()=>decodeTrdos(bytes),()=>decodeDfs(bytes,name),()=>decodeSysV(bytes),()=>decodeLisaPreboot(bytes)];
   for(const t of tries){
     let r=null;
     try{r=t()}catch(err){r=null}
