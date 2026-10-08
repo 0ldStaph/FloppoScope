@@ -5179,7 +5179,7 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
       const row = buf.subarray(p, Math.min(p + 16, buf.length));
       const hx = Array.from(row, hex).join(' ');
       const asc = Array.from(row, b => b >= 32 && b < 127 ? String.fromCharCode(b) : '.').join('');
-      out += (baseOffset + p).toString(16).padStart(8, '0').toUpperCase() + '  ' + hx.padEnd(47, ' ') + ' | ' + esc(asc) + '\n';
+      out += (baseOffset + p).toString(16).padStart(8, '0').toUpperCase() + '  ' + hx.padEnd(47, ' ') + ' | ' + asc + '\n'; // plain text: callers use textContent, so no HTML escaping here
     }
     return out;
   }
