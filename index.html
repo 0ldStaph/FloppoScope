@@ -1815,11 +1815,13 @@ function decodeOds1(bytes){
   const unp=c=>(c<10?'0':'')+c;
   const MON={JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
   const asc=(o,n)=>{let s='';for(let i=0;i<n;i++)s+=String.fromCharCode(bytes[o+i]&0x7f);return s};
-  const dateAt=o=>{
-    const d=asc(o,7),m=MON[d.slice(2,5)],dd=parseInt(d.slice(0,2),10),yy=parseInt(d.slice(5,7),10);
-    if(!m||isNaN(dd)||isNaN(yy))return '';
-    const t=asc(o+7,6);let r=(yy<70?2000+yy:1900+yy)+'-'+unp(m)+'-'+unp(dd);
-    if(/^\d{6}$/.test(t))r+=' '+t.slice(0,2)+':'+t.slice(2,4);
+  /* Ident-area dates are ASCII "DDMMMYY" (7 bytes) with a separate "HHMMSS" time (6 bytes): revision date at ident+12, revision time at +19,
+     creation date at +25, creation time at +32, expiry date at +38. A file that was never revised has an all-zero revision date. */
+  const dateAt=(od,ot)=>{
+    const d=asc(od,7),m=MON[d.slice(2,5)],dd=parseInt(d.slice(0,2),10),yy=parseInt(d.slice(5,7),10);
+    if(!m||isNaN(dd)||isNaN(yy)||dd<1||dd>31)return '';
+    const t=asc(ot,6);let r=(yy<70?2000+yy:1900+yy)+'-'+unp(m)+'-'+unp(dd);
+    if(/^\d{6}$/.test(t)&&+t.slice(0,2)<24&&+t.slice(2,4)<60)r+=' '+t.slice(0,2)+':'+t.slice(2,4);
     return r;
   };
   const oct=n=>n.toString(8);
@@ -1910,7 +1912,7 @@ function decodeOds1(bytes){
     if(!dirsSeen.has(dirPath)){dirsSeen.add(dirPath);entries.push({name:dirPath,path:dirPath,size:0,directory:true,cluster:0,chain:[],kind:'UIC directory',modified:''})}
     entries.push({name:fname,path:dirPath+'/'+fname,size:realSize,directory:false,cluster:chain.length?chain[0]:h.img,chain,
       kind:(isDir?'directory file':ext==='SYS'?'system file':ext==='OBJ'?'object':ext==='TSK'?'task image':ext==='MAC'||ext==='CMD'||ext==='TMP'||isText?'text':recDesc)+(isText&&rtyp===2?' · extracted as text':''),
-      modified:dateAt(io+22),reader,exportName:fname.replace(/;(\d+)$/,'_v$1'),
+      modified:dateAt(io+12,io+19)||dateAt(io+25,io+32),created:dateAt(io+25,io+32),reader,exportName:fname.replace(/;(\d+)$/,'_v$1'),
       note:missing?(missing+' of '+nblk+' block(s) are not present in this image'+(missing===nblk?' — contents unavailable.':' — gaps are skipped/zero-filled.')):'',
       fileNumber:h.fn});
   }
@@ -2041,7 +2043,7 @@ function decodeSharpMz(bytes){
   }
   const usedSecs=used.size,reserved=catLbas.size+iplLbas.size+sys;
   const label='Sharp MZ'+(iplProduct?' '+iplProduct:'')+' Disk BASIC';
-const geo=makeGeo({order:uniformOrder(cyl,heads,16,false),label:label+' · '+cyl+' tracks × '+heads+' side(s)',badge:'SHARP MZ-800 DISK BASIC',hub:'CYL / SECTOR',
+  const geo=makeGeo({order:uniformOrder(cyl,heads,16,false),label:label+' · '+cyl+' tracks × '+heads+' side(s)',badge:'SHARP MZ-800 DISK BASIC',hub:'CYL / SECTOR',
     facts:[['Format','Sharp MZ Disk BASIC'+(iplProduct?' ('+iplProduct+')':'')],['Tracks',String(cyl)],['Sides',String(heads)],['Sectors per track','16 × 256 B'],['Data polarity',r.inv?'Inverted on disk':'Normal']],
     note:'Sharp MZ disks use 16 sectors of 256 bytes per track, numbered from 1. '+(swapped?'The sector inspector shows physical image order (cylinder by cylinder, side 0 then side 1); the Disk BASIC logical track order swaps each pair of tracks from track 2 on, so file sectors appear on the opposite side of their cylinder. ':'Logical sector order runs cylinder by cylinder, side 0 then side 1. ')+(r.inv?' Sector data is stored inverted (complemented) on the disk; file contents are shown de-inverted.':''),
     locFmt:p=>'Cyl '+p.cylinder+' · Side '+p.head+' · Sector '+p.sector});
@@ -3588,7 +3590,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.2'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.3'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
