@@ -2041,7 +2041,7 @@ function decodeSharpMz(bytes){
   }
   const usedSecs=used.size,reserved=catLbas.size+iplLbas.size+sys;
   const label='Sharp MZ'+(iplProduct?' '+iplProduct:'')+' Disk BASIC';
-  const geo=makeGeo({order:uniformOrder(cyl,heads,16,false),label:label+' · '+cyl+' tracks × '+heads+' side(s)',badge:'SHARP MZ-800 DISK BASIC',hub:'CYL / SECTOR',
+const geo=makeGeo({order:uniformOrder(cyl,heads,16,false),label:label+' · '+cyl+' tracks × '+heads+' side(s)',badge:'SHARP MZ-800 DISK BASIC',hub:'CYL / SECTOR',
     facts:[['Format','Sharp MZ Disk BASIC'+(iplProduct?' ('+iplProduct+')':'')],['Tracks',String(cyl)],['Sides',String(heads)],['Sectors per track','16 × 256 B'],['Data polarity',r.inv?'Inverted on disk':'Normal']],
     note:'Sharp MZ disks use 16 sectors of 256 bytes per track, numbered from 1. '+(swapped?'The sector inspector shows physical image order (cylinder by cylinder, side 0 then side 1); the Disk BASIC logical track order swaps each pair of tracks from track 2 on, so file sectors appear on the opposite side of their cylinder. ':'Logical sector order runs cylinder by cylinder, side 0 then side 1. ')+(r.inv?' Sector data is stored inverted (complemented) on the disk; file contents are shown de-inverted.':''),
     locFmt:p=>'Cyl '+p.cylinder+' · Side '+p.head+' · Sector '+p.sector});
@@ -3423,13 +3423,39 @@ function fin(img,filled,total,size,name,geom,lbl,extra){
 
 const CATN={'recovered':'recovered with alternate clock','crc-stable':'repeatable checksum error','weak':'weak / unstable data','intermittent':'intermittent reads','crc-error':'checksum error','header-crc':'bad address field','id-mismatch':'ID/track mismatch','dup-id':'duplicate sector ID','extra-sectors':'extra sectors','missing-sectors':'missing sectors','size':'mixed sector sizes','deleted':'deleted-data mark','no-data':'track with no decodable sectors','long-track':'long track','short-track':'short track','unsupported13':'13-sector format','stray':'stray sector IDs','layout':'irregular layout','short-sector':'data field shorter than its ID announces'};
 const STRONG=['short-sector','crc-stable','id-mismatch','dup-id','extra-sectors','long-track','size','unsupported13','no-data','layout'];
+/* Sharp MZ-800 Personal CP/M-80 boot track. The disk is 40 cylinders x 2 sides of 8 x 512 B sectors, except cylinder 0 side 1, which is the
+   IPL boot track: sixteen 256-byte sectors (IDs 1-16, interleaved 1,9,2,10...) whose first sector holds a 0x03 "IPLPRO" header, stored complemented
+   because Sharp's floppy interface inverts data. Against the rest of the disk that track looks like "extra sectors" and "mixed sector sizes", but
+   it is the format's normal layout. Recognise it from the geometry plus the IPLPRO header and demote exactly those two findings to an informational
+   note. Any other finding on that track (checksum errors, weak data...) and anything on another track is left untouched. */
+function sharpBootTrack(anoms,map,best){
+  if(!best||best.kind!=='ibm')return false;
+  const boot=new Map();let maxCyl=0,other=0,other512=0;
+  for(const {s,t} of map.values()){
+    if(t.cyl>maxCyl)maxCyl=t.cyl;
+    if(t.cyl===0&&t.head===1){boot.set(s.r,s);continue}
+    other++;if(s.n===2)other512++;
+  }
+  if(maxCyl<38||maxCyl>41||other<300||other512<other*0.9||boot.size!==16)return false;
+  for(let r=1;r<=16;r++){const q=boot.get(r);if(!q||q.n!==1||!q.data||q.data.length!==256)return false}
+  const d=boot.get(1).data,sig=[0x49,0x50,0x4c,0x50,0x52,0x4f]; // "IPLPRO" after a leading 0x03
+  let inv=true,plain=true;
+  for(let i=0;i<6;i++){if((d[i+1]^0xff)!==sig[i])inv=false;if(d[i+1]!==sig[i])plain=false}
+  if(!inv&&!plain)return false;
+  const note='C0 H1 is the Sharp MZ-800 Personal CP/M-80 boot track: 16 × 256 B sectors with an "IPLPRO" header'+(inv?' (data stored inverted)':'')+' among 8 × 512 B CP/M tracks. This is the normal layout of that format, not copy protection.';
+  let n=0;
+  for(const a of anoms)if(a.track==='C0 H1'&&(a.cat==='extra-sectors'||a.cat==='size')){a.info=true;a.boot=true;a.bootNote=note;n++}
+  return n>0;
+}
 function anomalyRows(all){
   const infos=(all||[]).filter(a=>a.info),real=(all||[]).filter(a=>!a.info),rows=anomalyRowsCore(real);
-  if(infos.length){
+  const ints=infos.filter(a=>!a.boot),boots=infos.filter(a=>a.boot);
+  if(ints.length){
     if(!real.length)rows[0][2]='Nothing unusual found — all sectors verified';
-    const tr=new Set(infos.map(a=>a.track));
-    rows.push(['—','Read note',infos.length+' sector(s) on '+tr.size+' track(s) verified in only some revolutions (intermittent reads). The image uses a checksum-valid copy, so this is not treated as an error.']);
+    const tr=new Set(ints.map(a=>a.track));
+    rows.push(['—','Read note',ints.length+' sector(s) on '+tr.size+' track(s) verified in only some revolutions (intermittent reads). The image uses a checksum-valid copy, so this is not treated as an error.']);
   }
+  if(boots.length)rows.push(['—','Boot track',boots[0].bootNote]);
   return rows;
 }
 function anomalyRowsCore(anoms0){
@@ -3551,6 +3577,7 @@ function convert(ab,name,extra){
       for(const e of res.dropped.slice(0,20))anoms.push({cat:e.ok?'extra-sectors':'stray',track:'C'+e.cyl+' H'+e.head,msg:'sector ID '+e.r+' ('+e.data.length+' B, '+(e.ok?'checksum valid':'checksum error')+') lies outside the disk layout and was left out of the image'});
     }else{res=assembleFixed(best.kind,map);if(dec.layout&&dec.layout.length&&res.lbaOf){for(const tl of dec.layout)for(const q of tl.sectors)q.lba=res.lbaOf(q.tn,q.sn);layout={tracks:dec.layout,size:res.size}}}
   }catch(err){return {error:src.label+' decoded but the sector image could not be built: '+err.message,kind}}
+  try{sharpBootTrack(anoms,map,best)}catch(_){}
   const covered=new Set(src.tracks.map(t=>t.cyl+'.'+t.head)).size;
   return {ab:res.img.buffer,geo:res.geo,fmt:best.kind,container:src.label+(src.reversed?' (reversed)':'')+' → '+({ibm:'MFM sector image',amiga:'ADF',apple:'DSK (DOS order)',mac:'DSK (Macintosh 400K/800K)',c64:'D64'}[best.kind]),note:'',name:res.name,badLbas:res.badLbas,size:res.size,layout,report:summarize(src,best,res,covered,anoms),kind};
 }
@@ -3561,7 +3588,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.1'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.2'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
