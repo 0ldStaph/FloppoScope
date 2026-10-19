@@ -26,7 +26,7 @@ Or download `index.html` and open it in any modern browser. No server, install o
   
 ![Filesystem explorer](assets/filesystem_explorer.png)
 
-* **Bulk conversion.** Convert images to IMG, IMD or HFE, or extract all files into one folder per disk. Output goes to ZIP or straight to a folder, with an optional manifest and SHA-256 checksums.
+* **Bulk conversion.** Convert images to IMG, IMD, HFE or Extended CPC DSK, or extract all files into one folder per disk. Output goes to ZIP or straight to a folder, with an optional manifest and SHA-256 checksums.
 <p align="center">
   <img src="assets/bulk_export.png" alt="Bulk conversion">
 </p>
@@ -36,7 +36,7 @@ Or download `index.html` and open it in any modern browser. No server, install o
   <img src="assets/analysis_report.png" alt="Analysis report">
 </p>
   
-* **Flux and container decoding.** Reads KryoFlux streams, SCP, HFE, IMD, TD0, WOZ, NIB, G64 and similar containers, and rebuilds sector images from them.
+* **Flux and container decoding.** Reads KryoFlux streams, SCP, HFE, IMD, TD0, WOZ, NIB, G64, Amstrad CPC / Extended CPC DSK and similar containers, and rebuilds sector images from them. DSK, IMD and KryoFlux files get a one-line summary in the image library.
 <p align="center">
   <img src="assets/disk_image_found_issues.png" alt="Found issues">
 </p>
@@ -48,7 +48,7 @@ Or download `index.html` and open it in any modern browser. No server, install o
 
 | Area | Details |
 | --- | --- |
-| Filesystems | FAT12/16/32 (PC), Amiga OFS/FFS, Apple DOS 3.3 and ProDOS, Macintosh, Commodore (D64 and relatives), Atari DOS, ZX Spectrum TR-DOS, BBC Micro DFS, SysV and SCO UNIX, NeXTSTEP UFS |
-| Image and flux files | .img .ima .dsk .bin .d64 .d71 .d81 .adf .atr .xfd .st .msa .po .do .2mg .hdv .trd .ssd .dsd .msx .mdi .woz .nib .g64 .dms .ipf .hfe .scp .raw .imd .td0 .fdi |
+| Filesystems | FAT12/16/32 (PC), Amiga OFS/FFS, Apple DOS 3.3 and ProDOS, Macintosh, Commodore (D64 and relatives), Atari DOS, ZX Spectrum TR-DOS, BBC Micro DFS, SysV and SCO UNIX, NeXTSTEP UFS, DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80, Sharp MZF/MZT tape files |
+| Image and flux files | .img .ima .dsk .bin .d64 .d71 .d81 .adf .atr .xfd .st .msa .po .do .2mg .hdv .trd .ssd .dsd .msx .mdi .woz .nib .g64 .dms .ipf .hfe .scp .raw .imd .td0 .fdi .mzf .mzt |
 
 Support depends on what the image actually contains, so some images may only be partly decoded. The unmapped-data scan applies to FAT sector images only.
