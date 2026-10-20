@@ -482,7 +482,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
             <div><dt>Apple</dt><dd>Macintosh MFS/HFS, Apple II DOS 3.3 / ProDOS, Apple Lisa PREBOOT</dd></div>
             <div><dt>Unix</dt><dd>SunOS Bar/Tar, NeXT UFS1, SCO UNIX System V (S5)</dd></div>
             <div><dt>Commodore, Atari, Amiga, Acorn</dt><dd>D64/D71/D81, Atari 8-bit DOS 2, Amiga OFS/FFS, BBC DFS</dd></div>
-        <div><dt>DEC, Sharp &amp; Amstrad</dt><dd>DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80, Sharp MZF/MZT tape files, Amstrad CPC / Extended CPC DSK</dd></div>
+        <div><dt>DEC, Sharp &amp; Amstrad</dt><dd>DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80 (320 KB and 400 KB variants), Sharp MZF/MZT tape files, Amstrad CPC / Extended CPC DSK</dd></div>
             <div><dt>Flux &amp; bitstream</dt><dd>SCP, KryoFlux .raw, HFE, WOZ, NIB, G64, IMD — including Macintosh 400K/800K GCR — decoded to sectors with a copy-protection and read-error scan (time-reversed flux from flipped disks, e.g. Apple II side B via <code>gw read --reverse</code>, is detected automatically)</dd></div>
           </dl>
         </details>
@@ -1088,7 +1088,7 @@ function unwrap(ab,name){
       const sorted=ids.slice().sort((x,y)=>x-y),cnt=new Map();
       for(let k=0;k+1<n;k++){const a=ids.indexOf(sorted[k]),b2=ids.indexOf(sorted[k+1]);const d=((b2-a)%n+n)%n;cnt.set(d,(cnt.get(d)||0)+1)}
       let best=1,bc=-1;for(const [d,c] of cnt)if(c>bc){bc=c;best=d}
-      return best===1?'none (1:1)':best+':1';
+      return(best===1?'none (1:1)':best+':1');
     };
     const groups=new Map();
     for(const t of cpcTracks){
@@ -2449,6 +2449,155 @@ function decodeMzf(bytes){
   }
 }
 
+/* ---------- Sharp MZ-800 Personal CP/M-80, 400 KB variant (5.25" 2D: 40 cylinders x 2 sides x 10 x 512 B) ---------- */
+/* Seen on a "400 KByte - Modification" of P-CP/M80 for the MZ-800 (sds Computer Service, 1985), imaged as an Extended CPC DSK. Layout as observed:
+   - Each cylinder is one 20-sector CP/M track: sector IDs 1-10 carry head label 0 and IDs 11-20 head label 1. The DSK lists the ID 11-20 track first,
+     so the flat image holds them in the opposite order; CP/M order is therefore found through the sector IDs, not through the flat offsets.
+   - Cylinder 0 is the one reserved system track: sixteen 256-byte IPL sectors (an "IPLPRO" header and boot code) on one side, 0xE5 filler (10 x 512 B) on the other.
+   - The directory starts at the first sector of cylinder 1 (two 2 KiB blocks = 128 entries); 2 KiB allocation blocks, 8-bit pointers, 16 per entry.
+   - All sectors are stored complemented (0xE5 filler reads as 0x1A); both polarities are tried.
+   Verified on one disk: with this order every text file reads back as clean ASCII; the other orders tried (side-serpentine as on the 320 KB disks, side-major) do not. */
+function decodeSharpCpm400(bytes,hint){
+  const len=bytes.length,SEC=512,BLK=2048,SPC=20;
+  /* locate sector (cylinder, ID) in the flat image */
+  let off=null,cyls=0,tracks=null;const iplSec=new Map();
+  if(hint&&hint.cpcDsk&&hint.cpcTracks&&hint.cpcTracks.length>=60){
+    const m=new Map();
+    for(const t of hint.cpcTracks){
+      cyls=Math.max(cyls,t.cyl+1);
+      for(const s of t.sectors){if(s.size===SEC&&s.len===SEC)m.set(t.cyl*256+s.r,s.off);else if(t.cyl===0)iplSec.set(s.r,s.off)}
+    }
+    if(cyls<35||cyls>42)return null;
+    off=(c,id)=>m.has(c*256+id)?m.get(c*256+id):-1;
+    tracks=hint.cpcTracks;
+  }else if(len===40*SPC*SEC){
+    cyls=40;
+    off=(c,id)=>id>=1&&id<=SPC?(c*SPC+id-1)*SEC:-1;
+  }else return null;
+  const NSEC=cyls*SPC,NBLK=(NSEC-SPC)/4;
+  /* CP/M logical sector n (0 = first sector of cylinder 0) */
+  const secOff=n=>off(Math.floor(n/SPC),n%SPC+1);
+  const blkSegs=b=>{const a=[];for(let k=0;k<4;k++)a.push({off:secOff(SPC+b*4+k),len:SEC});return a};
+  const okChar=c=>c>0x20&&c<0x7f&&'<>.,;:=?*[]_|\\"/'.indexOf(String.fromCharCode(c))<0||c===0x5f;
+  const tryPolarity=inv=>{
+    let lb=bytes;
+    if(inv){lb=new Uint8Array(len);for(let i=0;i<len;i++)lb[i]=bytes[i]^255}
+    const dir=new Uint8Array(2*BLK);
+    for(let b=0;b<2;b++)for(let k=0;k<4;k++){const o=secOff(SPC+b*4+k);if(o<0||o+SEC>len)return null;dir.set(lb.subarray(o,o+SEC),b*BLK+k*SEC)}
+    const raw=[];let bad=0,blank=0;const skipped=[];
+    for(let i=0;i<128;i++){
+      const o=i*32,u=dir[o];
+      if(u===0xe5){blank++;continue}
+      let ok=u<=15;
+      for(let k=1;k<12&&ok;k++){const c=dir[o+k]&0x7f;if(!(c===0x20||okChar(c)))ok=false}
+      if(ok&&(dir[o+1]&0x7f)===0x20)ok=false;
+      if(ok&&(dir[o+12]>31||dir[o+15]>128||(dir[o+14]&0x7f)>15))ok=false;
+      if(ok)for(let k=16;k<32;k++)if(dir[o+k]>=NBLK){ok=false;break}
+      if(!ok){bad++;skipped.push(i);continue}
+      raw.push({i,o,user:u,name:trimR(String.fromCharCode(...Array.from(dir.subarray(o+1,o+9),c=>c&0x7f))),ext:trimR(String.fromCharCode(...Array.from(dir.subarray(o+9,o+12),c=>c&0x7f))),
+        ro:!!(dir[o+9]&0x80),sys:!!(dir[o+10]&0x80),arc:!!(dir[o+11]&0x80),ex:dir[o+12]+32*(dir[o+14]&0x7f),rc:dir[o+15],blocks:Array.from(dir.subarray(o+16,o+32)).filter(x=>x)});
+    }
+    if(!raw.length||bad>Math.min(3,Math.floor(raw.length/4)))return null;
+    return {inv,lb,raw,badN:bad,badNames:skipped.map(i=>trimR(String.fromCharCode(...Array.from(dir.subarray(i*32+1,i*32+9),c=>c&0x7f)))).filter(Boolean)};
+  };
+  const r=tryPolarity(0)||tryPolarity(255);
+  if(!r)return null;
+  const {lb,raw}=r;
+  /* IPL header: first sector of the 256-byte-sector side of cylinder 0 (or, in a logical image, sector 1) */
+  let ipl='',iplInv=false,bootTxt=[];
+  const bo=iplSec.has(1)?iplSec.get(1):off(0,1);
+  if(bo>=0&&bo+256<=len)for(const pol of [255,0]){
+    if((bytes[bo]^pol)===3&&String.fromCharCode(...Array.from(bytes.subarray(bo+1,bo+7),c=>c^pol))==='IPLPRO'){
+      let nm='';for(let i=1;i<18;i++){const c=bytes[bo+i]^pol;if(c===0x0d||c<0x20||c>0x7e)break;nm+=String.fromCharCode(c)}
+      ipl=trimR(nm);iplInv=pol===255;
+      /* readable strings in the 4 KiB boot track (sixteen 256-byte sectors) */
+      let txt='';for(let i=0;i<4096&&bo+i<len;i++){const c=bytes[bo+i]^pol;txt+=(c>=0x20&&c<0x7f)?String.fromCharCode(c):'\n'}
+      bootTxt=(txt.match(/[ -~]{12,}/g)||[]).map(s=>s.trim()).filter(s=>/[A-Za-z]{4}/.test(s)&&!/^IPLPRO/.test(s)).slice(0,5);
+      break;
+    }
+  }
+  const groups=new Map();
+  for(const e of raw){const k=e.user+'\u0000'+e.name+'.'+e.ext;if(!groups.has(k))groups.set(k,[]);groups.get(k).push(e)}
+  const textExt=/^(ASM|TXT|DOC|CFG|SUB|BAS|LST|PRN|MAC|INC|LIB|SYM|ME|C|H|HEX|DAT|HLP)$/i;
+  const entries=[],usedBlocks=new Set();
+  let overlap=0;
+  for(const [k,exts] of groups){
+    exts.sort((a,b)=>a.ex-b.ex);
+    const first=exts[0],last=exts[exts.length-1];
+    const records=last.ex*128+last.rc;
+    const blocks=[];for(const e of exts)for(const b of e.blocks)blocks.push(b);
+    let size=records*128;
+    const cap=blocks.length*BLK;
+    const notes=[];
+    if(size>cap){size=cap;notes.push('Record count exceeds the allocated blocks; size limited to the allocated blocks.')}
+    for(const b of blocks){if(b<2)continue;if(usedBlocks.has(b))overlap++;usedBlocks.add(b)}
+    const full=first.name+(first.ext?'.'+first.ext:'');
+    const disp=segName((first.user?'U'+first.user+':':'')+full);
+    const segs=[];for(const b of blocks)for(const s of blkSegs(b))segs.push(s);
+    let rd=segReader(lb,segs,size),textTrim=false;
+    if(textExt.test(first.ext)&&size>0){
+      const lastRec=Math.max(0,size-128);
+      try{
+        const tail=segReader(lb,segs,size)();
+        for(let i=lastRec;i<size;i++)if(tail[i]===0x1a){size=i;textTrim=true;break}
+      }catch(_){}
+      if(textTrim)rd=segReader(lb,segs,size);
+    }
+    const lbas=[];for(const s of segs)if(s.off>=0)lbas.push(s.off>>9);
+    const flags=[first.sys?'SYS':'',first.ro?'R/O':'',first.arc?'ARC':''].filter(Boolean);
+    if(textTrim)notes.push('Length trimmed at the ^Z end-of-file marker (CP/M stores sizes in 128-byte records).');
+    else notes.push('CP/M stores file sizes in 128-byte records, so the length may include padding after the real end of the file.');
+    if(exts.length>1)notes.push(exts.length+' directory extents.');
+    entries.push({name:disp,path:disp,size,directory:false,cluster:blocks[0]||0,chain:lbas,
+      kind:'User '+first.user+(flags.length?' · '+flags.join(' · '):'')+' · '+records+' records',reader:rd,exportName:disp,note:notes.join(' ')});
+  }
+  const total=Math.floor(len/512);
+  const cyl0=[];for(let id=1;id<=SPC;id++){const o=off(0,id);if(o>=0)cyl0.push({id,o})}
+  const sysL=new Set(),iplL=new Set(),dirL=new Set();
+  for(const s of cyl0){
+    /* the 256-byte IPL sectors share LBAs in pairs; everything else on cylinder 0 is the filler half of the reserved track */
+    const small=tracks&&tracks.some(t=>t.cyl===0&&t.sectors.some(x=>x.r===s.id&&x.size!==SEC));
+    (small?iplL:sysL).add(s.o>>9);
+  }
+  if(tracks){for(const t of tracks)if(t.cyl===0)for(const x of t.sectors)if(x.size!==SEC){const a=x.off>>9,b=(x.off+x.len-1)>>9;for(let l=a;l<=b;l++){iplL.add(l);sysL.delete(l)}}}
+  for(let b=0;b<2;b++)for(const s of blkSegs(b))if(s.off>=0)dirL.add(s.off>>9);
+  const usedL=new Set();for(const e of entries)for(const l of e.chain)usedL.add(l);
+  const dataBlocks=NBLK-2;
+  const freeBlocks=Math.max(0,dataBlocks-usedBlocks.size);
+  /* layout: one row per track in flat-image order (the DSK's own track order) */
+  let order;
+  if(tracks){order=tracks.map(t=>({cylinder:t.cyl,head:t.head,sectors:Math.ceil(t.sectors.reduce((a,x)=>a+x.len,0)/SEC)}))}
+  else order=uniformOrder(cyls,2,SPC/2,false);
+  const label='Sharp MZ-800 Personal CP/M-80 (400 KB)';
+  const geo=makeGeo({order,label:label+' · '+cyls+' cylinders × 2 sides',badge:'SHARP MZ-800 CP/M 400K',hub:'CYL / SECTOR',
+    facts:[['Format','Personal CP/M-80 (Sharp MZ-800), 400 KB variant'],['Cylinders',String(cyls)],['Sides','2'],['Sectors per cylinder','20 × 512 B (IDs 1–10 head label 0, IDs 11–20 head label 1)'],['Block size','2 KiB (4 sectors)'],['Logical track order','One cylinder per CP/M track, sector IDs 1–20']],
+    note:'Each cylinder is one 20-sector CP/M track: IDs 1–10 on one side and IDs 11–20 on the other. The DSK stores the side with IDs 11–20 first, so CP/M order follows the sector IDs rather than the file order. Cylinder 0 is the reserved system track: sixteen 256-byte IPL sectors (inverted "IPLPRO" header and boot code) and a half track of 0xE5 filler. The directory starts at cylinder 1.',
+    locFmt:p=>'Cyl '+p.cylinder+' · Side '+p.head+' · Sector '+p.sector});
+  const regions=regionsFrom(total,[
+    {name:'IPL boot track (cyl 0)',kind:'boot',lbas:iplL},
+    {name:'System track filler (cyl 0)',kind:'boot',lbas:sysL},
+    {name:'CP/M directory (blocks 0–1)',kind:'root',lbas:dirL}
+  ],'Data blocks');
+  const iplLine=ipl?ipl+' (type 3)':'not present';
+  const trackStarts=[];{let s=0;for(const t of order){trackStarts.push({cyl:t.cylinder,head:t.head,start:s,n:t.sectors});s+=t.sectors}}
+  return baseDisk({fsType:'SHARP_CPM',formatLabel:label+' · 40T DS · read-only',name:'Sharp MZ-800 CP/M 400K',volLabel:'',bps:512,total,actualSectors:total,usable:total,spt:10,heads:2,geo,regions,
+    boot:[['—','CP/M directory','128 × 32-byte entries (blocks 0–1, from cyl 1 sector 1) · '+raw.length+' extent(s) · '+entries.length+' file(s)'+(r.badN?' · '+r.badN+' malformed entr'+(r.badN>1?'ies':'y')+' skipped'+(r.badNames.length?' ('+r.badNames.join(', ')+')':''):'')],
+      ['—','Data polarity',r.inv?'Whole image inverted; file data de-inverted':'Normal (IPL track '+(ipl?(iplInv?'inverted':'normal'):'not recognised')+')'],
+      ['—','IPL header (cyl 0)',iplLine],
+      ['—','Boot track text',bootTxt.length?bootTxt.join(' · '):'—'],
+      ['—','Allocation block','2 KiB · blocks 0–1 = directory · 8-bit pointers'],
+      ['—','Reserved system track','1 (cylinder 0)'],
+      ['—','Logical track order','One cylinder per CP/M track, sector IDs 1–20 (IDs 11–20 are stored first in the DSK)'],
+      ['—','Image size',sizeStr(len)]],
+    bootFacts:[['Filesystem','CP/M-80 (Sharp MZ-800 Personal CP/M, 400 KB)'],['IPL header',ipl||'—'],['Block size','2 KiB'],['Files',fmtN(entries.length)]],
+    bootLabel:'Boot track text',
+    bootNote:(bootTxt.length?'Readable text on the boot track: '+bootTxt.join(' · ')+'. ':'')+'The CP/M system track is cylinder 0: sixteen 256-byte IPL sectors plus 0xE5 filler. The directory starts at the first sector of cylinder 1.',
+    alloc:{free:freeBlocks*4,used:usedL.size,reserved:sysL.size+iplL.size+dirL.size,bad:0},
+    allocNote:'Free space is computed from the directory: '+dataBlocks+' data blocks of 2 KiB (the first two blocks hold the directory), minus the blocks used by files.'+(overlap?' '+overlap+' block(s) are referenced by more than one file.':'')+(r.badN?' '+r.badN+' malformed directory entr'+(r.badN>1?'ies were':'y was')+' ignored.':''),
+    fileEntries:entries,idLabel:'First block',kindLabel:'User / attributes',
+    lbaLabel:l=>{for(const t of trackStarts)if(l>=t.start&&l<t.start+t.n)return 'cyl '+t.cyl+' side '+t.head+' sector '+(l-t.start+1);return 'LBA '+l}});
+}
+
 /* ---------- entry point ---------- */
 function detect(bytes,name,hint){
   hint=hint||{};
@@ -2459,7 +2608,7 @@ function detect(bytes,name,hint){
       regions:[{name:'Image',start:0,sectors:total,kind:'data'}],boot:[['—','Recognised format',sn.label],['—','Note',sn.msg]],
       bootFacts:[['Recognised format',sn.label],['Status','Not decoded'],['Note',sn.msg]],bootLabel:'Image start',bootNote:sn.msg});
   }
-  const tries=[()=>decodeCbm(bytes,name),()=>decodeAmiga(bytes),()=>decodeAtari8(bytes,hint),()=>decodeApple(bytes,name,hint),()=>decodeTrdos(bytes),()=>decodeDfs(bytes,name),()=>decodeSharpMz(bytes),()=>decodeSharpCpm(bytes),()=>decodeSysV(bytes),()=>decodeOds1(bytes),()=>decodeLisaPreboot(bytes),()=>decodeMzf(bytes)];
+  const tries=[()=>decodeCbm(bytes,name),()=>decodeAmiga(bytes),()=>decodeAtari8(bytes,hint),()=>decodeApple(bytes,name,hint),()=>decodeTrdos(bytes),()=>decodeDfs(bytes,name),()=>decodeSharpMz(bytes),()=>decodeSharpCpm(bytes),()=>decodeSharpCpm400(bytes,hint),()=>decodeSysV(bytes),()=>decodeOds1(bytes),()=>decodeLisaPreboot(bytes),()=>decodeMzf(bytes)];
   for(const t of tries){
     let r=null;
     try{r=t()}catch(err){r=null}
@@ -2815,7 +2964,7 @@ function parseSCP(b){
       return out.subarray(0,m);
     }});
   }
-  return {label:'SCP flux',tracks,detail:revs+' revolution(s) per track · time base '+tick+' ns'+(spread&&heads!==0?' · single-sided, '+(heads===2?'side 1':'side 0'):''),allow:['ibm','amiga','apple','c64','mac']};
+  return {label:'SCP flux',otherCreator:!!(b[8]&0x80),tracks,detail:revs+' revolution(s) per track · time base '+tick+' ns'+(spread&&heads!==0?' · single-sided, '+(heads===2?'side 1':'side 0'):''),allow:['ibm','amiga','apple','c64','mac']};
 }
 function parseKF(b){
   let p=0,ovl=0,sp=0,sck=24027428.5714285;
@@ -3008,7 +3157,7 @@ function probeWith(src,opt){
     if(sc>0&&(!best||sc>best.score))best={kind:cd.kind,cell:cd.cell,score:sc,perTrack:count,hdr:lcount,opt};
     if(ls>0&&(!loose||ls>loose.score))loose={kind:cd.kind,cell:cd.cell,score:ls,perTrack:lcount,loose:true,opt};
   }
-  return best||loose;
+  return(best||loose);
 }
 function keyOf(kind,t,s){
   if(kind==='ibm')return t.cyl+'.'+t.head+'.'+s.c+'.'+s.h+'.'+s.r;
@@ -3046,7 +3195,7 @@ function analyzeTrack(kind,t,all,want,anoms){
   for(const g of groups.values()){
     const allc=g.copies,altOk=allc.some(x=>x._alt&&x.ok);
     g.copies=allc.filter(x=>!x._alt);
-    if(!g.copies.length||(!g.copies.some(x=>x.ok)&&altOk)){if(altOk)push('recovered',secLabel(kind,g.s0)+': only verified with alternative clock recovery (marginal / uneven flux timing)');continue}
+    if(!g.copies.length||(!g.copies.some(x=>x.ok)&&altOk)){if(altOk)anoms.push({cat:'recovered',track:'C'+t.cyl+' H'+t.head,msg:secLabel(kind,g.s0)+': only verified with alternative clock recovery (marginal / uneven flux timing)',info:true,recov:true});continue}
     const c=g.copies,s0=g.s0,lab=secLabel(kind,s0),okc=c.filter(x=>x.ok),revsSeen=new Set(c.map(x=>x._ri)).size,revsOk=new Set(okc.map(x=>x._ri)).size;
     if(g.dup)push('dup-id',lab+': the same sector ID occurs more than once in a revolution with different data');
     if(!okc.length){
@@ -3217,8 +3366,11 @@ function trackLayout(t,all){
   const out=[];
   ents.forEach((e,k)=>{
     const nx=ents.length>1?(k+1<ents.length?ents[k+1].at:ents[0].at+cells):null;
-    let weak=false;
-    if(e.sec&&!e.dOk){for(const q of others){if(q!==e.sec&&q.c===e.c&&q.h===e.h&&q.r===e.r&&!dataEq(q.data,e.sec.data)){weak=true;break}}}
+    let weak=false,viaAlt=false;
+    /* this revolution's copy failed its checksum, but another revolution or an alternate clock-recovery pass read the same sector with a valid checksum:
+       the data is good, so it is shown as OK (the alternate-clock note is informational only) */
+    if(e.sec&&!e.dOk&&e.idOk){for(const arr of all)for(const q of arr)if(q!==e.sec&&q.ok&&q.c===e.c&&q.h===e.h&&q.r===e.r){viaAlt=true;break}}
+    if(e.sec&&!e.dOk&&!viaAlt){for(const q of others){if(q!==e.sec&&q.c===e.c&&q.h===e.h&&q.r===e.r&&!dataEq(q.data,e.sec.data)){weak=true;break}}}
     const end=e.hasData?e.dEnd:e.idEnd;
     const over=nx!=null&&e.hasData?e.dEnd-nx:0;              /* bits by which the data field runs into the next sector */
     const f=v=>Math.round(v/cells*100000)/100000;
@@ -3231,7 +3383,7 @@ function trackLayout(t,all){
       if(k>=2){kept=k-2;real=Math.min(real,e.dAt+16*(4+kept+2))}
       else kept=Math.max(0,Math.floor((nx-e.dAt)/16)-6);
     }
-    out.push({c:e.c,h:e.h,r:e.r,n:e.n,size,idOk:e.idOk,hasData:e.hasData,dOk:!!e.dOk,deleted:!!e.deleted,weak,short:isShort,
+    out.push({c:e.c,h:e.h,r:e.r,n:e.n,size,idOk:e.idOk,hasData:e.hasData,dOk:!!e.dOk||viaAlt,viaAlt,deleted:!!e.deleted,weak,short:isShort,
       keptBytes:kept,
       a:f(e.at),b:f(e.idEnd),c0:e.hasData?f(e.dAt):null,d:f(real),lba:-1});
   });
@@ -3443,21 +3595,122 @@ function sharpBootTrack(anoms,map,best){
   const d=boot.get(1).data,sig=[0x49,0x50,0x4c,0x50,0x52,0x4f]; // "IPLPRO" after a leading 0x03
   let inv=true,plain=true;
   for(let i=0;i<6;i++){if((d[i+1]^0xff)!==sig[i])inv=false;if(d[i+1]!==sig[i])plain=false}
-  if(!inv&&!plain)return false;
-  const note='C0 H1 is the Sharp MZ-800 Personal CP/M-80 boot track: 16 × 256 B sectors with an "IPLPRO" header'+(inv?' (data stored inverted)':'')+' among 8 × 512 B CP/M tracks. This is the normal layout of that format, not copy protection.';
+  let blank=false;
+  if(!inv&&!plain){
+    /* A PCP/M data disk formatted without the system: the boot track is still 16 x 256 B but every byte is 0xE5 (or its complement). Accept that only
+       when the rest of the disk is clearly CP/M: cylinder 0 side 0 is 8 x 512 B and (nearly) all 0xE5, and cylinder 1 side 0 starts with a plausible
+       CP/M directory entry (user 0-15, printable 8+3 name). */
+    let fill=-1,uni=true;
+    for(let r=1;r<=16&&uni;r++){for(const b of boot.get(r).data){if(fill<0)fill=b;if(b!==fill){uni=false;break}}}
+    if(!uni||(fill!==0xe5&&fill!==0x1a))return false;
+    const c0=[],c1=[];
+    for(const {s,t} of map.values()){if(t.head===0&&t.cyl===0)c0.push(s);if(t.head===0&&t.cyl===1)c1.push(s)}
+    if(c0.length!==8||c1.length<1)return false;
+    let e5=0,tot=0;for(const q of c0){if(!q.data||q.n!==2)return false;for(const b of q.data){tot++;if(b===0xe5)e5++}}
+    if(e5<tot*0.99)return false;
+    const q1=c1.find(q=>q.r===1);if(!q1||!q1.data||q1.data.length<32)return false;
+    const e=q1.data;if(e[0]>15)return false;
+    for(let i=1;i<=11;i++){const c=e[i]&0x7f;if(c<0x20||c>0x7e)return false}
+    blank=true;
+  }
+  if(!inv&&!plain&&!blank)return false;
+  const note='C0 H1 is the Sharp MZ-800 Personal CP/M-80 boot track: 16 × 256 B sectors'+(blank?' left blank (0xE5; this disk was formatted without the system)':' with an "IPLPRO" header'+(inv?' (data stored inverted)':''))+' among 8 × 512 B CP/M tracks. This is the normal layout of that format, not copy protection.';
   let n=0;
   for(const a of anoms)if(a.track==='C0 H1'&&(a.cat==='extra-sectors'||a.cat==='size')){a.info=true;a.boot=true;a.bootNote=note;n++}
   return n>0;
 }
+/* Sharp MZ Disk BASIC (MZ-2Z046 and similar) trailing "sector 17". Cylinders written by the original formatter carry a 17th address mark after the
+   16 real 256-byte sectors: ID 17, announced as 256 B but cut short by the write splice, never verifying, with different bytes each revolution.
+   It is never part of the file system. On such a disk those leftovers (and the "16 of 17 sectors" notes on the cylinders that lack one) are not
+   copy protection. Applies only when the image is a Sharp MZ Disk BASIC disk (volume header 0x80, complemented or not, plus an IPLPRO header or a
+   valid first directory entry), at least half the tracks show the pattern, and the 16 real sectors of the track all verified. Findings about
+   sectors 1-16 are never demoted. */
+function sharpDiskBasic17(anoms,map,res,best){
+  if(!best||best.kind!=='ibm'||!res||!res.geo||res.size!==256||res.geo.spt!==16||!res.img)return false;
+  const im=new Uint8Array(res.img.buffer?res.img.buffer:res.img);
+  if(im.length<4096+7)return false;
+  let sharp=false;
+  for(const x of [0,255]){
+    if((im[0]^x)!==0x80)continue;
+    const ipl=(im[4096]^x)===3&&String.fromCharCode(...[1,2,3,4,5,6].map(i=>im[4096+i]^x))==='IPLPRO';
+    let nm=0;if((im[32]^x)>0&&(im[32]^x)<0x10){for(let i=1;i<18;i++){const c=im[32+i]^x;if(c===0x0d){nm=i;break}if(c<0x20||c>=0x7f)break}}
+    if(ipl||nm>1){sharp=true;break}
+  }
+  if(!sharp)return false;
+  const trk=new Map();
+  for(const {s,t} of map.values()){
+    const k='C'+t.cyl+' H'+t.head;let g=trk.get(k);if(!g){g={real:0,okReal:0,has17:false};trk.set(k,g)}
+    if(s.r>=1&&s.r<=16){g.real++;if(s.ok)g.okReal++}else if(s.r===17)g.has17=true;
+  }
+  let with17=0;for(const g of trk.values())if(g.has17)with17++;
+  if(!with17||with17<trk.size*0.5)return false;
+  let n=0;const cyls=new Set();
+  for(const a of anoms){
+    const g=trk.get(a.track);if(!g||g.real!==16||g.okReal!==16)continue;
+    const is17=/^sector (ID )?17\b/.test(a.msg)&&(a.cat==='short-sector'||a.cat==='crc-stable'||a.cat==='weak'||a.cat==='stray'||a.cat==='crc-error'||a.cat==='deleted');
+    const miss=a.cat==='missing-sectors'&&/^16 of 17 /.test(a.msg)&&!g.has17;
+    if(!is17&&!miss)continue;
+    a.info=true;a.fmt17=true;n++;const m=/^C(\d+) /.exec(a.track);if(m)cyls.add(+m[1]);
+  }
+  if(!n)return false;
+  const have=[...trk].filter(([k,g])=>g.has17).map(([k])=>+/^C(\d+)/.exec(k)[1]);
+  const lo=Math.min(...have),hi=Math.max(...have);
+  const note='Sharp MZ Disk BASIC format: '+with17+' of '+trk.size+' tracks (cylinders '+lo+'–'+hi+') carry a trailing 17th address mark after the 16 real sectors — ID 17, announced as 256 B but cut short, with a bad checksum. It is a formatter leftover, not part of the file system'+(hi<res.geo.cyls-1?'; cylinders '+(hi+1)+'–'+(res.geo.cyls-1)+' have only the 16 sectors':'')+'. All 16 real sectors per track verified, so these '+n+' findings are treated as expected, not copy protection.';
+  for(const a of anoms)if(a.fmt17)a.fmtNote=note;
+  return true;
+}
+/* Single-sided disk imaged with both heads. Side 1 carries only unrecorded noise, so every side-1 track is flagged "no decodable sectors". When no
+   sector at all decodes on side 1 while side 0 decodes on every cylinder 0..last (last >= 34), the disk is simply single sided: demote those
+   side-1 "no-data" findings to an informational note. A side-1 track that does decode anything makes this return false, and findings of any other
+   kind, or on side 0, are left untouched. */
+function unusedSide(anoms,map,res,best){
+  if(!best||best.kind!=='ibm'||!res||!res.geo)return false;
+  const seen=new Set();let last=-1,h1=0;
+  for(const {t} of map.values()){if(t.head===1)h1++;seen.add(t.cyl+'.'+t.head);if(t.head===0&&t.cyl>last)last=t.cyl}
+  if(h1>0||last<34)return false;
+  for(let c=0;c<=last;c++)if(!seen.has(c+'.0'))return false;
+  const hit=anoms.filter(a=>a.cat==='no-data'&&!a.info&&/^C\d+ H1$/.test(a.track));
+  if(!hit.length)return false;
+  const note='Side 1 holds no formatted sectors (only unrecorded noise on '+hit.length+' track(s)), while side 0 decodes completely on cylinders 0–'+last+'. This is a single-sided disk imaged with both heads, not copy protection.';
+  for(const a of hit){a.info=true;a.side1=true;a.side1Note=note}
+  return true;
+}
+/* Disk written with fewer cylinders than the drive can step to (typically a 35-track disk imaged as 40 tracks). Cylinders past the last formatted one
+   carry only noise: no address marks decode, and the flux differs from revolution to revolution. The scan would flag every such track as "no
+   decodable sectors", which on a 35-track disk is simply the unrecorded area, not copy protection. Applies only to IBM MFM images whose formatted
+   cylinders 0-34 decode on every side and whose "no-data" findings are all past cylinder 34. Each demoted finding is kept as an informational note. */
+function trailingUnformatted(anoms,map,res,best){
+  if(!best||best.kind!=='ibm'||!res||!res.geo)return false;
+  const seen=new Set();let last=-1;
+  for(const {t} of map.values()){seen.add(t.cyl+'.'+t.head);if(t.cyl>last)last=t.cyl}
+  const heads=res.geo.heads||1;
+  if(last!==34)return false;
+  for(let c=0;c<=last;c++)for(let h=0;h<heads;h++)if(!seen.has(c+'.'+h))return false;
+  const hit=[];
+  for(const a of anoms){
+    if(a.cat!=='no-data'||a.info)continue;
+    const m=/^C(\d+) H\d+$/.exec(a.track);
+    if(m&&+m[1]>last&&+m[1]<=44)hit.push({a,c:+m[1]});
+  }
+  if(!hit.length)return false;
+  const cyls=[...new Set(hit.map(x=>x.c))].sort((a,b)=>a-b);
+  const note='Cylinders '+cyls[0]+'–'+cyls[cyls.length-1]+' hold no formatted sectors (only unrecorded noise); cylinders 0–'+last+' decode completely. This is a '+(last+1)+'-track disk imaged on a 40-track drive, not copy protection.';
+  for(const x of hit){x.a.info=true;x.a.unfmt=true;x.a.unfmtNote=note}
+  return true;
+}
 function anomalyRows(all){
   const infos=(all||[]).filter(a=>a.info),real=(all||[]).filter(a=>!a.info),rows=anomalyRowsCore(real);
-  const ints=infos.filter(a=>!a.boot),boots=infos.filter(a=>a.boot);
+  const rec=infos.filter(a=>a.recov),ints=infos.filter(a=>!a.boot&&!a.fmt17&&!a.unfmt&&!a.side1&&!a.synth&&!a.recov),boots=infos.filter(a=>a.boot),fmts=infos.filter(a=>a.fmt17),unf=infos.filter(a=>a.unfmt),sd1=infos.filter(a=>a.side1);
+  if((ints.length||rec.length)&&!real.length)rows[0][2]='Nothing unusual found — all sectors verified';
+  if(rec.length){const tr=new Set(rec.map(a=>a.track));rows.push(['—','Read note',rec.length+' sector(s) on '+tr.size+' track(s) were verified only with an alternative clock-recovery pass (uneven flux timing, typically media wear or drive speed). The checksum is valid, so the data is good; this is not treated as an error.'])}
   if(ints.length){
-    if(!real.length)rows[0][2]='Nothing unusual found — all sectors verified';
     const tr=new Set(ints.map(a=>a.track));
     rows.push(['—','Read note',ints.length+' sector(s) on '+tr.size+' track(s) verified in only some revolutions (intermittent reads). The image uses a checksum-valid copy, so this is not treated as an error.']);
   }
   if(boots.length)rows.push(['—','Boot track',boots[0].bootNote]);
+  if(fmts.length)rows.push(['—','Format note',fmts[0].fmtNote]);
+  if(sd1.length)rows.push(['—','Sides',sd1[0].side1Note]);
+  if(unf.length)rows.push(['—','Track range',unf[0].unfmtNote]);
   return rows;
 }
 function anomalyRowsCore(anoms0){
@@ -3536,6 +3789,76 @@ function detect(b,name){
   if(isKF(b,name))return 'KF';
   return '';
 }
+/* Flux synthesised from a sector image. A converter (sector image -> SCP) writes perfectly regular flux: a handful of exact interval lengths (e.g. 4, 6 and
+   8 us) and the same data for every revolution. A real read always has jitter (hundreds of distinct values) and differs a little on every revolution.
+   Sampled on up to 12 evenly spaced tracks; every counted track must have at least 2 revolutions that are identical and at most 8 distinct interval
+   values in total. Revolution length then only reflects the converter's gap padding, so the timing-based copy-protection checks do not apply. */
+function syntheticFlux(src){
+  if(!src||!src.tracks||src.tracks.length<10||src.tracks[0].src!=='flux')return null;
+  const n=src.tracks.length,pick=[];
+  for(let i=0;i<12;i++){const k=Math.floor(i*(n-1)/11);if(pick.indexOf(k)<0)pick.push(k)}
+  const vals=new Set();let counted=0,revs=0;
+  for(const k of pick){
+    const t=src.tracks[k];
+    if(!(t.revCount>=2))return null;
+    let a;try{a=t.get(0)}catch(_){return null}
+    if(a.length<1000)continue;
+    for(let i=0;i<a.length;i++){vals.add(a[i]);if(vals.size>8)return null}
+    for(let r=1;r<t.revCount;r++){
+      let b;try{b=t.get(r)}catch(_){return null}
+      if(b.length!==a.length)return null;
+      for(let i=0;i<a.length;i++)if(a[i]!==b[i])return null;
+    }
+    counted++;if(t.revCount>revs)revs=t.revCount;
+  }
+  if(counted<5)return null;
+  return {values:[...vals].sort((x,y)=>x-y),revs,tracks:counted,otherCreator:!!src.otherCreator};
+}
+function syntheticRow(sy){
+  return ['—','Flux origin','Synthetic flux, not a real disk read: the '+sy.tracks+' tracks sampled use only '+sy.values.length+' exact interval length'+(sy.values.length===1?'':'s')+' ('+sy.values.map(v=>(v/1000)+' µs').join(', ')+') and all '+sy.revs+' revolutions are bit-for-bit identical'+(sy.otherCreator?'; the SCP header also says it was not created by a SuperCard Pro':'')+'. It was generated from a sector image, so revolution lengths only reflect the converter\'s gap padding and the timing, weak-bit and revolution-to-revolution protection checks do not apply.'];
+}
+/* Unformatted media. A flux track that carries encoded data (MFM, FM, GCR) has intervals that sit on whole multiples of one cell time; an unrecorded
+   or erased surface returns amplified noise whose intervals are spread continuously over 1-3.5 us. lockFit() is the fraction of intervals (first
+   8000 of a revolution) lying within 15% of a whole multiple (1-8) of the best-fitting cell time (1.0-5.0 us). Measured on real dumps: formatted and
+   fill-pattern tracks 0.73-1.00, unrecorded noise 0.34-0.55. */
+function lockFit(f){
+  const n=Math.min(f.length,8000);if(n<500)return 0;
+  const s0=Math.max(0,Math.min(100,f.length-n));let best=0;
+  for(let c=1000;c<=5000;c+=50){
+    let ok=0;
+    for(let i=0;i<n;i++){const r=f[s0+i]/c,k=Math.round(r);if(k>=1&&k<=8&&Math.abs(r-k)<0.15)ok++}
+    if(ok>best)best=ok;
+  }
+  return(best/n);
+}
+/* True only for a flux dump with at least 10 tracks in which NO track shows any lock (so no format of any kind is hiding on the disk). Anything with
+   even one structured track keeps the normal "could not decode" error, so copy protection and unsupported formats are never passed off as blank. */
+function unformattedFlux(src){
+  if(!src||!src.tracks||src.tracks.length<10||src.tracks[0].src!=='flux')return null;
+  let worst=0,sparse=0,mc=0,mh=0;
+  for(const t of src.tracks){
+    let f;try{f=t.get(0)}catch(_){return null}
+    const fit=lockFit(f);
+    if(fit>=0.65)return null;
+    if(fit>worst)worst=fit;
+    if(f.length<=4000)sparse++;
+    if(t.cyl>mc)mc=t.cyl;if(t.head>mh)mh=t.head;
+  }
+  return {tracks:src.tracks.length,worst,sparse,cyls:mc+1,heads:mh+1};
+}
+/* Placeholder result for an unformatted disk: an all-zero image so the disk is drawn with its physical cylinders and sides, and every sector shows empty. */
+function blankResult(src,u,kind){
+  const cyls=u.cyls,heads=u.heads,spt=9,size=512;
+  const ab=new ArrayBuffer(cyls*heads*spt*size);
+  return {ab,geo:{cyls,heads,spt,size,base:1,step:1},fmt:'ibm',container:src.label+' → unformatted disk',note:'',name:'disk.img',badLbas:[],size,layout:null,blank:true,kind,report:[
+    ['—','Flux source',src.label+' · '+src.detail],
+    ['—','Track encoding','None recognised — no track shows the regular interval clustering of MFM, FM or GCR data'],
+    ['—','Decoded geometry',cyls+' cylinder'+(cyls===1?'':'s')+' × '+heads+' side'+(heads===1?'':'s')+' of flux, no sectors. Drawn as an empty '+cyls+' × '+heads+' × '+spt+' × '+size+' B placeholder (the real sector layout is unknown).'],
+    ['—','Sector recovery','0 sectors — none of the '+u.tracks+' tracks holds formatted data'],
+    ['—','Protection / anomaly scan','Nothing unusual found — the whole surface is unrecorded'],
+    ['—','Unformatted disk','All '+u.tracks+' tracks hold only unrecorded noise ('+(u.sparse?u.sparse+' nearly empty, ':'')+'best interval lock '+Math.round(u.worst*100)+'% against 70% or more on formatted tracks), so this disk was most likely never formatted or was erased. If data is expected, it may be a degraded disk or a format this tool cannot read.']
+  ]};
+}
 function convert(ab,name,extra){
   const b=new Uint8Array(ab),kind=detect(b,name);
   if(!kind)return null;
@@ -3562,6 +3885,7 @@ function convert(ab,name,extra){
     const rs=reverseSrc(src),rb=rs?probe(rs):null;
     if(rb&&(!best||(!rb.loose&&best.loose)||(rb.loose===best.loose&&rb.score>best.score))){src=rs;best=rb}
   }
+  if(!best){let u=null;try{u=unformattedFlux(src)}catch(_){}if(u)return blankResult(src,u,kind)}
   if(!best)return {error:src.label+' parsed ('+src.tracks.length+' track(s)) but no known sector format could be decoded — tried '+src.allow.map(k=>({ibm:'IBM MFM',amiga:'Amiga MFM',apple:'Apple II 16-sector GCR',mac:'Macintosh 3.5-inch GCR',c64:'C64 GCR'}[k])).join(', ')+(src.tracks[0].src==='flux'?' (in both normal and time-reversed flux direction)':'')+'. The disk may use a copy-protected, FM or 13-sector layout.',kind,report:[['—','Flux source',src.label+' · '+src.detail]]};
   const dec=decodeAll(src,best),map=dec.map,anoms=dec.anoms;
   let layout=null;
@@ -3580,8 +3904,14 @@ function convert(ab,name,extra){
     }else{res=assembleFixed(best.kind,map);if(dec.layout&&dec.layout.length&&res.lbaOf){for(const tl of dec.layout)for(const q of tl.sectors)q.lba=res.lbaOf(q.tn,q.sn);layout={tracks:dec.layout,size:res.size}}}
   }catch(err){return {error:src.label+' decoded but the sector image could not be built: '+err.message,kind}}
   try{sharpBootTrack(anoms,map,best)}catch(_){}
+  try{sharpDiskBasic17(anoms,map,res,best)}catch(_){}
+  try{unusedSide(anoms,map,res,best)}catch(_){}
+  try{trailingUnformatted(anoms,map,res,best)}catch(_){}
+  let synth=null;try{synth=syntheticFlux(src)}catch(_){}
+  if(synth)for(const a of anoms)if(a.cat==='long-track'||a.cat==='short-track'){a.info=true;a.synth=true}
   const covered=new Set(src.tracks.map(t=>t.cyl+'.'+t.head)).size;
-  return {ab:res.img.buffer,geo:res.geo,fmt:best.kind,container:src.label+(src.reversed?' (reversed)':'')+' → '+({ibm:'MFM sector image',amiga:'ADF',apple:'DSK (DOS order)',mac:'DSK (Macintosh 400K/800K)',c64:'D64'}[best.kind]),note:'',name:res.name,badLbas:res.badLbas,size:res.size,layout,report:summarize(src,best,res,covered,anoms),kind};
+  const report=summarize(src,best,res,covered,anoms);if(synth)report.push(syntheticRow(synth));
+  return {ab:res.img.buffer,geo:res.geo,fmt:best.kind,container:src.label+(src.reversed?' (reversed)':'')+' → '+({ibm:'MFM sector image',amiga:'ADF',apple:'DSK (DOS order)',mac:'DSK (Macintosh 400K/800K)',c64:'D64'}[best.kind]),note:'',name:res.name,badLbas:res.badLbas,size:res.size,layout,report,kind};
 }
 return {detect,convert,parseKFSet,version:'1.1'};
 })();
@@ -3590,7 +3920,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.3'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.4'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -3609,11 +3939,16 @@ return {detect,convert,parseKFSet,version:'1.1'};
   const u16=o=>view.getUint16(o,true), u32=o=>view.getUint32(o,true);
   
   function setStatus(s,err=false){if(status){status.textContent=s;status.className='statusline'+(err?' error':'')}}
+  /* never let an error in the open path leave the page dead: report it on the status line */
+  function safeSelect(picked,fromFolder){
+    try{const p=handleSelection(picked,fromFolder);if(p&&p.catch)p.catch(err=>{console.error(err);setStatus('Could not open '+(fromFolder?'folder':'file')+': '+(err&&err.message||err),true)})}
+    catch(err){console.error(err);setStatus('Could not open '+(fromFolder?'folder':'file')+': '+(err&&err.message||err),true)}
+  }
   $('pickBtn').onclick=()=>$('fileInput').click();
-  E.onchange=async e=>{if(e.target.files&&e.target.files[0]){const picked=Array.from(e.target.files).map(f=>({file:f,path:f.name}));e.target.value='';handleSelection(picked,false)}};
+  E.onchange=async e=>{if(e.target.files&&e.target.files[0]){const picked=Array.from(e.target.files).map(f=>({file:f,path:f.name}));e.target.value='';safeSelect(picked,false)}};
   $('pickFolderBtn').onclick=()=>$('folderInput').click();
   $('openFolderBtn2').onclick=()=>$('folderInput').click();
-  $('folderInput').onchange=e=>{if(e.target.files&&e.target.files.length){const picked=Array.from(e.target.files).map(f=>({file:f,path:f.webkitRelativePath||f.name}));e.target.value='';handleSelection(picked,true)}};
+  $('folderInput').onchange=e=>{if(e.target.files&&e.target.files.length){const picked=Array.from(e.target.files).map(f=>({file:f,path:f.webkitRelativePath||f.name}));e.target.value='';safeSelect(picked,true)}};
   $('openAnotherBtn').onclick=()=>$('fileInput').click();
   /* drag & drop works anywhere on the page, before and after an image is loaded */
   {let depth=0;const hasFiles=e=>e.dataTransfer&&Array.from(e.dataTransfer.types||[]).includes('Files');
@@ -3973,7 +4308,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
         if(/^Signature/i.test(row('Assessment')))add('warn','protection','Signature typical of copy protection or a non-standard format');
         if(row('Note'))add('warn','flux-note',row('Note'));
       }
-      if(!d.valid&&!d.foreign&&!d.fsType)add('warn','nofs','No recognised filesystem (raw, blank or unsupported image)');
+      if(!d.valid&&!d.foreign&&!d.fsType&&!(fluxInfo&&fluxInfo.blank))add('warn','nofs','No recognised filesystem (raw, blank or unsupported image)');
       if(/not recogni[sz]ed|invalid|not decoded/i.test(d.formatLabel||''))add('warn','fs-note','Filesystem: '+d.formatLabel);
       for(const b of (d.boot||[])){
         if(b&&b[1]==='Parser note'){const t=String(b[2]||'');if(/broken|invalid|not a valid|ended early|corrupt/i.test(t))add('warn','fs-note',t.slice(0,220))}
@@ -4179,6 +4514,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
   function exGeo(){
     const d=disk||{};
     if(fluxInfo){
+      if(fluxInfo.blank)return {err:'this disk is unformatted, so there is no sector layout to write'};
       if(fluxInfo.fmt&&fluxInfo.fmt!=='ibm')return {err:'this disk uses a non-IBM track format ('+fluxInfo.fmt+'), which IMD/HFE as written here cannot describe'};
       if(fluxInfo.geo)return Object.assign({src:'decoded flux'},fluxInfo.geo);
       return {err:'the decoded sectors have an irregular layout with no cylinder/head/sector geometry'};
@@ -4432,7 +4768,8 @@ return {detect,convert,parseKFSet,version:'1.1'};
       const srcExt=(it.ext||'').toLowerCase();
       let geo=null,geoChecked=false;
       const getGeo=()=>{if(!geoChecked){geo=exGeo();geoChecked=true;if(!geo.err)rec.geometry=geo.cyls+' cyl × '+geo.heads+' head × '+geo.spt+' sec × '+geo.size+' B'}return geo};
-      if(want.img){
+      if(fluxInfo&&fluxInfo.blank)rec.notes.push('unformatted disk: no sector data, nothing exported');
+      if(want.img&&!(fluxInfo&&fluxInfo.blank)){
         let ext='img';
         if(fluxInfo){const m=/\.([A-Za-z0-9]+)$/.exec(dn);if(m)ext=m[1].toLowerCase()}
         else if(!(retroInfo&&retroInfo.container)&&RAW_EXT.has(srcExt))ext=srcExt;
@@ -4849,7 +5186,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
     if(ab.byteLength<512)throw Error('Image is smaller than one sector.');
     fluxInfo=null;
     {let f=null;try{f=FluxDisk.convert(ab,name,extra)}catch(err){throw Error('Flux decoding failed: '+err.message)}
-     if(f){if(f.error)throw Error(f.error);ab=f.ab;fluxInfo={layout:f.layout||null,geo:f.geo,fmt:f.fmt,report:f.report||[],container:f.container,bad:new Set(f.badLbas||[]),size:f.size||512,summary:(f.report||[]).filter(r=>r[1]==='Sector recovery').map(r=>r[2])[0]||''};
+     if(f){if(f.error)throw Error(f.error);ab=f.ab;fluxInfo={blank:!!f.blank,layout:f.layout||null,geo:f.geo,fmt:f.fmt,report:f.report||[],container:f.container,bad:new Set(f.badLbas||[]),size:f.size||512,summary:(f.report||[]).filter(r=>r[1]==='Sector recovery').map(r=>r[2])[0]||''};
        const base=f.kind==='KF'?'KryoFlux disk':name.replace(/\.[^.\/]*$/,'');name=base+'.'+String(f.name||'disk.img').split('.').pop()}}
     currentName=name;retroInfo={container:'',hint:{},note:''};
     try{const u=RetroDisk.unwrap(ab,name);if(u&&u.ab){ab=u.ab;retroInfo={container:u.container||'',hint:u.hint||{},note:u.note||''}}}catch(err){retroInfo.note='Container not unwrapped: '+err.message}
@@ -5464,7 +5801,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     if(q.short)return ['rec-short','data cut short: only about '+q.keptBytes+' of '+q.size+' bytes are recorded, then gap filler'+(q.dOk?'':' (checksum does not verify)')];
     if(!q.dOk)return q.weak?['rec-weak','weak / unstable data: checksum error and the bytes change between revolutions']:['rec-bad','data checksum error (identical on every revolution: likely deliberate)'];
     if(q.deleted)return ['rec-del','deleted-data address mark'];
-    return ['rec-ok','data OK',true];
+    return ['rec-ok',q.viaAlt?'data OK (checksum verified by another revolution or an alternate clock-recovery pass)':'data OK',true];
   }
   function recSectorStats(q,lbaI,size,levels){
     if(q.off===undefined)return levels.get(lbaI)||{isF6:false,isBadContent:false,percent:0,nonzero:0,byteCount:size};
@@ -6842,6 +7179,8 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
     const f=fluxInfo&&fluxInfo.geo;
     if(!d||!f||!(f.heads>0)||!(f.spt>0)||!(d.bps>0)||!(d.total>0))return null;
     const per=f.heads*f.spt;
+    if(fluxInfo.blank)return {cylinders:Math.max(1,Math.ceil(d.total/per)),heads:f.heads,spt:f.spt,contGeo:true,badge:'UNFORMATTED',label:String(fluxInfo.container||'Flux image').split(' → ')[0]+' · unformatted disk, nothing to decode',
+      note:'Every track holds only unrecorded noise, so no sectors could be decoded. The cylinders and sides come from the flux file; the sector grid is an empty placeholder because the real layout is unknown.'};
     return {cylinders:Math.max(1,Math.ceil(d.total/per)),heads:f.heads,spt:f.spt,contGeo:true,badge:'DECODED TRACKS',label:(fluxInfo.container||'Decoded disk')+' · no filesystem recognised',
       note:'Track layout comes from the '+String(fluxInfo.container||'container').split(' → ')[0]+' decode, not from a filesystem. Select a sector segment to inspect its LBA.'}
   }
@@ -6974,6 +7313,7 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
 
   $('exportBtn').onclick=()=>window.print();
   window.addEventListener('error',e=>{setStatus('Parser issue: '+e.message,true)});
+  window.addEventListener('unhandledrejection',e=>{const r=e.reason;setStatus('Error: '+(r&&r.message||r),true)});
 })();
 </script>
 <script>
