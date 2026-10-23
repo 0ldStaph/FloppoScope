@@ -41,7 +41,6 @@ Or download `index.html` and open it in any modern browser. No server, install o
   <img src="assets/disk_image_found_issues.png" alt="Found issues">
 </p>
 
-* **VZ200/VZ300 disks.** Reads VTech Laser 200/210/310 and Dick Smith VZ200/VZ300 DOS disk images (.dsk, .dvz), checks every sector checksum, and can write them back out as VZ DSK files. See [VZ200/VZ300 disk images](#vz200vz300-disk-images) below.
 * **Unmapped and deleted data.** Finds non-blank sectors that no live file or folder owns, separates deleted-file remnants from other unmapped data, and lets you step through them and export them.
 
 
