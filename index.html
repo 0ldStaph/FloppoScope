@@ -294,6 +294,9 @@ body.dragging::after{content:"Drop disk image to open it";position:fixed;inset:1
 .exp-body{padding:12px 16px;overflow:auto;display:flex;flex-direction:column;gap:10px}
 .exp-group{border:1px solid var(--artifact-border-light);border-radius:8px;margin:0;padding:8px 12px;display:flex;flex-direction:column;gap:6px}.exp-group legend{font-size:12px;font-weight:600;padding:0 6px;color:var(--artifact-text-secondary)}
 .exp-group label{display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.35;cursor:pointer}.exp-group input{accent-color:var(--artifact-primary-brand);flex:none}
+.exp-group label{align-items:flex-start}.exp-group label input{margin-top:2px}.exp-t{min-width:0;flex:1 1 auto}
+.exp-fmt label{display:grid;grid-template-columns:16px minmax(0,1fr);column-gap:8px;align-items:start}.exp-fmt label input{margin:2px 0 0}
+.exp-fmt .exp-t{display:block}.exp-fmt .exp-t .muted{display:block;font-size:12px;line-height:1.35;margin-top:1px}
 .exp-group code{font-size:12px}
 .exp-note{font-size:12px;color:var(--artifact-text-secondary);margin:0;line-height:1.45}
 .exp-prog{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--artifact-text-secondary)}.exp-prog.hidden{display:none}.exp-prog progress{flex:0 0 220px;height:8px;accent-color:var(--artifact-primary-brand)}
@@ -468,7 +471,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
   <main>
     <section class="hero" data-glean-id="hero">
       <div><div class="eyebrow">RAW DISK IMAGE / FLOPPY EXPLORER</div><h1>See what’s on the disk.</h1><p>Open a floppy image to inspect its boot record, allocation table, directory and raw sectors — visually, without mounting it.</p></div>
-      <div class="actions"><button class="btn primary" id="pickBtn" type="button">Open disk image</button><button class="btn" id="pickFolderBtn" type="button">Open folder</button><input id="folderInput" class="hidden" type="file" webkitdirectory directory multiple><input id="fileInput" class="hidden" type="file" accept=".img,.ima,.dsk,.bin,.d64,.d71,.d81,.adf,.atr,.xfd,.st,.msa,.po,.do,.2mg,.2img,.hdv,.trd,.ssd,.dsd,.msx,.mdi,.woz,.nib,.g64,.dms,.ipf,.hfe,.scp,.raw,.imd,.td0,.fdi,.mzf,.mzt,application/octet-stream" multiple></div>
+      <div class="actions"><button class="btn primary" id="pickBtn" type="button">Open diskimage</button><button class="btn" id="pickFolderBtn" type="button">Open folder</button><input id="folderInput" class="hidden" type="file" webkitdirectory directory multiple><input id="fileInput" class="hidden" type="file" accept=".img,.ima,.dsk,.bin,.d64,.d71,.d81,.adf,.atr,.xfd,.st,.msa,.po,.do,.2mg,.2img,.hdv,.trd,.ssd,.dsd,.msx,.mdi,.woz,.nib,.g64,.dms,.ipf,.hfe,.scp,.raw,.imd,.td0,.fdi,.mzf,.mzt,.dvz,application/octet-stream" multiple></div>
     </section>
     <div class="loadbox" id="dropzone" data-glean-id="load-source">
       <div class="dz-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></div>
@@ -482,7 +485,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
             <div><dt>Apple</dt><dd>Macintosh MFS/HFS, Apple II DOS 3.3 / ProDOS, Apple Lisa PREBOOT</dd></div>
             <div><dt>Unix</dt><dd>SunOS Bar/Tar, NeXT UFS1, SCO UNIX System V (S5)</dd></div>
             <div><dt>Commodore, Atari, Amiga, Acorn</dt><dd>D64/D71/D81, Atari 8-bit DOS 2, Amiga OFS/FFS, BBC DFS</dd></div>
-        <div><dt>DEC, Sharp &amp; Amstrad</dt><dd>DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80 (320 KB and 400 KB variants), Sharp MZF/MZT tape files, Amstrad CPC / Extended CPC DSK</dd></div>
+        <div><dt>DEC, Sharp, Amstrad &amp; VTech</dt><dd>DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80 (320 KB and 400 KB variants), Sharp MZF/MZT tape files, Amstrad CPC / Extended CPC DSK, VTech Laser 200/210/310 &amp; Dick Smith VZ200/VZ300 DOS (<code>.dsk</code> / <code>.dvz</code> emulator images)</dd></div>
             <div><dt>Flux &amp; bitstream</dt><dd>SCP, KryoFlux .raw, HFE, WOZ, NIB, G64, IMD — including Macintosh 400K/800K GCR — decoded to sectors with a copy-protection and read-error scan (time-reversed flux from flipped disks, e.g. Apple II side B via <code>gw read --reverse</code>, is detected automatically)</dd></div>
           </dl>
         </details>
@@ -497,6 +500,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
         <div class="fc-path" id="fcPath"></div>
         <div class="fc-sub" id="fcSub"></div>
         <div class="fc-notes" id="fcNotes"></div>
+        <div class="fc-vzstd hidden" id="fcVzStd" style="margin-top:8px"><button class="btn sm" id="vzStdBtn" type="button" title="Download this VZ disk as a corrected VZ DSK image (40 tracks × 2,480 B, 99,185 B), rebuilt from the decoded sectors">Export as corrected VZ DSK (99,185 B)</button> <button class="btn sm" id="vzOldBtn" type="button" title="Download in the early/legacy 98,560-byte layout (2,464 B per track)">Early 98,560 B</button> <span class="quiet" id="vzStdNote"></span></div>
         <div class="fc-analysis hidden" id="fcAnalysis" aria-live="polite"></div>
       </div>
       <div class="fc-actions interactive-only"><button class="btn primary" id="openAnotherBtn" type="button">Open another image</button><button class="btn" id="openFolderBtn2" type="button">Open folder</button></div>
@@ -734,7 +738,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
       </div>
 
     </div>
-    <div class="footer" data-glean-id="footer">FloppoScope parses raw sector images in your browser. It does not modify the image. FAT (including Atari ST and MSX-DOS disks), SunOS Bar/Tar archives, NeXT UFS1, SCO UNIX System V (S5), classic Macintosh MFS/HFS, Apple Lisa PREBOOT boot-file volumes, Commodore CBM DOS, Atari DOS 2, AmigaDOS, Apple DOS 3.3/ProDOS, TR-DOS, Acorn DFS, DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80 and Sharp MZF/MZT tape files are inspected read-only. MSA, ATR, XFD and 2IMG wrappers are unwrapped automatically. SCP, KryoFlux, HFE, WOZ (5.25-inch), NIB, G64 and IMD images are decoded to sectors when a supported sector format is found; IPF, DMS, TD0 and FDI are recognised but not decoded. Amstrad CPC / Extended CPC DSK containers are unwrapped to a flat sector image first (as used for Sharp MZ disks). Macintosh 400K/800K GCR track zones and 1.44MB HD MFM geometry are shown when a supported volume is detected.</div>
+    <div class="footer" data-glean-id="footer">FloppoScope parses raw sector images in your browser. It does not modify the image. FAT (including Atari ST and MSX-DOS disks), SunOS Bar/Tar archives, NeXT UFS1, SCO UNIX System V (S5), classic Macintosh MFS/HFS, Apple Lisa PREBOOT boot-file volumes, Commodore CBM DOS, Atari DOS 2, AmigaDOS, Apple DOS 3.3/ProDOS, TR-DOS, Acorn DFS, DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80, Sharp MZF/MZT tape files and VTech Laser/VZ200 DOS are inspected read-only. MSA, ATR, XFD and 2IMG wrappers are unwrapped automatically. SCP, KryoFlux, HFE, WOZ (5.25-inch), NIB, G64 and IMD images are decoded to sectors when a supported sector format is found; IPF, DMS, TD0 and FDI are recognised but not decoded. Amstrad CPC / Extended CPC DSK containers are unwrapped to a flat sector image first (as used for Sharp MZ disks). VZ200 .dsk / .dvz disk-drive images (98,560 to 99,185 bytes, early and corrected layouts) are rebuilt into a flat 40 × 16 × 128-byte image by their sector sync marks, and text-mode damage (CR LF expansion, or every 0x0D byte deleted) is repaired where the checksums allow; sectors whose lost 0x0D bytes cannot be placed are flagged. Macintosh 400K/800K GCR track zones and 1.44MB HD MFM geometry are shown when a supported volume is detected.</div>
   </main>
 </div>
 <div class="rep-overlay hidden" id="repOverlay" role="dialog" aria-modal="true" aria-label="Analysis report">
@@ -755,23 +759,25 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
     <div class="rep-bar"><strong id="expTitle">Bulk export</strong><button class="btn sm" id="expClose" type="button" aria-label="Close export dialog">Close</button></div>
     <div class="exp-body">
       <fieldset class="exp-group" id="expScopeBox"><legend>Images to export</legend>
-        <label><input type="radio" name="expScope" id="expScSel"> Selected images <span class="muted" id="expNSel"></span></label>
-        <label><input type="radio" name="expScope" id="expScShown"> All images currently shown (after filtering) <span class="muted" id="expNShown"></span></label>
-        <label><input type="radio" name="expScope" id="expScAll" checked> All images in the folder <span class="muted" id="expNAll"></span></label>
+        <label><input type="radio" name="expScope" id="expScSel"><span class="exp-t">Selected images <span class="muted" id="expNSel"></span></span></label>
+        <label><input type="radio" name="expScope" id="expScShown"><span class="exp-t">All images currently shown (after filtering) <span class="muted" id="expNShown"></span></span></label>
+        <label><input type="radio" name="expScope" id="expScAll" checked><span class="exp-t">All images in the folder <span class="muted" id="expNAll"></span></span></label>
       </fieldset>
-      <fieldset class="exp-group"><legend>Convert to</legend>
-        <label><input type="checkbox" id="expImg" checked> <b>IMG</b> — raw sector image <span class="muted">(keeps .adf / .d64 / .dsk for non-PC disks)</span></label>
-        <label><input type="checkbox" id="expImd"> <b>IMD</b> — ImageDisk <span class="muted">(PC MFM disks; bad sectors flagged)</span></label>
-        <label><input type="checkbox" id="expHfe"> <b>HFE</b> — HxC Floppy Emulator <span class="muted">(PC MFM DD/HD disks)</span></label>
-        <label><input type="checkbox" id="expDsk"> <b>DSK</b> — Extended CPC DSK <span class="muted">(keeps sector IDs, order and sizes; bad sectors flagged in ST1/ST2)</span></label>
-        <label><input type="checkbox" id="expFiles"> <b>Files</b> — extract every file into a folder per disk</label>
+      <fieldset class="exp-group exp-fmt"><legend>Convert to</legend>
+        <label><input type="checkbox" id="expImg" checked><span class="exp-t"><b>IMG</b> — raw sector image <span class="muted">(keeps .adf / .d64 / .dsk for non-PC disks)</span></span></label>
+        <label><input type="checkbox" id="expImd"><span class="exp-t"><b>IMD</b> — ImageDisk <span class="muted">(PC MFM disks; bad sectors flagged)</span></span></label>
+        <label><input type="checkbox" id="expHfe"><span class="exp-t"><b>HFE</b> — HxC Floppy Emulator <span class="muted">(PC MFM DD/HD disks)</span></span></label>
+        <label><input type="checkbox" id="expDsk"><span class="exp-t"><b>DSK</b> — Extended CPC DSK <span class="muted">(keeps sector IDs, order and sizes; bad sectors flagged in ST1/ST2)</span></span></label>
+        <label><input type="checkbox" id="expVzd"><span class="exp-t"><b>VZ DSK</b> — corrected VZ DOS image, 99,185 bytes <span class="muted">(VZ200/VZ300 disks only; 2,480-byte tracks, rebuilt as a freshly formatted disk)</span></span></label>
+        <label><input type="checkbox" id="expVzdOld"><span class="exp-t"><b>VZ DSK (early)</b> — 98,560-byte VZ DOS image <span class="muted">(early/legacy layout, 2,464-byte tracks; only for tools that still need it)</span></span></label>
+        <label><input type="checkbox" id="expFiles"><span class="exp-t"><b>Files</b> — extract every file into a folder per disk</span></label>
       </fieldset>
       <fieldset class="exp-group"><legend>Output</legend>
-        <label><input type="radio" name="expOut" id="expOutZip" checked> ZIP download <span class="muted">(split into ~512 MiB parts when large)</span></label>
-        <label><input type="radio" name="expOut" id="expOutDir"> Save straight into a folder on this computer<span class="muted" id="expDirNote"></span></label>
-        <label><input type="checkbox" id="expManifest" checked> Include a manifest (<code>manifest.csv</code> + <code>manifest.json</code>)</label>
-        <label><input type="checkbox" id="expHash" checked> Add SHA-256 checksums to the manifest</label>
-        <label><input type="checkbox" id="expKeep" checked> Keep the source sub-folder structure</label>
+        <label><input type="radio" name="expOut" id="expOutZip" checked><span class="exp-t">ZIP download <span class="muted">(split into ~512 MiB parts when large)</span></span></label>
+        <label><input type="radio" name="expOut" id="expOutDir"><span class="exp-t">Save straight into a folder on this computer<span class="muted" id="expDirNote"></span></span></label>
+        <label><input type="checkbox" id="expManifest" checked><span class="exp-t">Include a manifest (<code>manifest.csv</code> + <code>manifest.json</code>)</span></label>
+        <label><input type="checkbox" id="expHash" checked><span class="exp-t">Add SHA-256 checksums to the manifest</span></label>
+        <label><input type="checkbox" id="expKeep" checked><span class="exp-t">Keep the source sub-folder structure</span></label>
       </fieldset>
       <p class="exp-note">IMD and HFE files are rebuilt from the <em>decoded sectors</em> with standard MFM timing — they are not raw flux captures, so copy-protection timing is not preserved. Bad or missing sectors are flagged (IMD error records / HFE data CRC errors). Sources that are already IMD, HFE or Extended CPC DSK are copied unchanged. DSK output keeps each track's sector IDs, physical order and sizes (decoded flux and CPC DSK sources); for other images it is built from the C/H/S geometry. A CPC DSK source keeps its per-track layout in IMD/HFE too (e.g. a 16 × 256 B boot track next to 8 × 512 B tracks). Disks that are not PC-style MFM (Amiga, Apple, C64, Mac…) are skipped for IMD/HFE and listed in the manifest.</p>
       <div class="exp-prog hidden" id="expProg"><progress id="expBar" max="1" value="0"></progress><span id="expProgText"></span></div>
@@ -962,6 +968,307 @@ function previewText(file,data){
   return null;
 }
 
+/* ---------- VTech Laser 200/210/310 · Dick Smith VZ200/VZ300 disk-drive images (.dsk / .dvz) ---------- */
+/* The emulator image is the bit stream the DD20 controller reads, one byte-aligned track after another (40 tracks):
+   per sector  80 80 80 80 80 00 | FE E7 18 C3 | track sector (track+sector, 8 bit) | 80 80 80 80 80 80 00 | C3 18 E7 FE | 128 data bytes | 16-bit byte sum (LE).
+   One track is 16 such 154-byte sectors written with a 3:1 interleave (physical order 0,11,6,1,12,7,2,13,8,3,14,9,4,15,10,5).
+   Early images (98,560 B) put the tracks back to back; corrected images (99,184 / 99,185 B) add a 16-byte gap after every track but the last.
+   The sectors are located by their sync marks, not by file offset, so both layouts (and slightly different sizes) open the same way.
+   Some copies went through a text-mode transfer that turned every 0x0A into 0x0D 0x0A (e.g. 98,627 B CHIP8.DVZ): sectors whose checksums fail are retried with those CRs removed. */
+function vzScanStream(b){
+  const n=b.length,secs=new Map();let marks=0,badId=0,orphan=0,dup=0;
+  for(let p=0;p+7<n;p++){
+    if(b[p]!==0xfe||b[p+1]!==0xe7||b[p+2]!==0x18||b[p+3]!==0xc3)continue;
+    marks++;
+    const t=b[p+4],s=b[p+5];
+    if(t>79||s>15||((t+s)&255)!==b[p+6]){badId++;continue}
+    let q=-1;
+    for(let k=p+7;k<=p+27&&k+3<n;k++)if(b[k]===0xc3&&b[k+1]===0x18&&b[k+2]===0xe7&&b[k+3]===0xfe){q=k;break}
+    if(q<0||q+134>n){orphan++;continue}
+    let sum=0;for(let i=q+4;i<q+132;i++)sum+=b[i];
+    const dOk=(sum&0xffff)===(b[q+132]|(b[q+133]<<8));
+    const key=t*16+s,old=secs.get(key),rec={t,s,off:p,data:b.slice(q+4,q+132),dOk};
+    if(old){dup++;if(!old.dOk&&dOk)secs.set(key,rec)}else secs.set(key,rec);
+    p=q+133;
+  }
+  return {secs,marks,badId,orphan,dup};
+}
+/* Lossy transfers can also delete every 0x0D byte (not just add them). The sync marks and the two checksums still tell what was lost:
+   - an ID field "track sector track+sector" shrinks by the number of 0x0D bytes among its three values; the (track, sector) pair is the one whose
+     0x0D-stripped form matches, and neighbouring sectors settle the rare ties (track 0 sector 13 / track 13 sector 0);
+   - a data field (128 bytes + 16-bit sum) shrinks by k bytes; k is the one for which the stored sum equals the sum of the surviving bytes + 13 per lost byte.
+   Lost bytes in the link, the directory entries and the sector-map-free payload are put back where they must have been; for the rest of a payload the
+   count is known but not the position, so those sectors are flagged as lossy (bytes after the first lost CR are shifted). */
+function vzStripCr(a){const o=[];for(const x of a)if(x!==13)o.push(x);return o}
+function vzDataField(b,r,n){
+  for(let k=0;k<=64;k++){
+    const L=130-k;if(r+L>n)break;
+    if(k){let cr=false;for(let i=0;i<L;i++)if(b[r+i]===13){cr=true;break}if(cr)continue}
+    for(let c=0;c<=Math.min(k,2);c++){
+      const m=k-c,dl=128-m;
+      let sum=13*m;for(let i=0;i<dl;i++)sum+=b[r+i];sum&=0xffff;
+      let ok;
+      if(c===0)ok=(b[r+dl]|(b[r+dl+1]<<8))===sum;
+      else if(c===1)ok=sum===(b[r+dl]|(13<<8))||sum===(13|(b[r+dl]<<8));
+      else ok=sum===0x0d0d;
+      if(ok)return {k,m,dl};
+    }
+  }
+  return null;
+}
+function vzTrailerOptions(obs,k){
+  /* all ways to put k CRs back into a 6-byte directory trailer (track, sector, start LE, end LE) */
+  const out=new Map();
+  const rec=(i,j,cur,left)=>{
+    if(cur.length===6){if(!left&&j===obs.length)out.set(cur.join(','),cur.slice());return}
+    if(left)rec(i+1,j,cur.concat(13),left-1);
+    if(j<obs.length)rec(i+1,j+1,cur.concat(obs[j]),left);
+  };
+  rec(0,0,[],k);
+  return [...out.values()];
+}
+function vzTrailerScore(t,cyl){
+  const tr=t[0],sc=t[1],st=t[2]|(t[3]<<8),en=t[4]|(t[5]<<8);
+  let v=-(tr*16+sc)/100000;   /* tie-break: files are allocated from the lowest free sector, so a smaller T/S wins (T3 S13 over T13 S3) */
+  if(tr>=1&&tr<cyl&&sc<16)v+=4;else if(tr===0&&sc===0&&!st&&!en)v+=4;
+  if((st>>8)>=0x78)v+=2;
+  if((st&255)===0||st===0x7ae9)v+=0.5;   /* page-aligned or the standard BASIC start */
+  if((en>>8)>=0x78)v+=2;
+  if(en>=st)v+=1;
+  return v;
+}
+function vzRebuildDir(obs,m,cyl){
+  const want=128-m,printable=c=>c>=32&&c<127;
+  let best=null;
+  const dfs=(i,pos,acc,score)=>{
+    if(i===8){if(pos===want&&(!best||score>best.score))best={score,bytes:acc.slice()};return}
+    if(pos>=want)return;
+    let z=pos+16<=want;if(z)for(let k=0;k<16;k++)if(obs[pos+k]){z=false;break}
+    if(z){dfs(i+1,pos+16,acc.concat(new Array(16).fill(0)),score);}
+    if(pos+10>want||obs[pos+1]!==0x3a||!(obs[pos]===1||printable(obs[pos])))return;
+    let nameOk=true;for(let k=2;k<10;k++)if(!printable(obs[pos+k])){nameOk=false;break}
+    if(!nameOk)return;
+    const head=Array.from(obs.subarray(pos,pos+10));
+    for(let k=0;k<=6&&k<=m;k++){
+      const tl=6-k;if(pos+10+tl>want)break;
+      const tail=Array.from(obs.subarray(pos+10,pos+10+tl));
+      if(tail.indexOf(13)>=0)continue;
+      for(const full of vzTrailerOptions(tail,k)){
+        dfs(i+1,pos+10+tl,acc.concat(head,full),score+vzTrailerScore(full,cyl)-k*0.01);
+      }
+    }
+  };
+  dfs(0,0,[],0);
+  if(!best)return null;
+  return Uint8Array.from(best.bytes);
+}
+function vzRebuildSector(obs,m,t,s,cyl){
+  const out=new Uint8Array(128);
+  if(!m){out.set(obs);return {data:out,lost:0}}
+  if(t===0&&s<15){const d=vzRebuildDir(obs,m,cyl);if(d)return {data:d,lost:0}}
+  const lba=t*16+s,x=obs.length,cands=[];
+  const add=(nt,ns,j)=>{
+    const end=nt===0&&ns===0,tgt=nt*16+ns;
+    const okr=end?j===0:(nt>=1&&nt<cyl&&ns<16&&tgt!==lba);
+    if(okr)cands.push({nt,ns,j,end,delta:tgt-lba});
+  };
+  add(obs[x-2],obs[x-1],0);
+  if(m>=1){add(obs[x-1],13,1);add(13,obs[x-1],1)}
+  if(m>=2)add(13,13,2);
+  /* prefer: link read as-is and plausible, then a link that gets its 0x0D back and points shortly forward (files are allocated roughly in order), then any plausible as-is link */
+  let pick=cands.find(c=>c.j===0&&(c.end||(c.delta>=1&&c.delta<=64)));
+  if(!pick)pick=cands.filter(c=>c.j>0&&c.delta>=1&&c.delta<=64).sort((a,b)=>a.delta-b.delta||a.j-b.j)[0];
+  if(!pick)pick=cands.find(c=>c.j===0);
+  const j=pick?pick.j:0,pl=x-(j===0?2:j===1?1:0);
+  out.set(obs.subarray(0,pl),0);
+  const lost=m-j;
+  for(let i=pl;i<126;i++)out[i]=13;   /* position unknown: the lost CRs are parked at the end of the payload */
+  if(pick){out[126]=pick.nt;out[127]=pick.ns}else{out[126]=obs[x-2];out[127]=obs[x-1]}
+  return {data:out,lost};
+}
+function vzScanLossy(b,cyl){
+  const n=b.length,ids=[],dms=[];
+  for(let p=0;p+3<n;p++){
+    if(b[p]===0xfe&&b[p+1]===0xe7&&b[p+2]===0x18&&b[p+3]===0xc3)ids.push(p);
+    else if(b[p]===0xc3&&b[p+1]===0x18&&b[p+2]===0xe7&&b[p+3]===0xfe)dms.push(p);
+  }
+  const rows=[];let orphan=0,badId=0,di=0;
+  for(let i=0;i<ids.length;i++){
+    const p=ids[i],lim=i+1<ids.length?ids[i+1]:n;
+    let j=p+4;while(j<p+7&&j<n&&b[j]!==0x80)j++;
+    const obs=Array.from(b.subarray(p+4,j));
+    while(di<dms.length&&dms[di]<j)di++;
+    const q=di<dms.length&&dms[di]-j<=12&&dms[di]<lim?dms[di]:-1;
+    if(q<0){orphan++;continue}
+    const cands=[];
+    for(let t=0;t<80;t++)for(let s=0;s<16;s++){
+      const full=[t,s,(t+s)&255];
+      if(obs.length===3){if(full[0]===obs[0]&&full[1]===obs[1]&&full[2]===obs[2])cands.push([t,s])}
+      else if(obs.indexOf(13)<0){const st=vzStripCr(full);if(st.length===obs.length&&st.every((v,k)=>v===obs[k]))cands.push([t,s])}
+    }
+    if(!cands.length){badId++;continue}
+    rows.push({p,q,cands,pick:cands.length===1?cands[0]:null});
+  }
+  /* settle ties from the neighbours: learn the usual sector step inside a track, then prefer the candidate that continues the pattern */
+  const stepCount=new Map();
+  for(let i=1;i<rows.length;i++){const a=rows[i-1].pick,c=rows[i].pick;if(a&&c&&a[0]===c[0]){const d=(c[1]-a[1]+16)&15;stepCount.set(d,(stepCount.get(d)||0)+1)}}
+  let step=-1,bc=0;for(const [d,v] of stepCount)if(v>bc){bc=v;step=d}
+  for(let i=0;i<rows.length;i++){
+    const r=rows[i];if(r.pick)continue;
+    const pv=i>0?rows[i-1].pick:null,nx=i+1<rows.length?rows[i+1].pick:null;
+    let bestS=-1;
+    for(const c of r.cands){
+      let sc=0;
+      if(pv){if(c[0]===pv[0]||c[0]===pv[0]+1)sc++;if(step>=0&&c[0]===pv[0]&&c[1]===((pv[1]+step)&15))sc+=2}
+      if(nx){if(c[0]===nx[0]||c[0]===nx[0]-1)sc++;if(step>=0&&c[0]===nx[0]&&c[1]===((nx[1]-step+16)&15))sc+=2}
+      if(sc>bestS){bestS=sc;r.pick=c}
+    }
+  }
+  const secs=new Map();let dup=0,rebuilt=0,lostSecs=0;
+  for(const r of rows){
+    const [t,s]=r.pick,f=vzDataField(b,r.q+4,n);
+    if(!f){orphan++;continue}
+    const obs=b.subarray(r.q+4,r.q+4+f.dl);
+    const rb=vzRebuildSector(obs,f.m,t,s,cyl);
+    const key=t*16+s;
+    if(secs.has(key)){dup++;continue}
+    secs.set(key,{t,s,off:r.p,data:rb.data,dOk:true,crLost:rb.lost,crFixed:f.m-rb.lost});
+    if(f.m)rebuilt++;
+    if(rb.lost)lostSecs++;
+  }
+  return {secs,marks:ids.length,badId,orphan,dup,rebuilt,lostSecs};
+}
+function vzUnwrap(b){
+  if(b.length<50000||b.length>262144)return null;
+  const raw=vzScanStream(b);
+  if(raw.secs.size<32)return null;
+  const secs=new Map(raw.secs);
+  let nGood=0;for(const r of secs.values())if(r.dOk)nGood++;
+  if(nGood<32)return null;
+  /* text-mode transfer damage: retry failing sectors with every CR LF collapsed to LF */
+  let repaired=0,removed=0,fxSecs=null;
+  if(secs.size<640||nGood<secs.size||raw.badId){
+    let hasCrlf=false;for(let i=0;i+1<b.length;i++)if(b[i]===13&&b[i+1]===10){hasCrlf=true;break}
+    if(hasCrlf){
+      const f=new Uint8Array(b.length);let o=0;
+      for(let i=0;i<b.length;i++){if(b[i]===13&&b[i+1]===10)continue;f[o++]=b[i]}
+      const fx=vzScanStream(f.subarray(0,o));
+      for(const [k,r] of fx.secs){
+        const cur=secs.get(k);
+        if(!cur){secs.set(k,r);if(r.dOk)repaired++}
+        else if(!cur.dOk&&r.dOk){secs.set(k,r);repaired++}
+      }
+      if(repaired){removed=b.length-o;fxSecs=fx.secs}
+    }
+  }
+  /* deleted-CR damage: re-read the sectors that are still missing or failing, tolerating 0x0D bytes removed from the ID and data fields */
+  let lossyN=0,lossyFixed=0,lossyLost=0;const lostMap=new Map();
+  {
+    let nOk=0;for(const r of secs.values())if(r.dOk)nOk++;
+    if(secs.size<640||nOk<secs.size||raw.badId){
+      let mx=39;for(const r of secs.values())if(r.t>mx)mx=r.t;
+      const ls=vzScanLossy(b,Math.max(40,mx+1));
+      for(const [k,r] of ls.secs){
+        const cur=secs.get(k);
+        if(cur&&cur.dOk)continue;
+        secs.set(k,r);if(fxSecs)fxSecs.set(k,r);
+        lossyN++;lossyFixed+=r.crFixed;lossyLost+=r.crLost;
+        if(r.crLost)lostMap.set(k,r.crLost);
+      }
+    }
+  }
+  /* the oldest emulator images lost the header of track 0 sector 0: its 128 data bytes then start at file offset 0 */
+  let headerless=false;
+  if(!secs.has(0)){
+    let maxT0=39;for(const r of secs.values())if(r.t>maxT0)maxT0=r.t;
+    let first=1e9;for(const r of secs.values())if(r.off<first)first=r.off;
+    if(first>=140&&b.length>=130&&b[1]===0x3a){
+      let sum=0;for(let i=0;i<128;i++)sum+=b[i];
+      const okH=(sum&0xffff)===(b[128]|(b[129]<<8));
+      const rec={t:0,s:0,off:0,data:b.slice(0,128),dOk:okH,headerless:true};
+      if(!okH){
+        const f=vzDataField(b,0,b.length);
+        if(f){const rb=vzRebuildSector(b.subarray(0,f.dl),f.m,0,0,Math.max(40,maxT0+1));rec.data=rb.data;rec.dOk=true;rec.crLost=rb.lost;rec.crFixed=f.m-rb.lost;lossyN++;lossyFixed+=rec.crFixed;lossyLost+=rec.crLost;if(rb.lost)lostMap.set(0,rb.lost)}
+      }
+      secs.set(0,rec);headerless=true;
+    }
+  }
+  let maxT=0;for(const r of secs.values())if(r.t>maxT)maxT=r.t;
+  const cyl=Math.max(40,maxT+1),total=cyl*16,flat=new Uint8Array(total*128);
+  const missing=[],bad=[];
+  for(let k=0;k<total;k++){
+    const r=secs.get(k);
+    if(!r){missing.push(k);continue}
+    flat.set(r.data,k*128);
+    if(!r.dOk)bad.push(k);
+  }
+  /* track pitch (file offset of consecutive tracks) tells the early and the corrected layout apart; sector order in a track gives the interleave */
+  const first=new Array(cyl).fill(-1),byTrack=new Map();
+  for(const r of (fxSecs||secs).values()){
+    if(r.headerless)continue;
+    if(first[r.t]<0||r.off<first[r.t])first[r.t]=r.off;
+    if(!byTrack.has(r.t))byTrack.set(r.t,[]);
+    byTrack.get(r.t).push(r);
+  }
+  const deltas=[];for(let t=0;t+1<cyl;t++)if(first[t]>=0&&first[t+1]>=0)deltas.push(first[t+1]-first[t]);
+  deltas.sort((x,y)=>x-y);
+  const pitch=deltas.length?deltas[deltas.length>>1]:0;
+  const layout=pitch===2464?'early layout · 2,464 B per track, no inter-track gap':pitch===2480?'corrected layout · 2,480 B per track (16-byte inter-track gap)':pitch?'track pitch '+pitch+' B':'track pitch unknown';
+  const ilCount=new Map();let order=null;
+  for(const [t,list] of byTrack){
+    if(list.length!==16)continue;
+    list.sort((x,y)=>x.off-y.off);
+    const seq=list.map(r=>r.s),i0=seq.indexOf(0),i1=seq.indexOf(1);
+    if(i0<0||i1<0)continue;
+    const il=(i1-i0+16)%16;
+    ilCount.set(il,(ilCount.get(il)||0)+1);
+    if(!order)order=seq;
+  }
+  let interleave=0,best=0;for(const [k,v] of ilCount)if(v>best){best=v;interleave=k}
+  nGood=0;for(const r of secs.values())if(r.dOk)nGood++;
+  const info={len:b.length,cyl,total,found:secs.size,good:nGood,lossyN,lossyFixed,lossyLost,lostMap,missing,bad,headerless,repaired,removed,orphan:raw.orphan,badId:raw.badId,dup:raw.dup,pitch,layout,order,interleave};
+  return {ab:flat.buffer,container:'VZ DOS image',hint:{vzDisk:true,vzInfo:info},
+    note:'Laser/VZ200 disk-drive image ('+fmtN(b.length)+' B, '+layout+') rebuilt as a flat '+cyl+' × 16 × 128 B sector image in track/sector order'+
+      (repaired?'; '+repaired+' sector(s) recovered by removing CRs added by a text-mode transfer':'')+
+      (lossyN?'; '+lossyN+' sector(s) recovered from a copy with deleted 0x0D bytes':'')+
+      (missing.length?'; '+missing.length+' sector(s) not found in the file, zero-filled':'')+
+      (bad.length?'; '+bad.length+' sector(s) with a data checksum mismatch':'')+'.'};
+}
+
+/* VZ DOS disk images. Logical sector = 24-byte header + 128 raw bytes (126 data + 2 link) + 16-bit LE sum of those 128 bytes.
+   Sectors are written in the physical order 0,11,6,1,12,7,2,13,8,3,14,9,4,15,10,5. flat = cyl*16*128 B in track/sector order.
+   - Corrected format (99,185 B): 2,480-byte tracks. One leading 0x80, then per sector 5x80 00 FE E7 18 C3 T S T+S 6x80 00 C3 18 E7 FE + 128 + sum(2), then zero pad; the last track ends after its final checksum.
+     Reproduces the pristine XB2_SRC_1/2 images byte for byte. Gap lengths in real images vary with write history (a rewritten sector uses 6/5 instead of 5/6), which sector data cannot recover, so this is the clean freshly-formatted layout.
+   - Early/legacy format (98,560 B, as written by vz2vzd.c): 2,464-byte tracks, 6x80 ... 5x80, no pad, no leading byte. */
+const VZ_STD_ORDER=[0,11,6,1,12,7,2,13,8,3,14,9,4,15,10,5];
+function vzBuildDsk(flat,cyl,corrected){
+  const lead=corrected?1:0,g1=corrected?5:6,g2=corrected?6:5,pitch=corrected?2480:2464;
+  const out=new Uint8Array(cyl*pitch);let end=0;
+  for(let t=0;t<cyl;t++){
+    let o=t*pitch;for(let i=0;i<lead;i++)out[o++]=0x80;
+    for(const s of VZ_STD_ORDER){
+      for(let i=0;i<g1;i++)out[o++]=0x80;
+      out[o++]=0x00;out[o++]=0xFE;out[o++]=0xE7;out[o++]=0x18;out[o++]=0xC3;
+      out[o++]=t&255;out[o++]=s;out[o++]=(t+s)&255;
+      for(let i=0;i<g2;i++)out[o++]=0x80;
+      out[o++]=0x00;out[o++]=0xC3;out[o++]=0x18;out[o++]=0xE7;out[o++]=0xFE;
+      const b=(t*16+s)*128;let sum=0;
+      for(let i=0;i<128;i++){const v=flat[b+i]||0;out[o++]=v;sum+=v}
+      out[o++]=sum&255;out[o++]=(sum>>8)&255;
+    }
+    end=o;
+  }
+  return corrected?out.subarray(0,end):out;
+}
+function vzBuildStdDsk(flat,cyl){return vzBuildDsk(flat,cyl,false)}
+function vzStdDskFor(flat,info,corrected){
+  const cyl=info&&info.cyl||Math.floor(flat.length/2048);
+  if(cyl<1||cyl>80)throw Error('unexpected track count ('+cyl+')');
+  const data=vzBuildDsk(flat,cyl,!!corrected);
+  const nz=info&&info.missing?info.missing.length:0,nb=info&&info.bad?info.bad.length:0;
+  return {data,cyl,note:(corrected?'corrected VZ DSK layout, '+cyl+' tracks × 2,480 B (16 × 154 B sectors + pad)':'early/legacy VZ DSK layout, '+cyl+' tracks × 2,464 B (16 × 154 B sectors, no pad)')+' = '+data.length.toLocaleString('en-US')+' B, 3:1 interleave order'+(nz?'; '+nz+' sector(s) missing from the source were written as zero-filled':'')+(nb?'; '+nb+' sector(s) had a checksum mismatch in the source and were written with a freshly computed checksum':'')};
+}
+
 /* ---------- container unwrapping (2IMG, ATR, XFD, MSA) ---------- */
 function unwrap(ab,name){
   const b=new Uint8Array(ab),ext=extOf(name);
@@ -993,7 +1300,7 @@ function unwrap(ab,name){
     const out=new Uint8Array(720*256);
     for(let i=0;i<3;i++)out.set(b.subarray(i*128,i*128+128),i*256);
     out.set(b.subarray(384),768);
-    return {ab:out.buffer,container:'XFD',hint:{atari8:true,bps:256},note:'Atari XFD double-density dump normalised to 256-byte sectors'};
+    return {ab:out.buffer,container:'XFD',hint:{atari8:true,bps:256},note:'Atari XFD double-density dump normalisedto 256-byte sectors'};
   }
   if(b.length>=10&&b[0]===0x0e&&b[1]===0x0f){
     const spt=be16(b,2),sides=be16(b,4)+1,st=be16(b,6),en=be16(b,8);
@@ -1021,6 +1328,8 @@ function unwrap(ab,name){
       return {ab:out.buffer,container:'MSA',hint:{atariSt:true},note:'Atari ST Magic Shadow Archiver (MSA) decompressed: '+spt+' sectors/track, '+sides+' side(s), tracks '+st+'–'+en};
     }
   }
+
+  {const vz=vzUnwrap(b);if(vz)return vz}
 
   /* Amstrad CPC / Spectrum +3 DSK, standard ("MV - CPC") and "EXTENDED CPC DSK": rebuilt as a flat sector image.
      Tracks are kept in file order (cylinder-major, sides interleaved), sectors inside a track are placed in sector-ID (R) order,
@@ -2272,6 +2581,211 @@ function sniffUnsupported(bytes,name){
   return null;
 }
 
+/* ---------- VTech Laser 200/210/310 · Dick Smith VZ200/VZ300 DOS (DD20 disk drive, 5.25" single side) ---------- */
+/* Logical layout (sector numbers 0-15, track numbers 0-39, 128-byte sectors; LBA = track*16 + sector):
+   - Track 0 sectors 0-14: directory, 8 x 16-byte entries per sector (120 files): type char (T = BASIC, B = machine code, D = data; 0x00 = free slot,
+     0x01 = deleted), ':', 8-char name, first track, first sector, start address (LE), end address (LE). File length = end - start.
+   - Track 0 sector 15: sector map, 2 bytes per track (bit 0 = sector 0 of that track).
+   - File sectors carry 126 data bytes plus a 2-byte link (next track, next sector); a link of 0,0 ends the chain.
+   Besides containers unwrapped by vzUnwrap(), a flat 81,920-byte dump is accepted when its directory and file chains validate. */
+function decodeVzDos(bytes,hint){
+  const SS=128,SPT=16,PAY=126;
+  const info=hint&&hint.vzDisk&&hint.vzInfo?hint.vzInfo:null;
+  if(!info&&bytes.length!==40*SPT*SS)return null;
+  if(bytes.length%(SPT*SS))return null;
+  const total=bytes.length/SS,cyl=total/SPT;
+  const missing=new Set(info?info.missing:[]),badCk=new Set(info?info.bad:[]);
+  const lostMap=info&&info.lostMap?info.lostMap:new Map();
+  const printable=c=>c>=32&&c<127;
+  const slots=[],banner=[],shifted=[];let junk=0,dirMissing=0,spacers=0;
+  for(let sN=0;sN<15;sN++){
+    if(missing.has(sN)){dirMissing++;continue}
+    /* some images carry directory sectors whose entries do not start at byte 0 (e.g. 11 zero bytes first, then 7 entries): use the offset that yields the most "type:" entries */
+    const okAt=(off,i)=>{const q=sN*SS+off+i*16;return bytes[q+1]===0x3a&&(bytes[q]===1||printable(bytes[q]))&&printable(bytes[q+2])};
+    let shift=0,bestN=0,n0=0;
+    for(let off=0;off<16;off++){let c=0;for(let i=0;off+i*16+16<=SS;i++)if(okAt(off,i))c++;if(!off)n0=c;if(c>bestN){bestN=c;shift=off}}
+    if(shift&&bestN<=n0)shift=0;
+    if(shift)shifted.push([sN,shift]);
+    for(let i=0;shift+i*16+16<=SS;i++){
+      const o=sN*SS+shift+i*16,e=bytes.subarray(o,o+16);
+      let any=false;for(let k=0;k<16;k++)if(e[k]){any=true;break}
+      if(!any)continue;
+      if(e[1]!==0x3a||!(e[0]===1||printable(e[0]))){
+        /* not a normal "type:" entry: it may still be a title banner, a blank spacer or a file with an unusual separator byte */
+        let tail0=true;for(let k=10;k<16;k++)if(e[k]){tail0=false;break}
+        const bt=Array.from(e.subarray(0,10),c=>{const v=c&0x7f;return v===0x60||v===0x20?' ':(v>0x20&&v<0x60?String.fromCharCode(v):'')});
+        if(tail0&&e[0]>=0x80&&bt.join('').trim()&&Array.from(e.subarray(0,10)).every(c=>(c&0x7f)===0x60||(c&0x7f)===0x20||((c&0x7f)>0x20&&(c&0x7f)<0x60))){banner.push(bt.join('').trim());continue}
+        if(tail0&&Array.from(e.subarray(0,10)).every(c=>c===0x20)){spacers++;continue}
+        const trk=e[10],sec=e[11],stA=le16(e,12);
+        if(printable(e[0])&&printable(e[1])&&e[1]!==0x3a&&Array.from(e.subarray(2,10)).every(printable)&&trk>=1&&trk<cyl&&sec<SPT&&(stA>>8)>=0x70&&le16(e,14)>=stA){slots.push({sN,i,e,odd:String.fromCharCode(e[1])});continue}
+        junk++;continue}
+      slots.push({sN,i,e});
+    }
+  }
+  const follow=(t,s,need)=>{
+    const list=[],seen=new Set();let state='end';
+    for(let guard=0;guard<=total;guard++){
+      if(need&&list.length>=need){state='full';break}
+      if(!list.length&&t===0&&s===0){state='nostart';break}
+      const lba=t*SPT+s;
+      if(t<1||t>=cyl||s>=SPT){state='invalid';break}
+      if(seen.has(lba)){state='loop';break}
+      if(missing.has(lba)){state='unreadable';break}
+      seen.add(lba);list.push(lba);
+      const nt=bytes[lba*SS+PAY],ns=bytes[lba*SS+PAY+1];
+      if(nt===0&&ns===0){state='end';break}
+      t=nt;s=ns;
+    }
+    return {list,state};
+  };
+  const items=slots.map(sl=>{
+    const e=sl.e,del=e[0]===1;
+    const nm=trimR(Array.from(e.subarray(2,10),c=>printable(c)?String.fromCharCode(c):'?').join(''));
+    const tr=e[10],sc=e[11],start=le16(e,12),end=le16(e,14);
+    const len=end>start?end-start:0,need=len?Math.ceil(len/PAY):0;
+    return {e,del,nm,tr,sc,start,end,len,need,odd:sl.odd,ch:follow(tr,sc,need),tc:del?'':String.fromCharCode(e[0])};
+  });
+  /* Some images hold sectors whose payload is an exact copy of another sector in the same track (the real contents are not in the image), which also
+     carries that sector's link bytes along. Following the links then loops or stops early. If a file is stored contiguously from its start sector and every
+     sector whose link disagrees with that layout is such a copy, the file is read in directory order instead and the copies are reported as damaged. */
+  const dupOf=lba=>{
+    if(lba<0||lba>=total||missing.has(lba))return -1;
+    const o=lba*SS;let blank=true;for(let k=0;k<PAY;k++)if(bytes[o+k]){blank=false;break}
+    if(blank)return -1;
+    const t0=lba-(lba%SPT);
+    for(let l=t0;l<t0+SPT;l++){
+      if(l===lba||missing.has(l))continue;
+      let same=true;for(let k=0;k<SS;k++)if(bytes[l*SS+k]!==bytes[o+k]){same=false;break}
+      if(same)return l;
+    }
+    return -1;
+  };
+  const contiguous=(lba0,need)=>{
+    if(!need||lba0<SPT||lba0+need>total)return null;
+    const list=[],bad=new Map();
+    for(let k=0;k<need;k++){
+      const l=lba0+k;if(missing.has(l))return null;
+      list.push(l);
+      const nt=bytes[l*SS+PAY],ns=bytes[l*SS+PAY+1];
+      const ok=k<need-1?(nt*SPT+ns===l+1):(nt===0&&ns===0);
+      if(!ok){const d=dupOf(l);if(d<0)return null;bad.set(l,d)}
+    }
+    return {list,bad};
+  };
+  for(const it of items){
+    if(it.del||!it.need)continue;
+    if(it.ch.list.length<it.need){
+      const c=contiguous(it.tr*SPT+it.sc,it.need);
+      if(c){it.ch={list:c.list,state:'repaired'};it.dmg=c.bad}
+    }else if(it.ch.state==='full'){
+      /* the walk stopped because the length was reached; a last sector with a stray link that is a copy of another sector is damaged too */
+      const l=it.ch.list[it.ch.list.length-1];
+      if(bytes[l*SS+PAY]||bytes[l*SS+PAY+1]){const d=dupOf(l);if(d>=0)it.dmg=new Map([[l,d]])}
+    }
+  }
+  if(!info){
+    /* a bare flat dump has no container to vouch for it: require a directory whose live entries mostly follow clean chains */
+    const live=items.filter(x=>!x.del);
+    const good=live.filter(x=>x.need&&x.ch.list.length===x.need&&(x.ch.state==='full'||x.ch.state==='end')).length;
+    if(!live.length||good===0||good*2<live.length||junk>live.length)return null;
+  }
+  const owned=new Set();
+  for(const it of items)if(!it.del)for(const l of it.ch.list)owned.add(l);
+  const typeName={0x54:'BASIC program',0x42:'Machine code',0x44:'Data file'};
+  const extFor={0x54:'.bas',0x42:'.bin',0x44:'.dat'};
+  const entries=[],fi=[];
+  const tsTxt=l=>'T'+(l>>4)+' S'+(l&15);
+  for(const it of items){
+    const list=it.ch.list,cap=list.length*PAY;
+    const size=it.len?Math.min(it.len,cap):cap;
+    const nm=segName(it.nm||'(unnamed)');
+    const notes=[];
+    const st=it.ch.state;
+    if(st==='nostart')notes.push('The directory entry has no starting sector.');
+    else if(st==='invalid')notes.push('A sector link points outside the disk (after '+list.length+' sector'+(list.length===1?'':'s')+').');
+    else if(st==='loop')notes.push('The sector chain loops back on itself.');
+    else if(st==='unreadable')notes.push('The chain reaches a sector that is missing from the image.');
+    else if(st==='repaired')notes.push('The sector links loop or stop early, so the file was read in directory order (its sectors run one after another from the start sector).');
+    else if(it.need&&list.length<it.need)notes.push('The chain ends after '+list.length+' of '+it.need+' sectors; the data is truncated.');
+    const dmgL=it.dmg?[...it.dmg.keys()]:[];
+    const dmgTxt=dmgL.length?dmgL.length+' of '+list.length+' sector'+(list.length===1?'':'s')+' ('+dmgL.slice(0,6).map(tsTxt).join(', ')+(dmgL.length>6?' …':'')+') '+(dmgL.length===1?'is an exact copy of another sector':'are exact copies of other sectors')+' in the same track, so '+(dmgL.length===1?'its':'their')+' real contents are not in the image':'';
+    if(dmgTxt)notes.push(dmgTxt+'.');
+    if(it.odd)notes.push('The directory entry uses “'+it.odd+'” instead of “:” after the type character (the stock DOS directory listing would skip it); its chain was followed anyway.');
+    if(!it.len&&list.length)notes.push('Start/end addresses give no length, so the whole chain is shown, including unused bytes at the end of the last sector.');
+    if(list.some(l=>badCk.has(l)))notes.push('At least one sector fails its data checksum.');
+    const lostN=list.filter(l=>lostMap.has(l)).length;
+    if(lostN)notes.push(lostN+' sector'+(lostN===1?'':'s')+' of this file lost 0x0D byte(s) in transfer; their positions cannot be recovered, so data after the first lost byte in '+(lostN===1?'that sector is':'those sectors is')+' shifted.');
+    if(!it.del&&dmgTxt)fi.push(nm+': '+(st==='repaired'?'read in directory order because the sector links loop or stop early; ':'')+dmgTxt+' (directory length '+fmtN(it.len)+' B)');
+    else if(!it.del&&it.need&&(list.length<it.need||st==='nostart'||st==='invalid'||st==='loop'||st==='unreadable'))fi.push(nm+': '+(notes[0]||'chain is incomplete')+' (directory length '+fmtN(it.len)+' B, readable '+fmtN(cap)+' B)');
+    else if(!it.del&&list.some(l=>badCk.has(l)))fi.push(nm+': a sector of this file fails its data checksum');
+    else if(!it.del&&list.some(l=>lostMap.has(l)))fi.push(nm+': '+list.filter(l=>lostMap.has(l)).length+' sector(s) lost 0x0D byte(s) in transfer at positions that cannot be recovered; file content is shifted after them');
+    const tc=it.tc,cc=tc?tc.charCodeAt(0):0;
+    const hasAddr=it.start||it.end;
+    const kind=it.del?'Deleted entry · type character lost':(typeName[cc]||'Type “'+tc+'”')+(hasAddr?' · $'+H4(it.start)+'–$'+H4(it.end):'');
+    if(!it.del&&cc===0x54&&!notes.length)notes.push('Tokenised VZ BASIC program image as held in memory from $'+H4(it.start)+'.');
+    const segs=[];list.forEach((l,i)=>{const n=Math.min(PAY,size-i*PAY);if(n>0)segs.push({off:l*SS,len:n})});
+    const ent={name:nm,path:nm,size,directory:false,cluster:list.length?list[0]:0,chain:list,kind,
+      reader:segReader(bytes,segs,size),exportName:nm+(extFor[cc]||'.bin'),note:notes.join(' ')};
+    if(it.del){
+      ent.deleted=true;
+      const need2=Math.max(it.need,list.length);
+      const free=list.filter(l=>!owned.has(l)).length;
+      ent.recover=recoverInfo(list.length?need2:0,free,size||(list.length?1:0));
+      if(!list.length)ent.recover=recoverInfo(0,0,1);
+    }
+    entries.push(ent);
+  }
+  /* sector map */
+  /* 2 bytes per track, bit n = sector n. In nearly all images the first pair describes track 1 (track 0 is the fixed directory/map track and is not listed);
+     a few images (e.g. musicbox.dsk) use the first pair for track 0 instead, so both conventions are tried and the one that fits the file chains better wins. */
+  const mapBitAt=(base,t,s)=>{const i=t-base;return (i>=0&&i<63)?((bytes[15*SS+i*2+(s>>3)]>>(s&7))&1):0};
+  let mapTxt,mapUsed=0,unflagged=0,mapBase=1;
+  if(missing.has(15))mapTxt='sector is not readable in the image';
+  else if(lostMap.has(15))mapTxt='sector lost 0x0D byte(s) in transfer; the map cannot be checked';
+  else{
+    const miss=base=>{let n=0;for(const l of owned)if(!mapBitAt(base,l>>4,l&15))n++;return n};
+    const m1=miss(1),m0=miss(0);
+    mapBase=m0<m1?0:1;unflagged=mapBase?m1:m0;
+    for(let t=0;t<Math.min(cyl,63);t++)for(let s=0;s<SPT;s++)if(mapBitAt(mapBase,t,s))mapUsed++;
+    mapTxt=(mapUsed?fmtN(mapUsed)+' sectors marked used'+(mapBase?' (map starts at track 1)':' (map starts at track 0)'):'no sectors marked used')+(unflagged?' · '+fmtN(unflagged)+' sector'+(unflagged===1?'':'s')+' of live files not marked':'');
+    if(unflagged)fi.push('Sector map (track 0, sector 15) does not mark '+fmtN(unflagged)+' sector'+(unflagged===1?'':'s')+' that live files use'+(mapUsed?'':' (the map is blank)')+' · the files themselves read normally, but the DOS would treat those sectors as free and could overwrite them');
+  }
+  if(dirMissing)fi.push('Directory: '+dirMissing+' of 15 directory sectors are missing from the image, so some files cannot be listed');
+  if(junk)fi.push('Directory: '+junk+' non-empty slot'+(junk===1?' was':'s were')+' skipped (no valid “type:” prefix and not a title banner or recognisable file entry)');
+  const nLive=entries.filter(x=>!x.deleted).length,nDel=entries.length-nLive;
+  const usedSecs=owned.size;
+  const reserved=16;
+  const badN=[...missing].filter(l=>l>=reserved).length;
+  const freeN=Math.max(0,total-reserved-usedSecs-badN);
+  const geo=makeGeo({order:uniformOrder(cyl,1,SPT,false),label:'VZ DOS · '+cyl+' tracks × 16 sectors × 128 B',badge:'VTECH LASER / VZ200 DOS',hub:'TRACK / SECTOR',
+    facts:[['Format','VTech Laser 200/210/310 · VZ200/VZ300 DOS (DD20)'],['Tracks',String(cyl)],['Sides','1 (a second side is a separate 40-track image)'],['Sectors per track','16 × 128 B'],['Interleave',info&&info.interleave?info.interleave+':1':'—'],['Files',nLive+(nDel?' + '+nDel+' deleted':'')]],
+    note:'One side of a VZ DOS disk is 40 tracks of 16 sectors × 128 bytes, written with a 3:1 interleave. The view shows logical track/sector order; sector numbers start at 0.',
+    locFmt:p=>'Track '+p.cylinder+' · Sector '+(p.sector-1)});
+  const regions=regionsFrom(total,[{name:'Directory (T0 S0–14)',kind:'root',lbas:new Set(Array.from({length:15},(_,i)=>i))},{name:'Sector map (T0 S15)',kind:'fat',lbas:new Set([15])}],'File data');
+  const rows=[
+    ['T0 S0–14','Directory',fmtN(entries.length)+' entr'+(entries.length===1?'y':'ies')+' ('+nLive+' live, '+nDel+' deleted) · 8 entries per sector, up to 120'],
+    ['T0 S15','Sector map',mapTxt],
+    ...(shifted.length?[['T0 S'+shifted.map(x=>x[0]).join(', S'),'Directory alignment','Entries in sector'+(shifted.length===1?'':'s')+' '+shifted.map(x=>x[0]+' (starting at byte '+x[1]+')').join(', ')+' are not 16-byte aligned; they were read at that offset']]:[]),
+    ...(banner.length?[['T0 S0–14','Directory banner','Non-file title lines in inverse video: '+banner.map(x=>'“'+x+'”').join(' · ')]]:[]),
+    ['—','Geometry',cyl+' tracks × 1 side × 16 sectors × 128 B ('+fmtN(total*SS)+' B; 126 data bytes + 2-byte link per file sector)'],
+    ['—','Interleave',info&&info.order?(info.interleave+':1 · physical sector order '+info.order.join(','))+(info.interleave===3?' (default)':''):'not stored in a flat dump']
+  ];
+  if(info){
+    rows.push(['—','Image file',fmtN(info.len)+' B · '+info.layout]);
+    rows.push(['—','Sectors found',fmtN(info.found)+' of '+fmtN(info.total)+(info.headerless?' · track 0 sector 0 has no header (data taken from the start of the file)':'')+(info.bad.length?' · '+info.bad.length+' with a checksum mismatch':'')]);
+    if(info.missing.length)rows.push(['—','Missing sectors',info.missing.length+': '+info.missing.slice(0,12).map(tsTxt).join(', ')+(info.missing.length>12?' …':'')]);
+    if(info.repaired)rows.push(['—','Text-mode damage','Every 0x0A had been expanded to 0x0D 0x0A; '+info.repaired+' sector(s) were recovered by removing '+fmtN(info.removed)+' CR byte(s)']);
+    if(info.lossyN)rows.push(['—','Deleted-CR damage','Every 0x0D byte had been removed from the file; '+info.lossyN+' sector(s) re-read tolerantly, '+info.lossyFixed+' CR byte(s) put back with certainty, '+info.lossyLost+' lost at unknown positions in '+lostMap.size+' sector(s)']);
+    if(info.orphan||info.dup)rows.push(['—','Stray marks',(info.orphan?info.orphan+' sector header(s) without data':'')+(info.orphan&&info.dup?' · ':'')+(info.dup?info.dup+' repeated sector(s) (first good copy kept)':'')]);
+  }
+  return baseDisk({fsType:'VZ_DOS',formatLabel:'VTech Laser / VZ200 DOS · '+cyl+'T SS · read-only',name:'VZ DOS disk',volLabel:'',bps:SS,total,actualSectors:total,usable:total,spt:SPT,heads:1,geo,regions,
+    boot:rows,
+    bootFacts:[['Filesystem','VZ DOS (DD20 disk drive)'],['Directory','Track 0 · sectors 0–14'],['Sector map','Track 0 · sector 15']],bootLabel:'Track 0, sector 0 (directory start)',
+    bootNote:'VZ DOS has no boot record; track 0 sector 0 is the first directory sector (8 entries of 16 bytes).',
+    alloc:{free:freeN,used:usedSecs,reserved,bad:badN},allocNote:'Used sectors are counted from live file chains; the sector map is shown in the details. Deleted files count as free.',
+    fileEntries:entries,idLabel:'First sector (LBA)',kindLabel:'Type / addresses',lbaLabel:l=>'track '+(l>>4)+' sector '+(l&15),vzFindings:fi});
+}
+
 /* ---------- FAT platform hint (Atari ST / MSX-DOS) ---------- */
 function fatPlatform(bytes,name,info){
   const ext=extOf(name);
@@ -2608,7 +3122,7 @@ function detect(bytes,name,hint){
       regions:[{name:'Image',start:0,sectors:total,kind:'data'}],boot:[['—','Recognised format',sn.label],['—','Note',sn.msg]],
       bootFacts:[['Recognised format',sn.label],['Status','Not decoded'],['Note',sn.msg]],bootLabel:'Image start',bootNote:sn.msg});
   }
-  const tries=[()=>decodeCbm(bytes,name),()=>decodeAmiga(bytes),()=>decodeAtari8(bytes,hint),()=>decodeApple(bytes,name,hint),()=>decodeTrdos(bytes),()=>decodeDfs(bytes,name),()=>decodeSharpMz(bytes),()=>decodeSharpCpm(bytes),()=>decodeSharpCpm400(bytes,hint),()=>decodeSysV(bytes),()=>decodeOds1(bytes),()=>decodeLisaPreboot(bytes),()=>decodeMzf(bytes)];
+  const tries=[()=>decodeVzDos(bytes,hint),()=>decodeCbm(bytes,name),()=>decodeAmiga(bytes),()=>decodeAtari8(bytes,hint),()=>decodeApple(bytes,name,hint),()=>decodeTrdos(bytes),()=>decodeDfs(bytes,name),()=>decodeSharpMz(bytes),()=>decodeSharpCpm(bytes),()=>decodeSharpCpm400(bytes,hint),()=>decodeSysV(bytes),()=>decodeOds1(bytes),()=>decodeLisaPreboot(bytes),()=>decodeMzf(bytes)];
   for(const t of tries){
     let r=null;
     try{r=t()}catch(err){r=null}
@@ -2616,7 +3130,7 @@ function detect(bytes,name,hint){
   }
   return null;
 }
-return {unwrap,detect,fatPlatform,previewText,makeGeo,version:'1.0'};
+return {unwrap,detect,fatPlatform,previewText,makeGeo,vzStdDskFor,version:'1.0'};
 })();
 
 </script>
@@ -3920,7 +4434,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.4'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.6'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -3962,7 +4476,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
      if(entries.some(en=>en.isDirectory)){setStatus('Reading folder…');readDroppedEntries(entries).then(list=>handleSelection(list,true)).catch(err=>setStatus('Could not read the dropped folder: '+err.message,true))}
      else if(plain.length)handleSelection(plain.map(f=>({file:f,path:f.name})),false)})}
   /* ---------- Image library: open a folder (or several files) and pick the current image ---------- */
-  const DISK_EXTS=new Set('img ima dsk bin d64 d71 d81 adf atr xfd st msa po do 2mg 2img hdv trd ssd dsd msx mdi woz nib g64 dms ipf hfe scp raw imd td0 fdi'.split(' '));
+  const DISK_EXTS=new Set('img ima dsk bin d64 d71 d81 adf atr xfd st msa po do 2mg 2img hdv trd ssd dsd msx mdi woz nib g64 dms ipf hfe scp raw imd td0 fdi dvz'.split(' '));
   const libCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
   let library=null, libBusy=false;
   const baseName=p=>String(p||'').split('/').pop();
@@ -4294,6 +4808,13 @@ return {detect,convert,parseKFSet,version:'1.1'};
          if(ci.dup)add('warn','protection',ci.kind+': '+ci.dup+' repeated sector ID(s) within a track; only the first of each is in the flat image');
          if(ci.unformatted)add('warn','sec-missing',ci.kind+': '+ci.unformatted+' unformatted track(s) were zero-filled');
        }}
+      {const vi=retroInfo&&retroInfo.hint&&retroInfo.hint.vzInfo;
+       if(vi){
+         const tsl=l=>'T'+(l>>4)+' S'+(l&15);
+         if(vi.missing.length)add('warn','sec-missing','VZ DOS image: '+fmt(vi.missing.length)+' of '+fmt(vi.total)+' sectors are not present in the file and were zero-filled ('+vi.missing.slice(0,8).map(tsl).join(', ')+(vi.missing.length>8?' …':'')+')');
+         if(vi.bad.length)add('warn','sec-crc','VZ DOS image: '+fmt(vi.bad.length)+' sector(s) fail the data checksum ('+vi.bad.slice(0,8).map(tsl).join(', ')+(vi.bad.length>8?' …':'')+')');
+       }}
+      if(d.vzFindings)for(const m of d.vzFindings)add('warn','fs-note',m);
       if(fluxInfo){
         const row=n=>{const x=(fluxInfo.report||[]).find(q=>q&&q[1]===n);return x?String(x[2]):''};
         const num=x=>Number(String(x).replace(/,/g,''));
@@ -4755,7 +5276,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
   /* Decode one library item and build every requested output. Synchronous; module globals are saved/restored around it. */
   function exDecode(it,rb,want){
     const saved={fluxInfo,currentName,retroInfo,bytes,view,disk};
-    const rec={name:it.name,path:(it.rel?it.rel+'/':'')+it.name,type:it.kind==='kf'?'KryoFlux track set':it.ext.toUpperCase(),sourceBytes:it.size,status:'ok',outputs:[],notes:[]};
+    const rec={name:it.name,path:(it.rel?it.rel+'/':'')+it.name,type:it.kind==='kf'?'KryoFlux trackset':it.ext.toUpperCase(),sourceBytes:it.size,status:'ok',outputs:[],notes:[]};
     const outs=[];
     try{
       const dn=prepareImage(rb.ab,rb.name,rb.extra);
@@ -4804,6 +5325,22 @@ return {detect,convert,parseKFSet,version:'1.1'};
             const nbad=T.tracks.reduce((n,t)=>n+t.sectors.filter(q=>(q.st1&0x20)||(q.st2&0x20)).length,0);
             outs.push({fmt:'dsk',rel:'dsk/'+base+'.dsk',data,note:'Extended CPC DSK built from the '+T.src+' ('+T.cyls+' cyl × '+T.heads+' head)'+(nbad?'; '+nbad+' bad sector(s) flagged in ST1/ST2':'')+(T.notes.length?'; '+T.notes.join('; '):'')+(cpcSrc?'; converted from '+(cpcSrc.cpcInfo&&cpcSrc.cpcInfo.kind||'CPC DSK'):'')});
           }catch(e){outs.push({fmt:'dsk',skipped:true,reason:e.message})}
+        }
+      }
+      if(want.vzd){
+        const vi=retroInfo&&retroInfo.hint&&retroInfo.hint.vzInfo;
+        if(!vi)outs.push({fmt:'vzd',skipped:true,reason:'not a VZ DOS disk'});
+        else{
+          try{const r=RetroDisk.vzStdDskFor(img,vi,true);outs.push({fmt:'vzd',rel:'vzd/'+base+'.dsk',data:r.data,note:r.note})}
+          catch(e){outs.push({fmt:'vzd',skipped:true,reason:e.message})}
+        }
+      }
+      if(want.vzdold){
+        const vi=retroInfo&&retroInfo.hint&&retroInfo.hint.vzInfo;
+        if(!vi)outs.push({fmt:'vzdold',skipped:true,reason:'not a VZ DOS disk'});
+        else{
+          try{const r=RetroDisk.vzStdDskFor(img,vi,false);outs.push({fmt:'vzdold',rel:'vzdold/'+base+'.dsk',data:r.data,note:r.note})}
+          catch(e){outs.push({fmt:'vzdold',skipped:true,reason:e.message})}
         }
       }
       if(want.files){
@@ -4957,7 +5494,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
   $('expCancel').onclick=()=>{if(exportRunning){exportCancel=true;$('expCancel').textContent='Stopping…';$('expCancel').disabled=true}else closeExport()};
   $('expStart').onclick=async()=>{
     if(exportRunning||!library)return;
-    const want={img:$('expImg').checked,imd:$('expImd').checked,hfe:$('expHfe').checked,dsk:$('expDsk').checked,files:$('expFiles').checked};
+    const want={img:$('expImg').checked,imd:$('expImd').checked,hfe:$('expHfe').checked,dsk:$('expDsk').checked,vzd:$('expVzd').checked,vzdold:$('expVzdOld').checked,files:$('expFiles').checked};
     const res=$('expResult');
     if(!Object.values(want).some(Boolean)){res.innerHTML='<div class="exp-msg bad">Choose at least one output format.</div>';return}
     const sc=$('expScSel').checked?'selected':$('expScShown').checked?'shown':'all',idxs=library.single?[0]:expIdx(sc);
@@ -4969,7 +5506,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
       catch(e){if(e&&e.name==='AbortError')return;notes.push('Writing to a folder is not available here ('+(e&&e.message||e)+'), so a ZIP was created instead.')}
     }
     exportRunning=true;exportCancel=false;
-    const ctl=['expStart','expClose','expScSel','expScShown','expScAll','expImg','expImd','expHfe','expDsk','expFiles','expOutZip','expOutDir','expKeep','expManifest','expHash'];
+    const ctl=['expStart','expClose','expScSel','expScShown','expScAll','expImg','expImd','expHfe','expDsk','expVzd','expVzdOld','expFiles','expOutZip','expOutDir','expKeep','expManifest','expHash'];
     ctl.forEach(id=>$(id).disabled=true);$('expCancel').disabled=false;$('expCancel').textContent='Stop';
     res.innerHTML='';$('expProg').classList.remove('hidden');renderLibrary();
     let out,err=null;
@@ -5160,8 +5697,10 @@ return {detect,convert,parseKFSet,version:'1.1'};
     if(extra&&extra.length>1)chips.push([extra.length+' KryoFlux track files',false]);
     if(retroInfo.container)chips.push([retroInfo.container+' container unwrapped',false]);
     {const ci=retroInfo.hint&&retroInfo.hint.cpcInfo;if(ci){chips.push([ci.cyl+' cyl × '+ci.sides+' side'+(ci.sides===1?'':'s')+' · '+ci.summary,false]);if(ci.errSec)chips.push([ci.errSec+' sector'+(ci.errSec===1?'':'s')+' flagged (ST1/ST2)',true]);if(ci.copies)chips.push([ci.copies+' multi-copy sector'+(ci.copies===1?'':'s'),true])}}
+    {const vi=retroInfo.hint&&retroInfo.hint.vzInfo;if(vi){chips.push([vi.cyl+' tracks × 16 × 128 B'+(vi.interleave?' · '+vi.interleave+':1 interleave':''),false]);if(vi.repaired)chips.push([vi.repaired+' sector'+(vi.repaired===1?'':'s')+' recovered from CR LF damage',false]);if(vi.missing.length)chips.push([vi.missing.length+' sector'+(vi.missing.length===1?'':'s')+' missing',true]);if(vi.bad.length)chips.push([vi.bad.length+' checksum mismatch'+(vi.bad.length===1?'':'es'),true])}}
     if(fluxInfo){chips.push([fluxInfo.container||'Flux image',false]);if(fluxInfo.summary)chips.push([fluxInfo.summary,!!fluxInfo.bad.size])}
     chips.push(['Read-only analysis',false]);
+    {const vi=retroInfo.hint&&retroInfo.hint.vzInfo,bx=$('fcVzStd');if(bx){bx.classList.toggle('hidden',!vi);if(vi)$('vzStdNote').textContent=(vi.len===vi.cyl*2480-15||vi.len===vi.cyl*2480-16)?'source is already in the 2,480-byte track layout':vi.len===vi.cyl*2464?'source is the early 98,560-byte layout':'source: '+fmt(vi.len)+' B, '+(vi.pitch?vi.pitch.toLocaleString('en-US')+' B per track':'layout detected')}}
     $('fcNotes').innerHTML=chips.map(c=>'<span class="fc-chip'+(c[1]?' warn':'')+'">'+esc(c[0])+'</span>').join('');
     document.querySelector('.shell').classList.add('loaded');
     document.title=shownName+' · FloppoScope';
@@ -5447,6 +5986,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
   function decodeMacintosh(){const total=Math.floor(bytes.length/512),sig=bytes.length>=1026?macU16(1024):0;let format;if(total===800)format={label:'400K GCR',cylinders:80,heads:1,sectors:Array.from({length:80},(_,c)=>12-Math.floor(c/16))};else if(total===1600)format={label:'800K GCR',cylinders:80,heads:2,sectors:Array.from({length:80},(_,c)=>12-Math.floor(c/16))};else if(total===2880)format={label:'1.44MB HD · MFM',cylinders:80,heads:2,sectors:Array(80).fill(18)};else return null;if(sig!==0xd2d7&&sig!==0x4244)return null;const mdb=1024,fsType=sig===0xd2d7?'MAC_MFS':'MAC_HFS';try{let fs,entries,regions,boot,volName;if(fsType==='MAC_MFS'){fs={mdb,dirStart:macU16(mdb+14),dirLength:macU16(mdb+16),allocBlocks:macU16(mdb+18),allocBlockSize:macU32(mdb+20),allocStart:macU16(mdb+28),fileCount:macU16(mdb+12),freeBlocks:macU16(mdb+34)};const nameLen=Math.min(27,bytes[mdb+36]||0);volName=macTextAt(mdb+37,nameLen);if(!fs.dirLength||fs.dirLength>256||fs.dirStart+fs.dirLength>total||fs.allocBlocks>4096||fs.allocBlockSize<512||fs.allocBlockSize>131072||fs.allocBlockSize%512||fs.allocStart>=total||fs.allocStart+Math.ceil(fs.allocBlocks*fs.allocBlockSize/512)>total)throw Error('MFS volume allocation geometry is outside the image.');entries=parseMfsDirectory(fs);regions=[{name:'Boot blocks',start:0,sectors:2,kind:'boot'},{name:'MFS master directory block + allocation map',start:2,sectors:2,kind:'fat'},{name:'MFS file directory',start:fs.dirStart,sectors:fs.dirLength,kind:'root'},{name:'MFS allocation area',start:fs.allocStart,sectors:Math.min(total-fs.allocStart,Math.ceil(fs.allocBlocks*fs.allocBlockSize/512)),kind:'data'}];boot=[['0x400','MFS signature','0xD2D7'],['—','Volume name',volName||'Unnamed Macintosh volume'],['—','Directory start / length',fs.dirStart+' / '+fs.dirLength+' sectors'],['—','Allocation blocks',fmt(fs.allocBlocks)],['—','Allocation block size',fmt(fs.allocBlockSize)+' bytes'],['—','Files in directory',fmt(entries.length)],['—','Floppy geometry',format.label+' · '+format.cylinders+' tracks · '+format.heads+' head(s)']]}else{fs={mdb,allocStart:macU16(mdb+28),allocBlockSize:macU32(mdb+20),allocBlocks:macU16(mdb+18),bitmapStart:macU16(mdb+14),catalogSize:macU32(mdb+146),catalogExtents:hfsExtentRecord(mdb+150),extentsSize:macU32(mdb+130),extentsExtents:hfsExtentRecord(mdb+134),fileCount:macU16(mdb+12),folderCount:macU16(mdb+82),freeBlocks:macU16(mdb+34)};fs.allocBase=fs.allocStart*512;const nameLen=Math.min(27,bytes[mdb+36]||0);volName=macTextAt(mdb+37,nameLen);if(!fs.allocBlockSize||fs.allocBlockSize%512||fs.allocBlockSize>1048576||!fs.allocBlocks||fs.allocBlocks>65535||fs.allocBase>=bytes.length||!fs.catalogSize||fs.catalogSize>bytes.length||!fs.catalogExtents.some(e=>e.count))throw Error('HFS volume allocation or catalog metadata is outside the image.');entries=parseHfsCatalog(fs);regions=[{name:'Boot blocks',start:0,sectors:2,kind:'boot'},{name:'HFS master directory block',start:2,sectors:1,kind:'fat'},{name:'HFS volume bitmap',start:fs.bitmapStart,sectors:Math.max(1,Math.ceil(fs.allocBlocks/4096)),kind:'fat'}];for(const [label,extents,kind] of [['HFS extents-overflow tree',fs.extentsExtents,'root'],['HFS catalog tree',fs.catalogExtents,'root']])for(const e of extents)if(e.count){const start=fs.allocStart*512+e.start*fs.allocBlockSize;regions.push({name:label,start:Math.floor(start/512),sectors:Math.ceil(e.count*fs.allocBlockSize/512),kind})}regions.push({name:'HFS file data',start:0,sectors:total,kind:'data'});boot=[['0x400','HFS signature','BD'],['—','Volume name',volName||'Unnamed Macintosh volume'],['—','Allocation block size',fmt(fs.allocBlockSize)+' bytes'],['—','Allocation blocks',fmt(fs.allocBlocks)],['—','Catalog records',fmt(entries.length)],['—','Floppy geometry',format.label+' · '+format.cylinders+' tracks · '+format.heads+' head(s)']]}const d={valid:false,fsType,formatLabel:(fsType==='MAC_MFS'?'Macintosh MFS':'Macintosh HFS')+' · read-only',name:volName||'Macintosh floppy',volLabel:volName||'',bps:512,total,actualSectors:total,usable:total,spt:format.sectors[0],heads:format.heads,mac:{...format,fs},regions,boot,fileEntries:entries};return d}catch(error){return {valid:false,fsType,formatLabel:(fsType==='MAC_MFS'?'MFS':'HFS')+' · metadata error',name:'Macintosh floppy',bps:512,total,spt:format.sectors[0],heads:format.heads,mac:{...format,fs:{}},regions:[{name:'Macintosh volume',start:0,sectors:total,kind:'data'}],boot:[['0x400',fsType==='MAC_MFS'?'MFS signature':'HFS signature','validated signature found'],['—','Parser note',error.message]],fileEntries:[]}}}
 
   function decode(){
+    if(retroInfo&&retroInfo.hint&&retroInfo.hint.vzDisk){const vz=decodeRetro();if(vz)return vz}
     let sig=view.getUint16(510,true)===0xaa55, bps=u16(11), spc=bytes[13], reserved=u16(14), fats=bytes[16], roots=u16(17), total16=u16(19), media=bytes[21], spf16=u16(22), spt=u16(24), heads=u16(26), hidden=u32(28), total32=u32(32);
     
     const actualSectors = Math.floor(bytes.length / 512);
@@ -7312,6 +7852,13 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
   });
 
   $('exportBtn').onclick=()=>window.print();
+  const vzExportOne=corrected=>{
+    const vi=retroInfo&&retroInfo.hint&&retroInfo.hint.vzInfo;if(!vi||!bytes)return;
+    try{const r=RetroDisk.vzStdDskFor(bytes,vi,corrected),nm=(currentName||'disk').replace(/\.[^.\/]*$/,'')+(corrected?'_vz.dsk':'_early.dsk');downloadBlob(new Blob([r.data],{type:'application/octet-stream'}),nm);$('vzStdNote').textContent='saved '+nm+' · '+r.note}
+    catch(e){$('vzStdNote').textContent='could not export: '+e.message}
+  };
+  $('vzStdBtn').onclick=()=>vzExportOne(true);
+  $('vzOldBtn').onclick=()=>vzExportOne(false);
   window.addEventListener('error',e=>{setStatus('Parser issue: '+e.message,true)});
   window.addEventListener('unhandledrejection',e=>{const r=e.reason;setStatus('Error: '+(r&&r.message||r),true)});
 })();
