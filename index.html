@@ -60,7 +60,7 @@ button,input{font:inherit;color:inherit} button{cursor:pointer} .shell{max-width
   button{display:none!important}*,*::before,*::after{animation:none!important;transition:none!important}
 }
 
-.file-preview-panel{margin-top:14px}.preview-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.preview-title{display:flex;align-items:center;gap:10px}.preview-actions{display:flex;gap:8px;flex-wrap:wrap}.preview-meta{margin:10px 0;color:var(--artifact-text-secondary);font:12px/1.5 "SF Mono",Consolas,monospace;overflow-wrap:anywhere}.preview-stage{min-height:150px;max-height:560px;overflow:auto;border:1px solid var(--artifact-border-light);border-radius:7px;background:var(--artifact-well);display:grid;place-items:center;padding:14px}.preview-placeholder{color:var(--artifact-text-secondary);text-align:center;max-width:560px}.preview-image{display:block;max-width:100%;max-height:520px;object-fit:contain}.file-preview-text{width:100%;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--artifact-text-primary);font:12px/1.55 "SF Mono",Consolas,monospace}.preview-note{margin:9px 0 0;color:var(--artifact-text-secondary);font-size:12px}.preview-hidden{display:none!important}.file-select{width:16px;height:16px;accent-color:var(--artifact-primary-brand);cursor:pointer}.file-select:disabled{cursor:not-allowed;opacity:.45}.file-select-cell{width:34px;text-align:center}
+.file-preview-panel{margin-top:14px}.preview-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.preview-title{display:flex;align-items:center;gap:10px}.preview-actions{display:flex;gap:8px;flex-wrap:wrap}.preview-meta{margin:10px 0;color:var(--artifact-text-secondary);font:12px/1.5 "SF Mono",Consolas,monospace;overflow-wrap:anywhere}.preview-stage{min-height:150px;max-height:560px;overflow:auto;border:1px solid var(--artifact-border-light);border-radius:7px;background:var(--artifact-well);display:grid;place-items:center;padding:14px}.preview-placeholder{color:var(--artifact-text-secondary);text-align:center;max-width:560px}.preview-image{display:block;max-width:100%;max-height:520px;object-fit:contain}.file-preview-text{width:100%;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--artifact-text-primary);font:12px/1.55 "SF Mono",Consolas,monospace}.preview-note{margin:9px 0 0;color:var(--artifact-text-secondary);font-size:12px}.preview-hidden{display:none!important}.preview-pdf{display:block;width:100%;height:500px;border:0;background:#fff;border-radius:4px}.preview-archive{width:100%;align-self:start;justify-self:stretch}.arc-sum{margin:0 0 8px;color:var(--artifact-text-secondary);font-size:12px;overflow-wrap:anywhere}.arc-wrap{overflow:auto;max-height:430px}.arc-table{width:100%;border-collapse:collapse;font:12px/1.4 "SF Mono",Consolas,monospace}.arc-table th,.arc-table td{padding:4px 8px;text-align:left;border-bottom:1px solid var(--artifact-border-light);white-space:nowrap}.arc-table th{position:sticky;top:0;background:var(--artifact-well);color:var(--artifact-text-secondary);font-weight:600}.arc-table td.arc-name{white-space:normal;overflow-wrap:anywhere;min-width:160px}.arc-table td.num{text-align:right}.arc-table tr.arc-dir td.arc-name{color:var(--artifact-text-secondary)}.arc-bad{color:#b45309}.arc-act .btn{padding:2px 8px;font-size:11px;margin-right:4px}.preview-nestbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px}.file-select{width:16px;height:16px;accent-color:var(--artifact-primary-brand);cursor:pointer}.file-select:disabled{cursor:not-allowed;opacity:.45}.file-select-cell{width:34px;text-align:center}
 @media(max-width:760px){.preview-head{align-items:flex-start}.preview-stage{min-height:120px}.preview-actions{width:100%}.preview-actions .btn{flex:1}}
 
 /* Tab Navigation Styles */
@@ -471,7 +471,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
   <main>
     <section class="hero" data-glean-id="hero">
       <div><div class="eyebrow">RAW DISK IMAGE / FLOPPY EXPLORER</div><h1>See what’s on the disk.</h1><p>Open a floppy image to inspect its boot record, allocation table, directory and raw sectors — visually, without mounting it.</p></div>
-      <div class="actions"><button class="btn primary" id="pickBtn" type="button">Open diskimage</button><button class="btn" id="pickFolderBtn" type="button">Open folder</button><input id="folderInput" class="hidden" type="file" webkitdirectory directory multiple><input id="fileInput" class="hidden" type="file" accept=".img,.ima,.dsk,.bin,.d64,.d71,.d81,.adf,.atr,.xfd,.st,.msa,.po,.do,.2mg,.2img,.hdv,.trd,.ssd,.dsd,.msx,.mdi,.woz,.nib,.g64,.dms,.ipf,.hfe,.scp,.raw,.imd,.td0,.fdi,.mzf,.mzt,.dvz,application/octet-stream" multiple></div>
+      <div class="actions"><button class="btn primary" id="pickBtn" type="button">Open disk image</button><button class="btn" id="pickFolderBtn" type="button">Open folder</button><input id="folderInput" class="hidden" type="file" webkitdirectory directory multiple><input id="fileInput" class="hidden" type="file" accept=".img,.ima,.dsk,.bin,.d64,.d71,.d81,.adf,.atr,.xfd,.st,.msa,.po,.do,.2mg,.2img,.hdv,.trd,.ssd,.dsd,.msx,.mdi,.woz,.nib,.g64,.dms,.ipf,.hfe,.scp,.raw,.imd,.td0,.fdi,.mzf,.mzt,.dvz,application/octet-stream" multiple></div>
     </section>
     <div class="loadbox" id="dropzone" data-glean-id="load-source">
       <div class="dz-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></div>
@@ -511,6 +511,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
         <div class="lib-title"><strong id="libTitle">Folder</strong><span id="libMeta"></span></div>
         <div class="lib-nav interactive-only">
           <button class="btn sm primary" id="libAnalyze" type="button" title="Decode every image in the list (read-only) and check it for errors">Analyze all</button>
+          <button class="btn sm hidden" id="libAnalyzeSel" type="button" title="Re-analyze only the ticked images (read-only); the list and status update, no report opens">Analyze selected</button>
           <button class="btn sm" id="libReport" type="button" disabled title="View or download the analysis report">Report</button>
           <button class="btn sm" id="libExport" type="button" title="Convert or extract the selected (or all) images: IMG, IMD, HFE, DSK or files, as a ZIP with manifest">Export…</button>
           <button class="btn sm" id="libPrev" type="button" aria-label="Previous image">‹ Prev</button>
@@ -646,7 +647,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
       <div id="filesystem-tab" class="tab-pane">
         <section class="section" data-glean-id="files-section">
           <div class="sectionhead">
-            <div><h2>Filesystem explorer</h2><p>Navigate directories, preview contents, inspect audio/executables, or extract files.</p></div>
+            <div><h2>Filesystem explorer</h2><p>Navigate directories, preview text, images (including PCX, TGA, TIFF, IFF and icons), PDF and archives (ZIP, TAR, GZ, ARC, LZH, StuffIt), inspect audio/executables, or extract files.</p></div>
           </div>
           
           <div class="fs-layout">
@@ -699,7 +700,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
                 <button id="exportSelected" class="btn" type="button" disabled>Export checked files (.zip)</button>
               </div>
             </div>
-            <div id="previewMeta" class="preview-meta">Select a file entry to preview text, images, executable headers, or retro audio formats.</div>
+            <div id="previewMeta" class="preview-meta">Select a file entry to preview text, images, PDF, archives, executable headers, or retro audio formats.</div>
             
             <div id="previewStage" class="preview-stage">
               <div id="previewPlaceholder" class="preview-placeholder">File content is reconstructed from its FAT cluster chain in memory. The source image remains unchanged.</div>
@@ -707,6 +708,12 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
               <!-- Image Preview -->
               <img id="previewImage" class="preview-image preview-hidden" alt="Preview of the selected image file">
               
+              <!-- PDF (browser viewer) -->
+              <iframe id="previewPdf" class="preview-pdf preview-hidden" title="PDF preview"></iframe>
+
+              <!-- Archive listing -->
+              <div id="previewArchive" class="preview-archive preview-hidden"></div>
+
               <!-- Text / Hex View -->
               <pre id="previewText" class="file-preview-text preview-hidden"></pre>
 
@@ -1300,7 +1307,7 @@ function unwrap(ab,name){
     const out=new Uint8Array(720*256);
     for(let i=0;i<3;i++)out.set(b.subarray(i*128,i*128+128),i*256);
     out.set(b.subarray(384),768);
-    return {ab:out.buffer,container:'XFD',hint:{atari8:true,bps:256},note:'Atari XFD double-density dump normalisedto 256-byte sectors'};
+    return {ab:out.buffer,container:'XFD',hint:{atari8:true,bps:256},note:'Atari XFD double-density dump normalised to 256-byte sectors'};
   }
   if(b.length>=10&&b[0]===0x0e&&b[1]===0x0f){
     const spt=be16(b,2),sides=be16(b,4)+1,st=be16(b,6),en=be16(b,8);
@@ -4432,9 +4439,1600 @@ return {detect,convert,parseKFSet,version:'1.1'};
 
 </script>
 <script>
+/* ---------- PvCodec: decompressors for archive previews (bzip2, LZMA/LZMA2/XZ, compress/LZW, PKZIP shrink/reduce/implode/deflate64, LHA lh4-lh7, ARC squeeze). Pure functions. ---------- */
+const PvCodec=(function(){
+'use strict';
+/* ---- growable output with a hard limit; partial output is attached to thrown errors ---- */
+function Out(limit,hint){
+  let b=new Uint8Array(Math.min(Math.max(4096,hint||0),limit+16)),n=0;
+  const grow=need=>{if(n+need>limit)throw Object.assign(Error('output exceeds the '+Math.round(limit/1048576)+' MiB preview limit'),{partial:b.slice(0,n),limitHit:true});
+    let c=b.length;while(c<n+need)c*=2;if(c>limit+16)c=limit+16;const nb=new Uint8Array(c);nb.set(b.subarray(0,n));b=nb};
+  return {
+    put(v){if(n>=b.length)grow(1);b[n++]=v},
+    ensure(k){if(n+k>b.length)grow(k)},
+    copy(dist,len){ /* LZ77 copy, overlapping allowed */
+      if(dist<1||dist>n)throw Object.assign(Error('invalid match distance '+dist),{partial:b.slice(0,n)});
+      if(n+len>b.length)grow(len);
+      for(let i=0,s=n-dist;i<len;i++)b[n+i]=b[s+i];n+=len},
+    get n(){return n}, byteAt(i){return b[i]}, view(){return b.subarray(0,n)}, done(){return b.slice(0,n)},
+    fail(msg){throw Object.assign(Error(msg),{partial:b.slice(0,n)})}
+  };
+}
+/* ---- bit readers ---- */
+function lsbBits(src,start,end){
+  let pos=start||0,buf=0,cnt=0;const stop=end===undefined?src.length:end;
+  return {get(n){while(cnt<n){if(pos>=stop)return -1;buf|=src[pos++]<<cnt;cnt+=8}const v=buf&((1<<n)-1);buf>>>=n;cnt-=n;return v},
+    align(){buf=0;cnt=0}, get pos(){return pos}, set pos(p){pos=p;buf=0;cnt=0}};
+}
+/* canonical Huffman (deflate-style: shorter codes first, then symbol order). decode() reads one bit at a time with getBit(). */
+function canon(lengths,maxLen){
+  const count=new Uint16Array(maxLen+1),offs=new Uint16Array(maxLen+2);
+  for(const l of lengths)count[l]++;count[0]=0;
+  for(let l=1;l<=maxLen;l++)offs[l+1]=offs[l]+count[l];
+  const syms=new Uint16Array(lengths.length);
+  for(let s=0;s<lengths.length;s++)if(lengths[s])syms[offs[lengths[s]]++]=s;
+  return {count,syms,maxLen};
+}
+function canonDecode(t,getBit){
+  let code=0,first=0,index=0;
+  for(let len=1;len<=t.maxLen;len++){
+    const b=getBit();if(b<0)return -1;
+    code|=b;const c=t.count[len];
+    if(code-c<first)return t.syms[index+(code-first)];
+    index+=c;first+=c;first<<=1;code<<=1;
+  }
+  return -2;
+}
+
+/* ================= bzip2 ================= */
+const BZ_CRC=new Uint32Array(256);for(let i=0;i<256;i++){let c=i<<24;for(let k=0;k<8;k++)c=c&0x80000000?(c<<1)^0x04c11db7:c<<1;BZ_CRC[i]=c>>>0}
+function bunzip2(src,limit){
+  let pos=0,bb=0,bc=0;const out=Out(limit,src.length*4);
+  const bits=n=>{while(bc<n){if(pos>=src.length)out.fail('bzip2: unexpected end of data');bb=((bb<<8)|src[pos++])>>>0;bc+=8}bc-=n;const v=(bb>>>bc)&((1<<n)-1);bb&=(1<<bc)-1;return v};
+  const bit=()=>bits(1);
+  let streams=0;
+  for(;;){
+    if(streams&&(pos>=src.length||(bc=0,bb=0,src[pos]!==0x42)))break;
+    if(bits(8)!==0x42||bits(8)!==0x5a||bits(8)!==0x68)out.fail(streams?'bzip2: bad stream header':'bzip2: bad magic');
+    const lv=bits(8)-0x30;if(lv<1||lv>9)out.fail('bzip2: bad block size');
+    const tt=new Uint32Array(lv*100000);streams++;
+    for(;;){
+      const m1=bits(24),m2=bits(24);
+      if(m1===0x177245&&m2===0x385090){bits(16);bits(16);break}
+      if(m1!==0x314159||m2!==0x265359)out.fail('bzip2: bad block header');
+      const crcStored=((bits(16)<<16)|bits(16))>>>0;
+      if(bit())out.fail('bzip2: randomised blocks are not supported');
+      const origPtr=bits(24);
+      const used16=bits(16),seqToUnseq=[];
+      for(let i=0;i<16;i++)if(used16&(0x8000>>i)){const w=bits(16);for(let j=0;j<16;j++)if(w&(0x8000>>j))seqToUnseq.push(i*16+j)}
+      const nInUse=seqToUnseq.length;if(!nInUse)out.fail('bzip2: empty symbol map');
+      const alpha=nInUse+2,nGroups=bits(3);if(nGroups<2||nGroups>6)out.fail('bzip2: bad table count');
+      const nSel=bits(15);if(nSel<1)out.fail('bzip2: no selectors');
+      const mtfG=[];for(let i=0;i<nGroups;i++)mtfG.push(i);
+      const sel=new Uint8Array(nSel);
+      for(let i=0;i<nSel;i++){let j=0;while(bit()){j++;if(j>=nGroups)out.fail('bzip2: bad selector')}const v=mtfG[j];for(;j>0;j--)mtfG[j]=mtfG[j-1];mtfG[0]=v;sel[i]=v}
+      const tabs=[];
+      for(let t=0;t<nGroups;t++){
+        const len=new Uint8Array(alpha);let cur=bits(5);
+        for(let i=0;i<alpha;i++){for(;;){if(cur<1||cur>20)out.fail('bzip2: bad code length');if(!bit())break;cur+=bit()?-1:1}len[i]=cur}
+        tabs.push(canon(len,20));
+      }
+      /* decode MTF/RLE2 symbols */
+      const yy=new Uint8Array(nInUse);for(let i=0;i<nInUse;i++)yy[i]=i;
+      const unz=new Int32Array(256),EOB=nInUse+1,maxN=tt.length;
+      let nblock=0,gPos=0,gNo=-1,tab=null;
+      const nextSym=()=>{if(gPos===0){gNo++;if(gNo>=nSel)out.fail('bzip2: ran out of selectors');gPos=50;tab=tabs[sel[gNo]]}gPos--;const s=canonDecode(tab,bit);if(s<0)out.fail('bzip2: bad Huffman code');return s};
+      let sym=nextSym();
+      for(;;){
+        if(sym===EOB)break;
+        if(sym<=1){
+          let es=-1,N=1;
+          do{es+=(sym===0?1:2)*N;N*=2;sym=nextSym()}while(sym<=1);
+          es++;const uc=seqToUnseq[yy[0]];unz[uc]+=es;
+          if(nblock+es>maxN)out.fail('bzip2: block overflow');
+          while(es--)tt[nblock++]=uc;
+        }else{
+          if(nblock>=maxN)out.fail('bzip2: block overflow');
+          const nn=sym-1,v=yy[nn];for(let k=nn;k>0;k--)yy[k]=yy[k-1];yy[0]=v;
+          const uc=seqToUnseq[v];unz[uc]++;tt[nblock++]=uc;sym=nextSym();
+        }
+      }
+      if(origPtr>=nblock&&nblock>0)out.fail('bzip2: bad origin pointer');
+      /* inverse BWT */
+      const cf=new Int32Array(257);for(let i=0;i<256;i++)cf[i+1]=cf[i]+unz[i];
+      for(let i=0;i<nblock;i++){const uc=tt[i]&255;tt[cf[uc]++]|=(i<<8)}
+      let tPos=nblock?tt[origPtr]>>>8:0,crc=0xFFFFFFFF,run=0,prev=-1,i=0;
+      const emit=ch=>{out.put(ch);crc=((crc<<8)^BZ_CRC[(crc>>>24)^ch])>>>0};
+      while(i<nblock){
+        tPos=tt[tPos];const ch=tPos&255;tPos>>>=8;i++;
+        if(run===4){for(let k=0;k<ch;k++)emit(prev);run=0;prev=-1;continue}
+        if(ch===prev)run++;else{run=1;prev=ch}
+        emit(ch);
+      }
+      if(((~crc)>>>0)!==crcStored)out.fail('bzip2: block CRC mismatch (data damaged)');
+    }
+    bc=0;bb=0;
+  }
+  return out.done();
+}
+
+/* ================= LZMA / LZMA2 / XZ ================= */
+function LzmaState(out){
+  const S={lc:0,lp:0,pb:0,base:0,out,state:0,rep0:0,rep1:0,rep2:0,rep3:0,
+    isMatch:null,isRep:null,isRepG0:null,isRepG1:null,isRepG2:null,isRep0Long:null,posSlot:null,posSpec:null,align:null,lit:null,len:null,repLen:null,
+    src:null,pos:0,end:0,range:0,code:0};
+  const P=n=>new Uint16Array(n).fill(1024);
+  const lenInit=()=>({choice:P(2),low:P(16*8),mid:P(16*8),high:P(256)});
+  S.setProps=(lc,lp,pb)=>{S.lc=lc;S.lp=lp;S.pb=pb;S.lit=P(0x300<<(lc+lp))};
+  S.resetState=()=>{S.state=0;S.rep0=S.rep1=S.rep2=S.rep3=0;
+    S.isMatch=P(192);S.isRep=P(12);S.isRepG0=P(12);S.isRepG1=P(12);S.isRepG2=P(12);S.isRep0Long=P(192);
+    S.posSlot=P(256);S.posSpec=P(115);S.align=P(16);S.len=lenInit();S.repLen=lenInit();if(S.lit)S.lit.fill(1024)};
+  S.initRange=(src,pos,end)=>{
+    S.src=src;S.end=end;
+    if(src[pos]!==0)throw Error('LZMA: bad range coder start');
+    S.code=((src[pos+1]<<24)|(src[pos+2]<<16)|(src[pos+3]<<8)|src[pos+4])>>>0;S.range=0xFFFFFFFF;S.pos=pos+5};
+  /* decode until outTarget bytes exist in out (or end marker when outTarget<0). returns true if end marker seen */
+  S.run=(outTarget)=>{
+    const o=S.out,src=S.src;let {range,code,pos,state,rep0,rep1,rep2,rep3}=S;
+    const lc=S.lc,lpMask=(1<<S.lp)-1,pbMask=(1<<S.pb)-1;
+    const bit=(p,i)=>{
+      const pr=p[i],bound=(range>>>11)*pr;let b;
+      if(code<bound){range=bound;p[i]=pr+((2048-pr)>>5);b=0}else{range-=bound;code-=bound;p[i]=pr-(pr>>5);b=1}
+      if(range<16777216){range=(range<<8)>>>0;code=((code<<8)|(pos<S.end?src[pos]:0))>>>0;pos++}
+      return b;
+    };
+    const tree=(p,base,nb)=>{let m=1;for(let i=0;i<nb;i++)m=(m<<1)|bit(p,base+m);return m-(1<<nb)};
+    const rtree=(p,base,nb)=>{let m=1,sym=0;for(let i=0;i<nb;i++){const b=bit(p,base+m);m=(m<<1)|b;sym|=b<<i}return sym};
+    const decLen=(L,ps)=>{
+      if(!bit(L.choice,0))return tree(L.low,ps<<3,3);
+      if(!bit(L.choice,1))return 8+tree(L.mid,ps<<3,3);
+      return 16+tree(L.high,0,8);
+    };
+    let ended=false;
+    try{
+    while(outTarget<0||o.n<outTarget){
+      const rel=o.n-S.base,ps=rel&pbMask;
+      if(!bit(S.isMatch,(state<<4)+ps)){
+        const prev=rel?o.byteAt(o.n-1):0,base=0x300*(((rel&lpMask)<<lc)+(prev>>(8-lc)));
+        let sym=1;
+        if(state>=7){
+          let mb=o.byteAt(o.n-rep0-1);
+          do{const mbit=(mb>>7)&1;mb<<=1;const b=bit(S.lit,base+((1+mbit)<<8)+sym);sym=(sym<<1)|b;if(mbit!==b)break}while(sym<0x100);
+        }
+        while(sym<0x100)sym=(sym<<1)|bit(S.lit,base+sym);
+        o.put(sym&255);state=state<4?0:state<10?state-3:state-6;
+        continue;
+      }
+      let len;
+      if(bit(S.isRep,state)){
+        if(!rel)throw Error('LZMA: repeat match at start of data');
+        if(!bit(S.isRepG0,state)){
+          if(!bit(S.isRep0Long,(state<<4)+ps)){state=state<7?9:11;o.put(o.byteAt(o.n-rep0-1));continue}
+        }else{
+          let d;
+          if(!bit(S.isRepG1,state))d=rep1;else{if(!bit(S.isRepG2,state))d=rep2;else{d=rep3;rep3=rep2}rep2=rep1}
+          rep1=rep0;rep0=d;
+        }
+        len=decLen(S.repLen,ps);state=state<7?8:11;
+      }else{
+        rep3=rep2;rep2=rep1;rep1=rep0;
+        len=decLen(S.len,ps);state=state<7?7:10;
+        const lenState=len<4?len:3,slot=tree(S.posSlot,lenState<<6,6);
+        if(slot<4)rep0=slot;
+        else{
+          const nd=(slot>>1)-1;let dist=((2|(slot&1))<<nd)>>>0;
+          if(slot<14)dist+=rtree(S.posSpec,dist-slot-1,nd);
+          else{
+            let direct=0;
+            for(let i=0;i<nd-4;i++){range>>>=1;let b=0;if(code>=range){code-=range;b=1}direct=((direct<<1)|b)>>>0;if(range<16777216){range=(range<<8)>>>0;code=((code<<8)|(pos<S.end?src[pos]:0))>>>0;pos++}}
+            dist=(dist+(direct<<4))>>>0;dist=(dist+rtree(S.align,0,4))>>>0;
+          }
+          rep0=dist;
+          if(rep0===0xFFFFFFFF){ended=true;break}
+        }
+      }
+      len+=2;
+      if(rep0>=rel)throw Error('LZMA: invalid match distance');
+      if(outTarget>=0&&o.n+len>outTarget)len=outTarget-o.n; /* clamp at declared size */
+      o.copy(rep0+1,len);
+    }
+    }finally{S.range=range;S.code=code;S.pos=pos;S.state=state;S.rep0=rep0;S.rep1=rep1;S.rep2=rep2;S.rep3=rep3}
+    return ended;
+  };
+  return S;
+}
+const lzmaProps=b=>{if(b>=225)throw Error('LZMA: bad properties byte');const lc=b%9;b=(b-lc)/9;return [lc,b%5,(b-b%5)/5]};
+/* raw LZMA stream with 5-byte props at src[pos..pos+5) (ZIP method 14 / .lzma: pass props separately) */
+function lzmaDecode(src,pos,end,props,outSize,limit){
+  const out=Out(limit,outSize>0?outSize:src.length*3),S=LzmaState(out);
+  const [lc,lp,pb]=lzmaProps(props);S.base=0;S.setProps(lc,lp,pb);S.resetState();S.initRange(src,pos,end);
+  try{S.run(outSize>=0?outSize:-1)}catch(e){if(!e.partial)e.partial=out.done();throw e}
+  return out.done();
+}
+function lzma2Decode(src,pos,end,limit,out){
+  const S=LzmaState(out);let needProps=true,needState=true;
+  for(;;){
+    const ctl=src[pos++];if(ctl===undefined)out.fail('LZMA2: unexpected end of data');
+    if(ctl===0)break;
+    if(ctl===1||(ctl>=0xE0))S.base=out.n;
+    if(ctl===1||ctl===2){
+      const sz=((src[pos]<<8)|src[pos+1])+1;pos+=2;
+      if(pos+sz>end)out.fail('LZMA2: truncated uncompressed chunk');
+      out.ensure(sz);for(let i=0;i<sz;i++)out.put(src[pos+i]);pos+=sz;continue;
+    }
+    if(ctl<0x80)out.fail('LZMA2: bad control byte');
+    const usz=(((ctl&0x1f)<<16)|(src[pos]<<8)|src[pos+1])+1,csz=((src[pos+2]<<8)|src[pos+3])+1;pos+=4;
+    const mode=(ctl>>5)&3;
+    if(mode>=2){const [lc,lp,pb]=lzmaProps(src[pos++]);if(lc+lp>4)out.fail('LZMA2: bad lc/lp');S.setProps(lc,lp,pb);needProps=false;needState=true}
+    if(needProps)out.fail('LZMA2: missing properties');
+    if(mode>=1||needState){S.resetState();needState=false}
+    if(pos+csz>end)out.fail('LZMA2: truncated chunk');
+    S.initRange(src,pos,pos+csz);
+    try{S.run(out.n+usz)}catch(e){if(!e.partial)e.partial=out.done();throw e}
+    pos+=csz;
+  }
+  return pos;
+}
+function vli(b,p){let v=0,s=0;for(;;){const c=b[p++];v+=(c&127)*Math.pow(2,s);if(!(c&128))break;s+=7;if(s>56)throw Error('XZ: bad integer')}return [v,p]}
+function xzDecode(src,limit,crc32){
+  const M=[0xFD,0x37,0x7A,0x58,0x5A,0x00];
+  for(let i=0;i<6;i++)if(src[i]!==M[i])throw Error('XZ: bad magic');
+  const out=Out(limit,src.length*4);let sbase=0;
+  for(;;){
+  const checkType=src[sbase+7]&15,checkSize=[0,4,4,4,8,8,8,16,16,16,32,32,32,64,64,64][checkType];
+  let pos=sbase+12;
+  for(;;){
+    const hb=src[pos];if(hb===undefined)out.fail('XZ: truncated stream');
+    if(hb===0){ /* index: skip it, then the 12-byte footer, then any stream padding */
+      let q=pos+1,nrec;[nrec,q]=vli(src,q);for(let i=0;i<nrec*2;i++)[,q]=vli(src,q);
+      q+=(4-((q-pos)%4))%4;q+=4;q+=12;while(q<src.length&&src[q]===0)q++;
+      sbase=q;break;
+    }
+    const hsize=(hb+1)*4,flags=src[pos+1],nf=(flags&3)+1;let p=pos+2;
+    if(flags&0x40){[,p]=vli(src,p)}if(flags&0x80){[,p]=vli(src,p)}
+    for(let f=0;f<nf;f++){let id,ps;[id,p]=vli(src,p);[ps,p]=vli(src,p);if(id!==0x21)throw Error('XZ: filter 0x'+id.toString(16)+' is not supported (only LZMA2)');p+=ps}
+    const dataStart=pos+hsize,blockOutStart=out.n;
+    let q;
+    try{q=lzma2Decode(src,dataStart,src.length,limit,out)}catch(e){if(!e.partial)e.partial=out.done();throw e}
+    let pad=(4-((q-dataStart)%4))%4;q+=pad;
+    if(checkType===1&&crc32){const stored=(src[q]|(src[q+1]<<8)|(src[q+2]<<16)|(src[q+3]<<24))>>>0;if(crc32(out.view().subarray(blockOutStart))!==stored)out.fail('XZ: CRC-32 mismatch (data damaged)')}
+    pos=q+checkSize;
+  }
+  if(sbase>=src.length||src[sbase]!==0xFD)break;
+  for(let i=0;i<6;i++)if(src[sbase+i]!==M[i])return out.done();
+  }
+  return out.done();
+}
+
+/* ================= compress (.Z) / generic LZW ================= */
+/* opts: maxBits, block (CLEAR=256 reserved), quirk (compress's 8-code group alignment on width change / clear), headerless */
+function lzwDecode(src,start,opts,limit,outHint){
+  const maxBits=opts.maxBits,block=opts.block!==false,quirk=opts.quirk!==false;
+  const out=Out(limit,outHint||src.length*3);
+  const maxMax=1<<maxBits,pre=new Uint16Array(maxMax),suf=new Uint8Array(maxMax),stack=new Uint8Array(maxMax+1);
+  for(let i=0;i<256;i++)suf[i]=i;
+  const initBits=opts.initBits||9;
+  let nbits=initBits,maxcode=nbits>=maxBits?maxMax:(1<<nbits)-1,free=block?257:256,old=-1,fin=0,bitpos=0,gs=0;const total=(src.length-start)*8;
+  const rd=n=>{ /* LSB-first read at absolute bit position */
+    if(bitpos+n>total)return -1;
+    let v=0,got=0,p=bitpos;
+    while(got<n){const byte=src[start+(p>>3)],off=p&7,take=Math.min(8-off,n-got);v|=((byte>>off)&((1<<take)-1))<<got;got+=take;p+=take}
+    bitpos+=n;return v;
+  };
+  const align=()=>{if(!quirk)return;const g=nbits*8;bitpos=gs+Math.ceil((bitpos-gs)/g)*g;gs=bitpos};
+  for(;;){
+    if(free>maxcode&&nbits<maxBits){align();nbits++;maxcode=nbits===maxBits?maxMax:(1<<nbits)-1;}
+    let code=rd(nbits);if(code<0)break;
+    if(block&&code===256){align();nbits=initBits;maxcode=nbits>=maxBits?maxMax:(1<<nbits)-1;free=257;old=-1;continue}
+    if(old<0){if(code>255)out.fail('LZW: bad first code');out.put(code);fin=code;old=code;continue}
+    let incode=code,sp=0;
+    if(code>=free){if(code>free)out.fail('LZW: invalid code');stack[sp++]=fin;code=old}
+    while(code>=256){stack[sp++]=suf[code];code=pre[code]}
+    fin=suf[code];stack[sp++]=fin;
+    while(sp)out.put(stack[--sp]);
+    if(free<maxMax){pre[free]=old;suf[free]=fin;free++}
+    old=incode;
+  }
+  return out.done();
+}
+function uncompressZ(src,limit){
+  if(src[0]!==0x1f||src[1]!==0x9d)throw Error('not a compress (.Z) file');
+  const fl=src[2];return lzwDecode(src,3,{maxBits:fl&0x1f,block:!!(fl&0x80),quirk:true},limit);
+}
+
+/* ================= PKZIP legacy methods ================= */
+function unshrink(src,limit,outSize){
+  const out=Out(limit,outSize);const br=lsbBits(src,0);
+  const MAXC=8192,pre=new Int32Array(MAXC).fill(-1),suf=new Uint8Array(MAXC),used=new Uint8Array(MAXC),stack=new Uint8Array(MAXC+2);
+  for(let i=0;i<256;i++)suf[i]=i;
+  const isFree=c=>c>=257&&pre[c]===-1;
+  let nbits=9,free=257,old=-1,fin=0;
+  const lowestFree=()=>{while(free<MAXC&&!isFree(free))free++;};
+  for(;;){
+    const code=br.get(nbits);if(code<0)break;
+    if(code===256){
+      const sub=br.get(nbits);if(sub<0)break;
+      if(sub===1){if(nbits<13)nbits++;}
+      else if(sub===2){ /* partial clear: free every entry that is not the prefix of another */
+        used.fill(0);for(let c=257;c<MAXC;c++)if(pre[c]>=257)used[pre[c]]=1;if(old>=257)used[old]=1; /* the pending entry will use it as prefix */
+        for(let c=257;c<MAXC;c++)if(pre[c]!==-1&&!used[c])pre[c]=-1;
+        free=257;
+      }
+      continue;
+    }
+    if(old<0){if(code>255)out.fail('shrink: bad first code');out.put(code);fin=code;old=code;continue}
+    let c=code,sp=0;
+    lowestFree();
+    if(c>255&&isFree(c)){ /* KwKwK */
+      if(c!==free)out.fail('shrink: invalid code');
+      stack[sp++]=fin;c=old;
+    }
+    while(c>=257){stack[sp++]=suf[c];c=pre[c];if(sp>MAXC)out.fail('shrink: corrupt table')}
+    fin=suf[c];stack[sp++]=fin;
+    while(sp)out.put(stack[--sp]);
+    if(free<MAXC){pre[free]=old;suf[free]=fin;free++}
+    old=code;
+  }
+  return out.done();
+}
+function unreduce(src,limit,outSize,factor){ /* factor 1..4 (method-1) */
+  const out=Out(limit,outSize),br=lsbBits(src,0);
+  const Lmask=[0,0x7f,0x3f,0x1f,0x0f][factor],Dshift=[0,7,6,5,4][factor],Dmask=[0,0x01,0x03,0x07,0x0f][factor];
+  const follow=[];
+  for(let i=255;i>=0;i--){const n=br.get(6);if(n<0||n>32)out.fail('reduce: bad follower table');const f=[];for(let k=0;k<n;k++)f.push(br.get(8));follow[i]=f}
+  let last=0,state=0,V=0,len=0;
+  const bitsFor=n=>n<=1?1:n<=2?1:n<=4?2:n<=8?3:n<=16?4:5;
+  for(;;){
+    let b;
+    const f=follow[last];
+    if(f.length===0){b=br.get(8)}
+    else{const flag=br.get(1);if(flag<0)break;if(flag){b=br.get(8)}else{const i=br.get(bitsFor(f.length));if(i<0)break;b=f[i]}}
+    if(b<0)break;
+    last=b;
+    if(state===0){if(b!==144)out.put(b);else state=1}
+    else if(state===1){if(b===0){out.put(144);state=0}else{V=b;len=V&Lmask;state=len===Lmask?2:3}}
+    else if(state===2){len+=b;state=3}
+    else{const dist=(((V>>Dshift)&Dmask)<<8)+b+1;len+=3;
+      /* as with implode, the window starts zero-filled, so a match may reach back before the first byte; those bytes read as 0 */
+      if(dist>out.n){out.ensure(len);for(let i=0;i<len;i++){const q=out.n-dist;out.put(q<0?0:out.byteAt(q))}}
+      else out.copy(dist,len);state=0}
+    if(outSize>=0&&out.n>=outSize)break;
+  }
+  return out.done();
+}
+function explode(src,limit,outSize,flags){
+  const out=Out(limit,outSize),br=lsbBits(src,0);
+  const big=!!(flags&2),litTree=!!(flags&4),lowBits=big?7:6,minLen=litTree?3:2;
+  const readTree=n=>{
+    let cnt=br.get(8)+1;const l=new Uint8Array(n);let k=0;
+    while(cnt--){const j=br.get(8);if(j<0)out.fail('implode: truncated tree');const b=(j&15)+1,r=((j>>4)&15)+1;if(k+r>n)out.fail('implode: bad tree');for(let i=0;i<r;i++)l[k++]=b}
+    if(k!==n)out.fail('implode: bad tree');return canon(l,16);
+  };
+  const lit=litTree?readTree(256):null,lenT=readTree(64),dist=readTree(64);
+  /* Shannon-Fano codes arrive bit-inverted */
+  const dec=t=>{const s=canonDecode(t,()=>{const b=br.get(1);return b<0?-1:b^1});if(s<0)out.fail('implode: bad code');return s};
+  for(;;){
+    const f=br.get(1);if(f<0)break;
+    if(f){const c=lit?dec(lit):br.get(8);if(c<0)break;out.put(c)}
+    else{
+      const lo=br.get(lowBits);if(lo<0)break;
+      const hi=dec(dist),d=(hi<<lowBits|lo)+1;
+      let len=dec(lenT);if(len===63){const e=br.get(8);if(e<0)break;len+=e}
+      len+=minLen;
+      if(d>(big?8192:4096))out.fail('implode: bad distance');
+      /* PKZIP's window starts out zero-filled, so a match may reach back before the first byte; those bytes read as 0 (as Info-ZIP unzip does) */
+      if(d>out.n){out.ensure(len);for(let i=0;i<len;i++){const q=out.n-d;out.put(q<0?0:out.byteAt(q))}}
+      else out.copy(d,len);
+    }
+    if(outSize>=0&&out.n>=outSize)break;
+  }
+  return out.done();
+}
+/* Deflate / Deflate64 */
+const LBASE=[3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258],LEXT=[0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0];
+const DBASE=[1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,32769,49153],DEXT=[0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14];
+function inflate(src,limit,outSize,deflate64){
+  const out=Out(limit,outSize),br=lsbBits(src,0);
+  const nbit=()=>br.get(1);
+  const fixedL=new Uint8Array(288);for(let i=0;i<288;i++)fixedL[i]=i<144?8:i<256?9:i<280?7:8;
+  let fl=null,fd=null;
+  const sym=t=>{const s=canonDecode(t,nbit);if(s<0)out.fail('deflate: bad code');return s};
+  for(;;){
+    const fin=br.get(1),type=br.get(2);if(fin<0||type<0)out.fail('deflate: truncated');
+    if(type===0){
+      br.align();let p=br.pos;const len=src[p]|(src[p+1]<<8);p+=4;
+      if(p+len>src.length)out.fail('deflate: truncated stored block');
+      out.ensure(len);for(let i=0;i<len;i++)out.put(src[p+i]);br.pos=p+len;
+    }else if(type===3)out.fail('deflate: bad block type');
+    else{
+      let L,D;
+      if(type===1){if(!fl){fl=canon(fixedL,15);fd=canon(new Uint8Array(32).fill(5),15)}L=fl;D=fd}
+      else{
+        const hlit=br.get(5)+257,hdist=br.get(5)+1,hclen=br.get(4)+4,ord=[16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15];
+        const cl=new Uint8Array(19);for(let i=0;i<hclen;i++)cl[ord[i]]=br.get(3);
+        const ct=canon(cl,7),ls=new Uint8Array(hlit+hdist);
+        for(let i=0;i<hlit+hdist;){
+          const s=sym(ct);
+          if(s<16)ls[i++]=s;
+          else{let rep,v=0;if(s===16){if(!i)out.fail('deflate: bad repeat');v=ls[i-1];rep=3+br.get(2)}else if(s===17)rep=3+br.get(3);else rep=11+br.get(7);if(i+rep>hlit+hdist)out.fail('deflate: bad repeat');while(rep--)ls[i++]=v}
+        }
+        L=canon(ls.subarray(0,hlit),15);D=canon(ls.subarray(hlit),15);
+      }
+      for(;;){
+        const s=sym(L);
+        if(s<256)out.put(s);
+        else if(s===256)break;
+        else{
+          const li=s-257;if(li>28)out.fail('deflate: bad length');
+          let len,eb;
+          if(deflate64&&li===28){len=3;eb=16}else{len=LBASE[li];eb=LEXT[li]}
+          len+=eb?br.get(eb):0;
+          const ds=sym(D);if(ds>(deflate64?31:29))out.fail('deflate: bad distance');
+          const dist=DBASE[ds]+(DEXT[ds]?br.get(DEXT[ds]):0);
+          out.copy(dist,len);
+        }
+      }
+    }
+    if(fin)break;
+  }
+  return out.done();
+}
+
+/* ================= LHA / LZH lh4-lh7 ================= */
+function lhaDecode(src,start,end,method,outSize,limit){
+  const dic={'4':12,'5':13,'6':15,'7':16}[method];if(!dic)throw Error('unsupported LHA method -lh'+method+'-');
+  const np=dic+1,pbit=np<16?4:5;
+  const out=Out(limit,outSize);let pos=start,bb=0,bc=0;
+  const bits=n=>{if(n===0)return 0;while(bc<n){bb=((bb<<8)|(pos<end?src[pos]:0))>>>0;pos++;bc+=8}bc-=n;const v=(bb>>>bc)&((1<<n)-1);bb&=(1<<bc)-1;return v};
+  const bit1=()=>bits(1);
+  const ptable=(nn,nbit,special)=>{
+    const n=bits(nbit);const len=new Uint8Array(nn);
+    if(n===0)return {konst:bits(nbit),t:null};
+    let i=0;
+    while(i<n){
+      let c=bits(3);if(c===7){while(bit1()){c++;if(c>16)out.fail('LHA: bad table')}}
+      len[i++]=c;
+      if(i===special){let z=bits(2);while(z-->0)len[i++]=0}
+    }
+    return {konst:-1,t:canon(len,16)};
+  };
+  const clen=pt=>{
+    const n=bits(9),len=new Uint8Array(510);
+    if(n===0)return {konst:bits(9),t:null};
+    let i=0;
+    while(i<n){
+      let c=pt.konst>=0?pt.konst:canonDecode(pt.t,bit1);
+      if(c<0)out.fail('LHA: bad table code');
+      if(c<=2){let r;if(c===0)r=1;else if(c===1)r=bits(4)+3;else r=bits(9)+20;while(r-->0&&i<510)len[i++]=0}
+      else len[i++]=c-2;
+    }
+    return {konst:-1,t:canon(len,16)};
+  };
+  let blocks=0,c_,p_,pt_,remain=0;
+  const newBlock=()=>{remain=bits(16);const pt=ptable(19,5,3);c_=clen(pt);p_=ptable(np,pbit,-1);};
+  const total=outSize;
+  while(out.n<total){
+    if(remain===0){newBlock();if(remain===0&&pos>end+8)out.fail('LHA: unexpected end of data')}
+    remain--;
+    const c=c_.konst>=0?c_.konst:canonDecode(c_.t,bit1);
+    if(c<0)out.fail('LHA: bad literal/length code');
+    if(c<256)out.put(c);
+    else{
+      const len=c-253;
+      let j=p_.konst>=0?p_.konst:canonDecode(p_.t,bit1);
+      if(j<0)out.fail('LHA: bad distance code');
+      if(j>1)j=(1<<(j-1))+bits(j-1);
+      out.copy(j+1,len);
+    }
+    if(pos>end+8)out.fail('LHA: ran past end of data');
+  }
+  const r=out.done();return r.length>total?r.subarray(0,total):r;
+}
+
+
+/* ================= StuffIt method 3 (static Huffman, tree stored in the stream) ================= */
+function sitHuffman(src,outSize,limit,variant){ /* variant: {msb:bool, leafOne:bool} */
+  let pos=0,bb=0,bc=0;const msb=variant.msb,leafOne=variant.leafOne;
+  const bit=()=>{if(bc===0){if(pos>=src.length)return -1;bb=src[pos++];bc=8}let v;if(msb){v=(bb>>7)&1;bb=(bb<<1)&255}else{v=bb&1;bb>>=1}bc--;return v};
+  const nodes=[];let guard=0;
+  const parse=()=>{
+    if(++guard>600)throw Error('Huffman: corrupt tree');
+    const b=bit();if(b<0)throw Error('Huffman: truncated tree');
+    const id=nodes.length;nodes.push(null);
+    if((b===1)===leafOne){let v=0;for(let i=0;i<8;i++){const x=bit();if(x<0)throw Error('Huffman: truncated tree');v=msb?(v<<1)|x:v|(x<<i)}nodes[id]={leaf:v}}
+    else{const l=parse(),r=parse();nodes[id]={l,r}}
+    return id;
+  };
+  parse();
+  const out=Out(limit,outSize);
+  while(out.n<outSize){
+    let i=0;
+    for(;;){const nd=nodes[i];if(nd.leaf!==undefined){out.put(nd.leaf);break}const b=bit();if(b<0)out.fail('Huffman: unexpected end of data');i=b?nd.r:nd.l}
+  }
+  return out.done();
+}
+
+/* ================= ARC squeeze (method 4) ================= */
+function arcUnsqueeze(src,limit){
+  let p=0;const nn=src[0]|(src[1]<<8);p=2;
+  if(nn<1||nn>257)throw Error('squeeze: bad tree size');
+  const node=[];for(let i=0;i<nn;i++){const a=(src[p]|(src[p+1]<<8))<<16>>16,b=(src[p+2]|(src[p+3]<<8))<<16>>16;node.push([a,b]);p+=4}
+  const out=Out(limit,src.length*3);let bb=0,bc=0;
+  const bit=()=>{if(bc===0){if(p>=src.length)return -1;bb=src[p++];bc=8}const v=bb&1;bb>>=1;bc--;return v};
+  const raw=Out(limit,src.length*3);
+  for(;;){
+    let i=0;
+    do{const b=bit();if(b<0)out.fail('squeeze: unexpected end of data');i=node[i][b];if(i>=nn)out.fail('squeeze: bad tree')}while(i>=0);
+    const v=-(i+1);if(v===256)break;raw.put(v);
+  }
+  return raw.done();
+}
+/* RLE90 (ARC "packed"/StuffIt method 1) */
+function rle90(src,limit){
+  const out=Out(limit,src.length*2);let last=0;
+  for(let i=0;i<src.length;i++){
+    const c=src[i];
+    if(c!==0x90){out.put(c);last=c;continue}
+    const n=src[++i];if(n===undefined)break;
+    if(n===0){out.put(0x90);last=0x90}else{out.ensure(n);for(let k=1;k<n;k++)out.put(last)}
+  }
+  return out.done();
+}
+
+return {sitHuffman,bunzip2,lzmaDecode,lzma2Decode,xzDecode,uncompressZ,lzwDecode,unshrink,unreduce,explode,inflate,lhaDecode,arcUnsqueeze,rle90,Out,
+  zipDecode(method,raw,size,flags,limit){
+    switch(method){
+      case 1:return unshrink(raw,limit,size);
+      case 2:case 3:case 4:case 5:return unreduce(raw,limit,size,method-1);
+      case 6:return explode(raw,limit,size,flags);
+      case 8:return inflate(raw,limit,size,false);
+      case 9:return inflate(raw,limit,size,true);
+      case 12:return bunzip2(raw,limit);
+      case 14:{if(raw.length<4)throw Error('LZMA: truncated header');const ps=raw[2]|(raw[3]<<8);return lzmaDecode(raw,4+ps,raw.length,raw[4],size,limit)}
+    }
+    throw Error('unsupported method '+method);
+  }};
+})();
+
+/* ---------- PvFmt: extra file-preview formats (images, RTF, PDF/SVG sniffing, archive listings). Pure functions, no DOM. ---------- */
+const PvFmt=(function(){
+'use strict';
+const u16=(b,o)=>b[o]|(b[o+1]<<8);
+const u32=(b,o)=>(b[o]|(b[o+1]<<8)|(b[o+2]<<16)|(b[o+3]<<24))>>>0;
+const b16=(b,o)=>(b[o]<<8)|b[o+1];
+const b32=(b,o)=>((b[o]<<24)|(b[o+1]<<16)|(b[o+2]<<8)|b[o+3])>>>0;
+const ascii=(b,o,n)=>{let s='';for(let i=0;i<n&&o+i<b.length;i++)s+=String.fromCharCode(b[o+i]);return s};
+const extOf=n=>{const m=/\.([^.\/\\]+)$/.exec(String(n||''));return m?m[1].toLowerCase():''};
+const MAXPIX=64e6, ENTRY_LIMIT=64*1024*1024, MAX_ENTRIES=20000;
+function newImg(w,h){if(!(w>0&&h>0)||w>65535||h>65535||w*h>MAXPIX)throw Error('unsupported image size '+w+'×'+h);return {w,h,rgba:new Uint8ClampedArray(w*h*4)}}
+function put(o,i,r,g,b,a){const k=i<<2;o.rgba[k]=r;o.rgba[k+1]=g;o.rgba[k+2]=b;o.rgba[k+3]=a===undefined?255:a}
+
+/* ---- checksums ---- */
+const CRC32T=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;CRC32T[n]=c>>>0}
+function crc32(d){let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=CRC32T[(c^d[i])&255]^(c>>>8);return (c^0xFFFFFFFF)>>>0}
+const CRC16T=new Uint16Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xA001^(c>>>1):c>>>1;CRC16T[n]=c}
+function crc16(d){let c=0;for(let i=0;i<d.length;i++)c=CRC16T[(c^d[i])&255]^(c>>>8);return c&0xFFFF}
+
+/* ---- shared byte codecs ---- */
+function packBits(src,expected){ /* TIFF/IFF ByteRun1; packBits.short is set when the input ran out early */
+  const out=new Uint8Array(expected);let op=0,sp=0;
+  while(sp<src.length&&op<expected){
+    const n=src[sp++]<<24>>24;
+    if(n>=0){const c=Math.min(n+1,src.length-sp,expected-op);out.set(src.subarray(sp,sp+c),op);op+=c;sp+=n+1}
+    else if(n!==-128){const c=Math.min(1-n,expected-op),v=src[sp++];out.fill(v,op,op+c);op+=c}
+  }
+  packBits.short=op<expected;
+  return out;
+}
+function lzwTiff(src,expected){
+  const out=new Uint8Array(expected);let op=0;
+  const pre=new Int32Array(4096),suf=new Uint8Array(4096),len=new Uint32Array(4096),first=new Uint8Array(4096);
+  for(let i=0;i<256;i++){suf[i]=i;len[i]=1;first[i]=i;pre[i]=-1}
+  let bits=0,nb=0,sp=0,width=9,next=258,prev=-1;
+  const read=()=>{while(nb<width){if(sp>=src.length)return -1;bits=((bits<<8)|src[sp++])>>>0;nb+=8}nb-=width;const v=(bits>>>nb)&((1<<width)-1);bits&=(1<<nb)-1;return v};
+  const emit=code=>{const L=len[code];let q=op+L-1,c=code;for(let i=0;i<L;i++,q--){if(q<expected)out[q]=suf[c];c=pre[c]}op+=L};
+  for(;;){
+    const code=read();if(code<0||code===257||op>=expected)break;
+    if(code===256){width=9;next=258;prev=-1;continue}
+    if(prev<0){if(code>255)break;emit(code);prev=code;continue}
+    if(code<next){
+      emit(code);
+      if(next<4096){pre[next]=prev;suf[next]=first[code];len[next]=len[prev]+1;first[next]=first[prev];next++}
+    }else if(code===next&&next<4096){
+      pre[next]=prev;suf[next]=first[prev];len[next]=len[prev]+1;first[next]=first[prev];next++;
+      emit(code);
+    }else break;
+    prev=code;
+    if(next>=2047)width=12;else if(next>=1023)width=11;else if(next>=511)width=10;
+  }
+  lzwTiff.short=op<expected;
+  return out;
+}
+function rle90(src,limit){ /* ARC "packed" / StuffIt method 1 */
+  const out=[];let last=0;
+  for(let i=0;i<src.length&&out.length<limit;i++){
+    const c=src[i];
+    if(c!==0x90){out.push(c);last=c;continue}
+    const n=src[++i];
+    if(n===undefined)break;
+    if(n===0){out.push(0x90);last=0x90}else for(let k=1;k<n&&out.length<limit;k++)out.push(last);
+  }
+  return Uint8Array.from(out);
+}
+async function inflate(raw,fmt,limit){
+  if(typeof DecompressionStream==='undefined')throw Error('this browser has no DecompressionStream');
+  const ds=new DecompressionStream(fmt),w=ds.writable.getWriter();
+  w.write(raw).catch(()=>{});w.close().catch(()=>{});
+  const r=ds.readable.getReader(),chunks=[];let total=0,err=null;
+  try{for(;;){const {done,value}=await r.read();if(done)break;total+=value.length;if(total>limit){r.cancel().catch(()=>{});throw Error('output exceeds the '+Math.round(limit/1048576)+' MiB preview limit')}chunks.push(value)}}
+  catch(e){if(/exceeds/.test(e.message))throw e;err=e}
+  const out=new Uint8Array(total);let p=0;for(const c of chunks){out.set(c,p);p+=c.length}
+  return {data:out,error:err?String(err.message||err):''};
+}
+
+/* ================= images ================= */
+const gray=(o,i,v)=>put(o,i,v,v,v);
+
+function pcxDecode(d){
+  const bpp=d[3],np=d[65],bpl=u16(d,66),w=u16(d,8)-u16(d,4)+1,h=u16(d,10)-u16(d,6)+1;
+  const o=newImg(w,h);
+  let pal256=null;
+  if(bpp===8&&np===1&&d.length>=769+128&&d[d.length-769]===12)pal256=d.subarray(d.length-768);
+  const end=pal256?d.length-769:d.length,need=np*bpl,row=new Uint8Array(need);
+  let p=128,trunc=false;
+  for(let y=0;y<h;y++){
+    row.fill(0);let i=0;
+    while(i<need){
+      if(p>=end){trunc=true;break}
+      let c=d[p++];
+      if((c&0xC0)===0xC0){const n=c&0x3F;c=d[p++];if(p>end+1){trunc=true;break}row.fill(c,i,Math.min(need,i+n));i+=n}
+      else row[i++]=c;
+    }
+    for(let x=0;x<w;x++){
+      const k=y*w+x;
+      if(bpp===8&&np>=3){put(o,k,row[x],row[bpl+x],row[2*bpl+x]);continue}
+      let idx=0;
+      for(let q=0;q<np;q++){const bi=q*bpl+((x*bpp)>>3),sh=8-bpp-((x*bpp)&7);idx|=((row[bi]>>sh)&((1<<bpp)-1))<<(q*bpp)}
+      const bits=bpp*np;
+      if(bpp===8&&np===1){if(pal256)put(o,k,pal256[idx*3],pal256[idx*3+1],pal256[idx*3+2]);else gray(o,k,idx)}
+      else if(bits===1)gray(o,k,idx?255:0);
+      else if(bits<=4)put(o,k,d[16+idx*3],d[17+idx*3],d[18+idx*3]);
+      else gray(o,k,idx&255);
+    }
+  }
+  o.note='PCX v'+d[1]+' · '+w+'×'+h+' · '+(bpp===8&&np>=3?'24-bit RGB':bpp*np+'-bit '+(bpp===8&&np===1?(pal256?'palette':'grayscale'):bpp*np===1?'mono':'palette'))+' · RLE'+(trunc?' · data truncated, remaining rows blank':'');
+  return o;
+}
+function tgaDecode(d){
+  const idlen=d[0],cmt=d[1],it=d[2],cfirst=u16(d,3),clen=u16(d,5),cbits=d[7],w=u16(d,12),h=u16(d,14),bpp=d[16],desc=d[17];
+  const o=newImg(w,h),rle=it>=9,type=it&7,bs=(bpp+7)>>3;
+  let p=18+idlen;
+  const ces=(cbits+7)>>3;let pal=null;
+  if(cmt===1){pal=d.subarray(p,p+clen*ces);}
+  p+=cmt?clen*ces:0;
+  const total=w*h*bs,raw=new Uint8Array(total);let rp=0,trunc=false;
+  if(!rle){const c=Math.min(total,d.length-p);raw.set(d.subarray(p,p+c));if(c<total)trunc=true}
+  else{
+    while(rp<total){
+      if(p>=d.length){trunc=true;break}
+      const hd=d[p++],n=(hd&127)+1;
+      if(hd&128){for(let k=0;k<n&&rp<total;k++){for(let b=0;b<bs;b++)raw[rp+b]=d[p+b];rp+=bs}p+=bs}
+      else{const c=Math.min(n*bs,total-rp);raw.set(d.subarray(p,p+c),rp);rp+=c;p+=n*bs}
+    }
+  }
+  const alphaBits=desc&15;
+  const px=(src,so,bits)=>{ /* -> [r,g,b,a] */
+    if(bits===16){const v=src[so]|(src[so+1]<<8);return [((v>>10)&31)*255/31|0,((v>>5)&31)*255/31|0,(v&31)*255/31|0,alphaBits?(v&0x8000?255:0):255]}
+    if(bits===24)return [src[so+2],src[so+1],src[so],255];
+    if(bits===32)return [src[so+2],src[so+1],src[so],alphaBits?src[so+3]:255];
+    return [0,0,0,255];
+  };
+  for(let y=0;y<h;y++){
+    const sy=(desc&0x20)?y:h-1-y;
+    for(let x=0;x<w;x++){
+      const so=(sy*w+x)*bs,k=y*w+x;
+      if(type===3){gray(o,k,raw[so]);continue}
+      if(type===1){
+        let idx=(bs===2?raw[so]|(raw[so+1]<<8):raw[so])-cfirst;
+        if(!pal||idx<0||idx>=clen){gray(o,k,0);continue}
+        const c=px(pal,idx*ces,ces*8);put(o,k,c[0],c[1],c[2],c[3]);continue;
+      }
+      const c=px(raw,so,bpp);put(o,k,c[0],c[1],c[2],c[3]);
+    }
+  }
+  o.note='Targa · '+w+'×'+h+' · '+bpp+'-bit '+(type===1?'palette':type===3?'grayscale':'true colour')+(rle?' · RLE':'')+(trunc?' · data truncated':'');
+  return o;
+}
+
+/* ================= baseline + progressive-less JPEG decoder (Huffman, sequential DCT, 8-bit) ================= */
+function jpegDecode(d,opts){
+  opts=opts||{};
+  const ZZ=new Uint8Array([0,1,8,16,9,2,3,10,17,24,32,25,18,11,4,5,12,19,26,33,40,48,41,34,27,20,13,6,7,14,21,28,35,42,49,56,57,50,43,36,29,22,15,23,30,37,44,51,58,59,52,45,38,31,39,46,53,60,61,54,47,55,62,63]);
+  let p=0;const n=d.length;
+  const u16=()=>{const v=(d[p]<<8)|d[p+1];p+=2;return v};
+  const qt=[],hdc=[],hac=[];let frame=null,restart=0,adobe=-1,jfif=false;
+  const mkHuff=(counts,syms)=>{ /* lookup by (length, code) */
+    const maxcode=new Int32Array(18).fill(-1),valptr=new Int32Array(17),mincode=new Int32Array(17);let code=0,k=0;
+    for(let l=1;l<=16;l++){valptr[l]=k;mincode[l]=code;code+=counts[l-1];k+=counts[l-1];maxcode[l]=counts[l-1]?code-1:-1;code<<=1}
+    return {maxcode,valptr,mincode,syms};
+  };
+  if(d[0]!==0xFF||d[1]!==0xD8)throw Error('JPEG: missing SOI');
+  p=2;let scanDone=false;
+  const comps=[];
+  let mcusX=0,mcusY=0,hmax=1,vmax=1;
+  while(p<n&&!scanDone){
+    if(d[p]!==0xFF){p++;continue}
+    while(d[p]===0xFF)p++;
+    const m=d[p++];
+    if(m===0xD8||(m>=0xD0&&m<=0xD7)||m===0x01||m===0)continue;
+    if(m===0xD9)break;
+    const len=u16(),end=p+len-2;
+    if(m===0xDB){while(p<end){const pq=d[p]>>4,tq=d[p]&15;p++;const t=new Int32Array(64);for(let i=0;i<64;i++){t[ZZ[i]]=pq?u16():d[p++]}qt[tq]=t}}
+    else if(m===0xC4){while(p<end){const tc=d[p]>>4,th=d[p]&15;p++;const counts=d.subarray(p,p+16);p+=16;let tot=0;for(const c of counts)tot+=c;const syms=d.subarray(p,p+tot);p+=tot;(tc?hac:hdc)[th]=mkHuff(counts,syms)}}
+    else if(m===0xC0||m===0xC1){
+      const prec=d[p++];if(prec!==8)throw Error('JPEG: '+prec+'-bit samples are not supported');
+      const h=u16(),w=u16(),nc=d[p++];frame={w,h,nc};
+      for(let i=0;i<nc;i++){comps.push({id:d[p],h:d[p+1]>>4,v:d[p+1]&15,tq:d[p+2]});p+=3}
+      hmax=Math.max(...comps.map(c=>c.h));vmax=Math.max(...comps.map(c=>c.v));
+      mcusX=Math.ceil(w/(8*hmax));mcusY=Math.ceil(h/(8*vmax));
+      for(const c of comps){c.bw=mcusX*c.h*8;c.bh=mcusY*c.v*8;c.buf=new Uint8Array(c.bw*c.bh);c.pred=0}
+    }
+    else if(m===0xC2||m===0xC3||(m>=0xC5&&m<=0xCF&&m!==0xC8&&m!==0xCC))throw Error('JPEG: '+(m===0xC2?'progressive':'this (arithmetic/lossless/hierarchical)')+' JPEG is not supported');
+    else if(m===0xDD){restart=u16()}
+    else if(m===0xEE&&len>=14&&d[p]===0x41&&d[p+1]===0x64){adobe=d[p+11]}
+    else if(m===0xE0&&d[p]===0x4A&&d[p+1]===0x46)jfif=true;
+    else if(m===0xDA){
+      if(!frame)throw Error('JPEG: scan before frame header');
+      const ns=d[p++];const sc=[];
+      for(let i=0;i<ns;i++){const cid=d[p],t=d[p+1];p+=2;const c=comps.find(x=>x.id===cid);if(!c)throw Error('JPEG: bad scan component');c.dc=hdc[t>>4];c.ac=hac[t&15];sc.push(c)}
+      p+=3;
+      decodeScan(sc);scanDone=true;break;
+    }
+    p=end;
+  }
+  if(!frame||!scanDone)throw Error('JPEG: no image data');
+  function decodeScan(sc){
+    let bits=0,cnt=0,trunc=false;
+    const fill=()=>{ /* read one byte handling stuffing / markers */
+      if(p>=n){bits=(bits<<8)>>>0;cnt+=8;trunc=true;return}
+      let b=d[p];
+      if(b===0xFF){const b2=d[p+1];if(b2===0){p+=2}else{ /* marker: feed zeros */ bits=(bits<<8)>>>0;cnt+=8;return }}else p++;
+      bits=((bits<<8)|b)>>>0;cnt+=8;
+    };
+    const getBits=k=>{if(k===0)return 0;while(cnt<k)fill();cnt-=k;return (bits>>>cnt)&((1<<k)-1)};
+    const readBit=()=>{if(cnt===0)fill();cnt--;return (bits>>>cnt)&1};
+    const decodeH=t=>{let code=0;for(let l=1;l<=16;l++){code=(code<<1)|readBit();if(t.maxcode[l]>=0&&code<=t.maxcode[l]&&code>=t.mincode[l])return t.syms[t.valptr[l]+code-t.mincode[l]]}throw Error('JPEG: bad Huffman code')};
+    const ext=(v,k)=>k&&v<(1<<(k-1))?v-(1<<k)+1:v;
+    const blk=new Int32Array(64),tmp=new Float64Array(64);
+    const C=new Float64Array(64);for(let u=0;u<8;u++)for(let x=0;x<8;x++)C[u*8+x]=(u===0?Math.SQRT1_2:1)*Math.cos((2*x+1)*u*Math.PI/16)/2;
+    const idct=(q,c,ox,oy)=>{
+      for(let y=0;y<8;y++)for(let x=0;x<8;x++){let s=0;for(let u=0;u<8;u++)s+=C[u*8+x]*blk[y*8+u]*q[y*8+u];tmp[y*8+x]=s}
+      for(let x=0;x<8;x++)for(let y=0;y<8;y++){let s=0;for(let v=0;v<8;v++)s+=C[v*8+y]*tmp[v*8+x];const val=Math.round(s)+128;c.buf[(oy+y)*c.bw+ox+x]=val<0?0:val>255?255:val}
+    };
+    const block=(c,bx,by)=>{
+      blk.fill(0);
+      const t=decodeH(c.dc);c.pred+=ext(getBits(t),t);blk[0]=c.pred;
+      for(let k=1;k<64;){const rs=decodeH(c.ac),r=rs>>4,s=rs&15;if(s===0){if(r===15){k+=16;continue}break}k+=r;if(k>63)break;blk[ZZ[k]]=ext(getBits(s),s);k++}
+      const q=qt[c.tq];if(!q)throw Error('JPEG: missing quantisation table');
+      idct(q,c,bx*8,by*8);
+    };
+    const resync=()=>{cnt=0;bits=0;while(p+1<n&&!(d[p]===0xFF&&d[p+1]>=0xD0&&d[p+1]<=0xD7))p++;p+=2;for(const c of comps)c.pred=0};
+    for(const c of comps)c.pred=0;
+    let mcu=0;
+    if(sc.length===1){ /* non-interleaved: blocks cover the component's own extent */
+      const c=sc[0],bw=Math.ceil(Math.ceil(frame.w*c.h/hmax)/8),bh=Math.ceil(Math.ceil(frame.h*c.v/vmax)/8);
+      for(let by=0;by<bh;by++)for(let bx=0;bx<bw;bx++){if(restart&&mcu&&mcu%restart===0)resync();block(c,bx,by);mcu++;if(trunc&&cnt<=0)break}
+    }else{
+      for(let my=0;my<mcusY;my++)for(let mx=0;mx<mcusX;mx++){
+        if(restart&&mcu&&mcu%restart===0)resync();
+        for(const c of sc)for(let v=0;v<c.v;v++)for(let h=0;h<c.h;h++)block(c,mx*c.h+h,my*c.v+v);
+        mcu++;
+      }
+    }
+    frame.truncated=trunc;
+  }
+  /* assemble pixels */
+  const {w,h,nc}=frame,out=new Uint8Array(w*h*nc);
+  for(let ci=0;ci<nc;ci++){
+    const c=comps[ci],fx=c.h/hmax,fy=c.v/vmax;
+    const cw=Math.ceil(w*fx),ch=Math.ceil(h*fy);
+    if(fx===1&&fy===1){for(let y=0;y<h;y++){const row=y*c.bw;for(let x=0;x<w;x++)out[(y*w+x)*nc+ci]=c.buf[row+x]}continue}
+    /* linear ("fancy") upsampling of subsampled components, sample centres aligned like libjpeg */
+    for(let y=0;y<h;y++){
+      let sy=(y+0.5)*fy-0.5;if(sy<0)sy=0;if(sy>ch-1)sy=ch-1;const y0=Math.floor(sy),y1=Math.min(ch-1,y0+1),wy=sy-y0;
+      for(let x=0;x<w;x++){
+        let sx=(x+0.5)*fx-0.5;if(sx<0)sx=0;if(sx>cw-1)sx=cw-1;const x0=Math.floor(sx),x1=Math.min(cw-1,x0+1),wx=sx-x0;
+        const a=c.buf[y0*c.bw+x0],b=c.buf[y0*c.bw+x1],cc=c.buf[y1*c.bw+x0],dd=c.buf[y1*c.bw+x1];
+        out[(y*w+x)*nc+ci]=Math.round((a*(1-wx)+b*wx)*(1-wy)+(cc*(1-wx)+dd*wx)*wy);
+      }
+    }
+  }
+  let ycc;
+  if(opts.colorTransform!==undefined)ycc=!!opts.colorTransform;
+  else if(adobe>=0)ycc=adobe!==0;
+  else if(jfif)ycc=true;
+  else ycc=!(nc===3&&comps[0].id===0x52&&comps[1].id===0x47&&comps[2].id===0x42);
+  if(nc===3&&ycc)for(let i=0;i<w*h*3;i+=3){const Y=out[i],cb=out[i+1]-128,cr=out[i+2]-128;const r=Y+1.402*cr,g=Y-0.344136*cb-0.714136*cr,b=Y+1.772*cb;out[i]=r<0?0:r>255?255:r+.5|0;out[i+1]=g<0?0:g>255?255:g+.5|0;out[i+2]=b<0?0:b>255?255:b+.5|0}
+  if(nc===4){ /* Adobe CMYK(/YCCK): values are inverted */
+    if(adobe===2)for(let i=0;i<w*h*4;i+=4){const Y=out[i],cb=out[i+1]-128,cr=out[i+2]-128;const r=Y+1.402*cr,g=Y-0.344136*cb-0.714136*cr,b=Y+1.772*cb;out[i]=r<0?0:r>255?255:r;out[i+1]=g<0?0:g>255?255:g;out[i+2]=b<0?0:b>255?255:b}
+  }
+  return {w,h,nc,data:out,adobe,truncated:!!frame.truncated};
+}
+
+async function tiffDecode(d){
+  const le=d[0]===0x49;
+  const r16=o=>le?u16(d,o):b16(d,o),r32=o=>le?u32(d,o):b32(d,o);
+  const ifd0=r32(4);
+  if(ifd0<8||ifd0+2>d.length)throw Error('the TIFF directory (IFD) lies beyond the end of the file, so the file is truncated');
+  let pages=0,off=ifd0;
+  const readIfd=ofs=>{
+    const n=r16(ofs),tags={};
+    for(let i=0;i<n;i++){
+      const e=ofs+2+i*12,tag=r16(e),type=r16(e+2),cnt=r32(e+4);
+      const sz=({1:1,2:1,3:2,4:4,6:1,7:1,8:2,9:4,16:8})[type]||1;
+      let vo=cnt*sz<=4?e+8:r32(e+8);
+      const vals=[];
+      if(cnt>1000000)continue;
+      for(let k=0;k<cnt;k++){const q=vo+k*sz;if(q+sz>d.length)break;vals.push(sz===2?r16(q):sz===4?r32(q):d[q])}
+      tags[tag]=vals;
+    }
+    return {tags,next:r32(ofs+2+n*12)};
+  };
+  const first=readIfd(ifd0);
+  if(!first.tags[256]||!first.tags[257])throw Error('TIFF directory has no width/height');
+  for(let g=0;off&&off+2<d.length&&g<200;g++){pages++;off=readIfd(off).next}
+  const T=first.tags,g=(t,def)=>T[t]&&T[t].length?T[t][0]:def;
+  const w=g(256,0),h=g(257,0),spp=g(277,1),comp=g(259,1),photo=g(262,1),planar=g(284,1),pred=g(317,1);
+  const bpsArr=T[258]||[1],bps=bpsArr[0];
+  const tiled=!!(T[322]&&T[323]&&T[324]);
+  const planes=planar===2&&spp>1?spp:1,sppP=planes>1?1:spp;
+  if(![1,2,4,8,16].includes(bps))throw Error(bps+' bits per sample is not supported');
+  if(![1,5,7,8,32773,32946].includes(comp))throw Error('TIFF compression '+comp+({2:' (CCITT Group 3 RLE)',3:' (CCITT Group 3 fax)',4:' (CCITT Group 4 fax)',6:' (old-style JPEG)',34712:' (JPEG 2000)'}[comp]||'')+' is not supported');
+  const o=newImg(w,h),rowBytesP=Math.ceil(w*sppP*bps/8);
+  const tw=tiled?g(322,w):w,th=tiled?g(323,h):(Math.min(g(278,h),h)||h);
+  if(!(tw>0&&th>0)||tw*th*sppP>256e6)throw Error('TIFF tile/strip size is not usable');
+  const across=Math.ceil(w/tw),down=Math.ceil(h/th),perPlane=across*down;
+  const offs=(tiled?T[324]:T[273])||[],cnts=(tiled?T[325]:T[279])||[];
+  if(!offs.length)throw Error('TIFF has no image '+(tiled?'tiles':'strips'));
+  const raws=[];for(let q=0;q<planes;q++)raws.push(new Uint8Array(rowBytesP*h));
+  const jtab=T[347]&&T[347].length>4?Uint8Array.from(T[347]):null;
+  const photoEff=comp===7&&photo===6?2:photo;
+  let trunc=false;
+  for(let q=0;q<planes;q++)for(let ty=0;ty<down;ty++)for(let tx=0;tx<across;tx++){
+    const idx=q*perPlane+ty*across+tx;if(idx>=offs.length){trunc=true;continue}
+    const x0=tx*tw,y0=ty*th,bw=tw,bh=tiled?th:Math.min(th,h-y0);
+    const rowB=Math.ceil(bw*sppP*bps/8),exp=rowB*bh;
+    const so=offs[idx],sc=cnts[idx]!==undefined?cnts[idx]:d.length-so;
+    if(so>=d.length){trunc=true;continue}
+    const src=d.subarray(so,Math.min(d.length,so+sc));let buf;
+    if(src.length<sc)trunc=true;
+    if(comp===1){buf=new Uint8Array(exp);buf.set(src.subarray(0,exp))}
+    else if(comp===32773){buf=packBits(src,exp);if(packBits.short)trunc=true}
+    else if(comp===5){buf=lzwTiff(src,exp);if(lzwTiff.short)trunc=true}
+    else if(comp===7){
+      buf=new Uint8Array(exp);
+      try{
+        let js=src;
+        if(jtab&&src[0]===0xFF&&src[1]===0xD8){js=new Uint8Array(jtab.length+src.length-4);js.set(jtab.subarray(0,jtab.length-2));js.set(src.subarray(2),jtab.length-2)}
+        const jr=jpegDecode(js,{colorTransform:photo===6?true:photo===2?false:undefined});
+        if(jr.nc!==sppP)throw Error('JPEG has '+jr.nc+' components, TIFF says '+sppP);
+        if(jr.truncated)trunc=true;
+        for(let yy=0;yy<Math.min(bh,jr.h);yy++){const cw=Math.min(bw,jr.w)*sppP;buf.set(jr.data.subarray(yy*jr.w*sppP,yy*jr.w*sppP+cw),yy*rowB)}
+      }catch(err){trunc=true;if(!tiled&&down===1&&across===1)throw err}
+    }
+    else{const rr=await inflate(src,'deflate',exp+65536);buf=new Uint8Array(exp);buf.set(rr.data.subarray(0,exp));if(rr.error)trunc=true}
+    if(pred===2&&bps===8&&comp!==7){for(let y=0;y<bh;y++){const bb=y*rowB;for(let i=sppP;i<rowB;i++)buf[bb+i]=(buf[bb+i]+buf[bb+i-sppP])&255}}
+    else if(pred===2&&bps===16&&comp!==7){for(let y=0;y<bh;y++){const bb=y*rowB;for(let i=sppP*2;i+1<rowB;i+=2){const rd=k=>le?buf[k]|(buf[k+1]<<8):(buf[k]<<8)|buf[k+1];const v=(rd(bb+i-sppP*2)+rd(bb+i))&0xFFFF;if(le){buf[bb+i]=v&255;buf[bb+i+1]=v>>8}else{buf[bb+i]=v>>8;buf[bb+i+1]=v&255}}}}
+    const xb=Math.floor(x0*sppP*bps/8),len=Math.min(rowB,rowBytesP-xb);
+    for(let yy=0;yy<Math.min(bh,h-y0);yy++)raws[q].set(buf.subarray(yy*rowB,yy*rowB+len),(y0+yy)*rowBytesP+xb);
+  }
+  const cmap=T[320];
+  const extra=T[338]||[];
+  const sample=(y,x,c)=>{
+    const raw=planes>1?raws[c]:raws[0],cc=planes>1?0:c;
+    if(bps===8)return raw[y*rowBytesP+x*sppP+cc];
+    if(bps===16)return raw[y*rowBytesP+(x*sppP+cc)*2+(le?1:0)];
+    const bit=(x*sppP+cc)*bps,v=(raw[y*rowBytesP+(bit>>3)]>>(8-bps-(bit&7)))&((1<<bps)-1);
+    return v;
+  };
+  const maxv=bps>=8?255:(1<<bps)-1;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const k=y*w+x;
+    if(photoEff===0||photoEff===1){
+      let v=sample(y,x,0);v=Math.round(v*255/maxv);if(photo===0)v=255-v;
+      gray(o,k,v);
+      if(spp>=2&&extra.length&&extra[0]>0)o.rgba[k*4+3]=Math.round(sample(y,x,1)*255/maxv);
+    }else if(photoEff===3){
+      const idx=sample(y,x,0),n=1<<bps;
+      if(!cmap||bps>8)throw Error('palette TIFF without a usable colour map');
+      put(o,k,cmap[idx]>>8,cmap[n+idx]>>8,cmap[2*n+idx]>>8);
+    }else if(photoEff===2){
+      put(o,k,sample(y,x,0),sample(y,x,1),sample(y,x,2),spp>=4&&extra.length&&extra[0]>0?sample(y,x,3):255);
+    }else if(photoEff===5){
+      const c=sample(y,x,0),m=sample(y,x,1),yy=sample(y,x,2),kk=spp>=4?sample(y,x,3):0;
+      put(o,k,(255-c)*(255-kk)/255|0,(255-m)*(255-kk)/255|0,(255-yy)*(255-kk)/255|0);
+    }else throw Error('TIFF photometric interpretation '+photo+(photo===6?' (YCbCr)':photo===8?' (CIE Lab)':'')+' is not supported');
+  }
+  o.note='TIFF · '+w+'×'+h+' · '+spp+'×'+bps+'-bit · '+({1:'uncompressed',5:'LZW',7:'JPEG',8:'Deflate',32773:'PackBits',32946:'Deflate'})[comp]+(tiled?' · tiled '+tw+'×'+th:'')+(planes>1?' · planar':'')+(pages>1?' · page 1 of '+pages:'')+(trunc?' · data truncated':'')+(g(274,1)!==1?' · orientation tag ignored':'');
+  return o;
+}
+
+/* ---- Apple PICT (version 2 raster ops + QuickTime JPEG; vector drawing is not rendered) ---- */
+function pictOffset(d){
+  for(const o of [0,512]){
+    if(d.length<o+40)continue;
+    const t=b16(d,o+2),l=b16(d,o+4),bm=b16(d,o+6),r=b16(d,o+8);
+    if(!(bm>t&&r>l))continue;
+    if(b16(d,o+10)===0x0011&&b16(d,o+12)===0x02FF)return o;
+    if(d[o+10]===0x11&&d[o+11]===0x01&&o===512)return o;
+  }
+  return -1;
+}
+function pictDecode(d){
+  const base=pictOffset(d);if(base<0)throw Error('not a PICT picture');
+  if(d[base+10]===0x11&&d[base+11]===0x01)throw Error('PICT version 1 pictures are not supported');
+  const fr={t:b16(d,base+2),l:b16(d,base+4),b:b16(d,base+6),r:b16(d,base+8)};
+  let p=base+10;const n=d.length;
+  const s16=o=>(b16(d,o)<<16)>>16;
+  const readRegion=o=>o+b16(d,o);
+  let best=null,vector=0,other=0,trunc=false,qtNote='';
+  const unpackRow=(o,rowBytes,wordUnits,limitEnd)=>{ /* PackBits; returns {row,next} */
+    let cnt;if(rowBytes>250){cnt=b16(d,o);o+=2}else{cnt=d[o];o+=1}
+    const end=o+cnt,row=new Uint8Array(rowBytes);let q=0;
+    const unit=wordUnits?2:1;
+    while(o<end&&o<n&&q<rowBytes){
+      const c=(d[o++]<<24)>>24;
+      if(c>=0){const k=(c+1)*unit;for(let i=0;i<k&&q<rowBytes;i++)row[q++]=d[o+i];o+=k}
+      else if(c!==-128){const k=(1-c);const u=d.subarray(o,o+unit);o+=unit;for(let i=0;i<k;i++)for(let j=0;j<unit&&q<rowBytes;j++)row[q++]=u[j]}
+    }
+    return {row,next:end};
+  };
+  const pixmapOp=(op)=>{
+    const direct=op===0x9A||op===0x9B,hasRgn=op===0x91||op===0x99||op===0x9B,packed=op===0x98||op===0x99||op===0x9A||op===0x9B;
+    let q=p;if(direct)q+=4;
+    let rb=b16(d,q);const isPix=!!(rb&0x8000);rb&=0x3FFF;q+=2;
+    const bt=s16(q),bl=s16(q+2),bb=s16(q+4),br=s16(q+6);q+=8;
+    let packType=0,pixSize=1,cmpCount=1,pal=null;
+    if(isPix){
+      packType=b16(d,q+2);
+      /* pixmap fields after bounds: version(2) packType(2) packSize(4) hRes(4) vRes(4) pixelType(2) pixelSize(2) cmpCount(2) cmpSize(2) planeBytes(4) table(4) reserved(4) */
+      pixSize=b16(d,q+2+2+4+4+4+2);cmpCount=b16(d,q+2+2+4+4+4+2+2);q+=36;
+      if(!direct){
+        const flags=b16(d,q+4),cnt=b16(d,q+6)+1;q+=8;pal=[];
+        if(cnt>256||q+cnt*8>n)throw Error('PICT colour table is damaged');
+        for(let i=0;i<cnt;i++){const v=b16(d,q),c=[d[q+2],d[q+4],d[q+6]];q+=8;pal.push({v,c})}
+        pal.flags=flags;
+      }
+    }else{pixSize=1;cmpCount=1}
+    q+=16+2; /* srcRect, dstRect, mode */
+    if(hasRgn)q=readRegion(q);
+    const w=br-bl,h=bb-bt;
+    if(w<=0||h<=0||w>16384||h>16384)throw Error('PICT bitmap has an invalid size');
+    const o=newImg(w,h);
+    let idxMap=null;
+    if(pal){idxMap=new Array(1<<Math.min(pixSize,8));for(let i=0;i<pal.length;i++){const k=(pal.flags&0x8000)?i:pal[i].v;if(k<idxMap.length)idxMap[k]=pal[i].c}}
+    const rawRows=!packed||rb<8||packType===1;
+    for(let y=0;y<h;y++){
+      let row;
+      if(rawRows){if(q+rb>n){trunc=true;break}row=d.subarray(q,q+rb);q+=rb}
+      else{
+        if(q+1>n){trunc=true;break}
+        const r=unpackRow(q,rb,pixSize===16,n);row=r.row;q=r.next;
+        if(q>n){trunc=true;break}
+      }
+      for(let x=0;x<w;x++){
+        const k=y*w+x;
+        if(!isPix){const bit=(row[x>>3]>>(7-(x&7)))&1;gray(o,k,bit?0:255);continue}
+        if(pixSize<=8){
+          const per=8/pixSize,v=(row[Math.floor(x/per)]>>(8-pixSize-(x%per)*pixSize))&((1<<pixSize)-1);
+          const c=idxMap&&idxMap[v]?idxMap[v]:[v*255/((1<<pixSize)-1),v*255/((1<<pixSize)-1),v*255/((1<<pixSize)-1)];
+          put(o,k,c[0],c[1],c[2]);
+        }else if(pixSize===16){const v=(row[x*2]<<8)|row[x*2+1];put(o,k,((v>>10)&31)*255/31|0,((v>>5)&31)*255/31|0,(v&31)*255/31|0)}
+        else if(pixSize===32){
+          if(packType===4||(packed&&!rawRows&&cmpCount>=3)){const cw=w,ro=cmpCount===4?cw:0;put(o,k,row[ro+x],row[ro+cw+x],row[ro+2*cw+x])}
+          else put(o,k,row[x*4+1],row[x*4+2],row[x*4+3]);
+        }else throw Error(pixSize+'-bit PICT pixels are not supported');
+      }
+    }
+    if(!best||w*h>best.w*best.h){best=o;best.note='PICT · '+w+'×'+h+' · '+(isPix?pixSize+'-bit '+(direct?'direct colour':'indexed'):'1-bit bitmap')+(trunc?' · data truncated':'')}
+    p=q;
+  };
+  let guard=0;
+  while(p+2<=n&&guard++<200000){
+    const op=b16(d,p);p+=2;
+    if(op===0x00FF)break;
+    let size=-1;
+    switch(true){
+      case op===0x0000:size=0;break;
+      case op===0x0001:size=b16(d,p);break;
+      case op===0x0002||op===0x0009||op===0x000A||op===0x0010||op===0x002E:size=8;break;
+      case op===0x0003||op===0x0005||op===0x000D||op===0x0015||op===0x0016||op===0x0008||op===0x00A0:size=2;break;
+      case op===0x0004:size=2;break;
+      case op===0x0006||op===0x0007||op===0x000B||op===0x000C||op===0x000E||op===0x000F||op===0x0021:size=4;break;
+      case op===0x0011:size=2;break;
+      case op===0x001A||op===0x001B||op===0x001D||op===0x001F||op===0x0022:size=6;break;
+      case op===0x001C||op===0x001E:size=0;break;
+      case op===0x0020:size=8;break;
+      case op===0x0023:size=2;break;
+      case op===0x0028:size=5+d[p+4];break;
+      case op===0x0029||op===0x002A:size=2+d[p+1];break;
+      case op===0x002B:size=3+d[p+2];break;
+      case op===0x002C:size=2+b16(d,p);break;
+      case op===0x002D:size=10;break;
+      case (op>=0x0030&&op<=0x0034)||(op>=0x0040&&op<=0x0044)||(op>=0x0050&&op<=0x0054):size=8;break;
+      case (op>=0x0038&&op<=0x003C)||(op>=0x0048&&op<=0x004C)||(op>=0x0058&&op<=0x005C)||(op>=0x0078&&op<=0x007C)||(op>=0x0088&&op<=0x008C):size=0;break;
+      case op>=0x0060&&op<=0x0064:size=12;break;
+      case op>=0x0068&&op<=0x006C:size=4;break;
+      case (op>=0x0070&&op<=0x0074)||(op>=0x0080&&op<=0x0084):size=b16(d,p);break;
+      case op===0x0090||op===0x0091||op===0x0098||op===0x0099||op===0x009A||op===0x009B:pixmapOp(op);if(p&1)p++;continue;
+      case op===0x00A1:size=4+b16(d,p+2);break;
+      case op>=0x00A2&&op<=0x00AF:size=2+b16(d,p);break;
+      case op>=0x00B0&&op<=0x00CF:size=0;break;
+      case op>=0x00D0&&op<=0x00FE:size=4+b32(d,p);break;
+      case op===0x0C00:size=24;break;
+      case op===0x02FF:size=0;break;
+      case op===0x0012||op===0x0013||op===0x0014:throw Error('PICT pixel-pattern opcode 0x'+op.toString(16)+' is not supported');
+      case op>=0x0100&&op<=0x7FFF:size=(op>>8)*2;break;
+      case op>=0x8000&&op<=0x80FF:size=0;break;
+      case op>=0x8100&&op<=0x81FF:size=4+b32(d,p);break;
+      case op===0x8200||op===0x8201:{
+        const len=b32(d,p),s=p+4,e=Math.min(n,s+len);
+        if(op===0x8200){
+          const matte=b32(d,s+2+36),mask=b32(d,s+2+36+4+8+2+8+4);
+          const idOff=s+68+matte+mask,idSize=b32(d,idOff),ctype=ascii(d,idOff+4,4);
+          const w=b16(d,idOff+32),h=b16(d,idOff+34);
+          if(ctype==='jpeg'){
+            const jd=d.subarray(idOff+idSize,e);
+            const j=jpegDecode(jd);
+            const o=newImg(j.w,j.h);
+            for(let k=0;k<j.w*j.h;k++){if(j.nc===1)gray(o,k,j.data[k]);else put(o,k,j.data[k*j.nc],j.data[k*j.nc+1],j.data[k*j.nc+2])}
+            if(!best||j.w*j.h>best.w*best.h){best=o;best.note='PICT · '+j.w+'×'+j.h+' · QuickTime JPEG'+(j.truncated?' · data truncated':'')}
+          }else qtNote=ctype.trim()+' ('+w+'×'+h+')';
+        }
+        p=e;if(p&1)p++;continue;
+      }
+      default:size=-1;
+    }
+    if(size<0)throw Error('PICT opcode 0x'+op.toString(16).padStart(4,'0')+' is not supported');
+    if(op>=0x0020&&op<=0x00FE&&!(op>=0x00A0))vector++;else other++;
+    p+=size;
+    if(p&1)p++;
+  }
+  if(!best){
+    if(qtNote)throw Error('this PICT holds a QuickTime-compressed image ('+qtNote+') that this viewer cannot decode');
+    throw Error(vector?'this PICT contains only vector drawing commands, which are not rendered':'this PICT contains no bitmap data');
+  }
+  if(vector)best.note+=' · vector drawing commands skipped';
+  return best;
+}
+
+function ilbmDecode(d){
+  const form=ascii(d,8,4);let p=12,bm=null,cmap=null,camg=0,body=null;
+  const end=Math.min(d.length,8+b32(d,4));
+  while(p+8<=end){
+    const id=ascii(d,p,4),len=b32(d,p+4),s=p+8;
+    if(id==='BMHD'&&len>=20)bm={w:b16(d,s),h:b16(d,s+2),np:d[s+8],mask:d[s+9],comp:d[s+10],tr:b16(d,s+12)};
+    else if(id==='CMAP')cmap=d.subarray(s,s+len);
+    else if(id==='CAMG')camg=b32(d,s);
+    else if(id==='BODY'){body=d.subarray(s,Math.min(d.length,s+len));break}
+    p=s+len+(len&1);
+  }
+  if(!bm||!body)throw Error('IFF file has no '+(bm?'BODY':'BMHD')+' chunk');
+  const {w,h,np,mask,comp,tr}=bm,o=newImg(w,h);
+  const pbm=form==='PBM ',rb=pbm?(w+1)&~1:((w+15)>>4)*2,planes=pbm?1:np+(mask===1?1:0),rowLen=pbm?rb:rb*planes;
+  let short=false;
+  const data=comp===1?(()=>{const r=packBits(body,rowLen*h);short=packBits.short;return r})():(()=>{const t=new Uint8Array(rowLen*h);t.set(body.subarray(0,rowLen*h));short=body.length<rowLen*h;return t})();
+  if(comp>1)throw Error('IFF compression '+comp+' is not supported');
+  let pal=null;
+  if(cmap){pal=[];let nib=true;for(let i=0;i+2<cmap.length;i+=3){pal.push([cmap[i],cmap[i+1],cmap[i+2]]);if((cmap[i]&15)||(cmap[i+1]&15)||(cmap[i+2]&15))nib=false}
+    if(nib)for(const c of pal){c[0]|=c[0]>>4;c[1]|=c[1]>>4;c[2]|=c[2]>>4}}
+  const ham=!!(camg&0x800),ehb=!!(camg&0x80)&&np===6&&!ham;
+  let mode=pbm?'chunky 8-bit':np+' planes';
+  if(ham)mode='HAM'+np;else if(ehb)mode='EHB';else if(np===24||np===32)mode='true colour';
+  for(let y=0;y<h;y++){
+    const rowBase=y*rowLen;
+    for(let x=0;x<w;x++){
+      const k=y*w+x;let idx=0;
+      if(pbm)idx=data[rowBase+x];
+      else{
+        const bi=x>>3,bm8=0x80>>(x&7);
+        if(np>=24){
+          let r=0,g=0,b=0,a=255;
+          for(let q=0;q<8;q++){
+            if(data[rowBase+q*rb+bi]&bm8)r|=1<<q;
+            if(data[rowBase+(q+8)*rb+bi]&bm8)g|=1<<q;
+            if(data[rowBase+(q+16)*rb+bi]&bm8)b|=1<<q;
+            if(np>=32&&(data[rowBase+(q+24)*rb+bi]&bm8))a=(a===255?0:a)|1<<q;
+          }
+          put(o,k,r,g,b,np>=32?(a===255?0:a):255);continue;
+        }
+        for(let q=0;q<np;q++)if(data[rowBase+q*rb+bi]&bm8)idx|=1<<q;
+      }
+      let c;
+      if(ham&&pal){
+        if(x===0)o._hc=pal[0]||[0,0,0];
+        const sh=np-2,ctl=idx>>sh,v=idx&((1<<sh)-1),vv=sh===4?(v<<4)|v:(v<<2)|(v>>4);
+        let hc=o._hc.slice();
+        if(ctl===0)hc=pal[v]||[0,0,0];else if(ctl===1)hc[2]=vv;else if(ctl===2)hc[0]=vv;else hc[1]=vv;
+        o._hc=hc;c=hc;
+      }else if(ehb&&pal){c=idx<32?pal[idx]:(pal[idx-32]||[0,0,0]).map(v=>v>>1)}
+      else if(pal)c=pal[idx]||[0,0,0];
+      else{const v=np>=8?idx:Math.round(idx*255/((1<<np)-1));c=[v,v,v]}
+      put(o,k,c[0],c[1],c[2]);
+      if(mask===2&&idx===tr)o.rgba[k*4+3]=0;
+      if(mask===1&&!pbm){if(!(data[rowBase+np*rb+(x>>3)]&(0x80>>(x&7))))o.rgba[k*4+3]=0}
+    }
+  }
+  delete o._hc;
+  o.note='IFF '+(pbm?'PBM':'ILBM')+' · '+w+'×'+h+' · '+mode+(comp===1?' · ByteRun1':'')+(mask?' · '+(mask===1?'mask plane':'transparent colour'):'')+(short?' · data truncated, remaining rows blank':'');
+  return o;
+}
+
+function dibDecode(d,base,len){
+  const hs=u32(d,base),w=u32(d,base+4),h2=u32(d,base+8)|0,planes=u16(d,base+12),bpp=u16(d,base+14),cmp=u32(d,base+16);
+  if(hs<40||cmp!==0&&cmp!==3)throw Error('unsupported DIB header');
+  const h=Math.abs(h2)>>1,o=newImg(w,h);
+  let used=u32(d,base+32);if(!used&&bpp<=8)used=1<<bpp;
+  const palOff=base+hs,pal=[];for(let i=0;i<used;i++)pal.push([d[palOff+i*4+2],d[palOff+i*4+1],d[palOff+i*4]]);
+  const px=palOff+used*4,stride=((w*bpp+31)>>5)<<2,mstride=((w+31)>>5)<<2,mbase=px+stride*h;
+  let anyAlpha=false;
+  for(let y=0;y<h;y++){
+    const sy=h2>0?h-1-y:y,ro=px+sy*stride;
+    for(let x=0;x<w;x++){
+      const k=y*w+x;let c;
+      if(bpp===32){c=[d[ro+x*4+2],d[ro+x*4+1],d[ro+x*4],d[ro+x*4+3]];if(c[3])anyAlpha=true}
+      else if(bpp===24)c=[d[ro+x*3+2],d[ro+x*3+1],d[ro+x*3],255];
+      else if(bpp===8)c=(pal[d[ro+x]]||[0,0,0]).concat(255);
+      else if(bpp===4)c=(pal[(d[ro+(x>>1)]>>((x&1)?0:4))&15]||[0,0,0]).concat(255);
+      else if(bpp===1)c=(pal[(d[ro+(x>>3)]>>(7-(x&7)))&1]||[0,0,0]).concat(255);
+      else throw Error(bpp+'-bit DIB is not supported');
+      put(o,k,c[0],c[1],c[2],c[3]);
+    }
+  }
+  /* AND mask applies unless the 32-bit image carries real alpha */
+  if(!(bpp===32&&anyAlpha)&&mbase+mstride*h<=d.length+0){
+    for(let y=0;y<h;y++){const sy=h2>0?h-1-y:y;for(let x=0;x<w;x++){if((d[mbase+sy*mstride+(x>>3)]>>(7-(x&7)))&1)o.rgba[(y*w+x)*4+3]=0}}
+  }
+  o.note=bpp+'-bit';
+  return o;
+}
+function icoDecode(d){
+  const n=u16(d,4),cur=u16(d,2)===2;let best=null;
+  for(let i=0;i<n;i++){
+    const e=6+i*16,w=d[e]||256,h=d[e+1]||256,size=u32(d,e+8),off=u32(d,e+12);
+    if(off+size>d.length||off<6)continue;
+    if(!best||w*h>best.w*best.h)best={w,h,size,off};
+  }
+  if(!best)throw Error('icon directory points outside the file');
+  const tag=(cur?'Cursor':'Icon')+' · '+n+' image'+(n>1?'s':'')+', showing '+best.w+'×'+best.h;
+  if(d[best.off]===0x89&&d[best.off+1]===0x50)return {png:d.slice(best.off,best.off+best.size),w:best.w,h:best.h,note:tag+' · embedded PNG'};
+  const o=dibDecode(d,best.off,best.size);o.note=tag+' · '+o.note+' DIB';return o;
+}
+
+function tgaPlausible(d,name){
+  if(d.length<18)return false;
+  const cmt=d[1],it=d[2],bpp=d[16],w=u16(d,12),h=u16(d,14);
+  if(![1,2,3,9,10,11].includes(it)||cmt>1||!w||!h)return false;
+  if(![8,15,16,24,32].includes(bpp))return false;
+  if((it&7)===1&&(cmt!==1||bpp!==8&&bpp!==16))return false;
+  if((it&7)===2&&bpp<15)return false;
+  const foot=d.length>=26&&ascii(d,d.length-18,16)==='TRUEVISION-XFILE';
+  return foot||['tga','vda','icb','vst','tpic'].includes(extOf(name));
+}
+function sniffImage(name,d){
+  if(d.length<12)return '';
+  if(d[0]===10&&d[1]<=5&&d[1]!==1&&d[2]<=1&&[1,2,4,8].includes(d[3])&&d.length>128&&d[64]===0&&d[65]>=1&&d[65]<=4&&u16(d,8)>=u16(d,4)&&u16(d,10)>=u16(d,6)&&u16(d,66)>0)return 'pcx';
+  if((d[0]===0x49&&d[1]===0x49&&d[2]===0x2a&&d[3]===0)||(d[0]===0x4d&&d[1]===0x4d&&d[2]===0&&d[3]===0x2a))return 'tiff';
+  if(ascii(d,0,4)==='FORM'&&(ascii(d,8,4)==='ILBM'||ascii(d,8,4)==='PBM '))return 'ilbm';
+  if(d[0]===0&&d[1]===0&&(d[2]===1||d[2]===2)&&d[3]===0&&d[4]>0&&d[4]<=64&&d.length>=6+d[4]*16){
+    let ok=true;for(let i=0;i<d[4];i++){const e=6+i*16;if(u32(d,e+12)+u32(d,e+8)>d.length||u32(d,e+12)<6+d[4]*16)ok=false}
+    if(ok)return 'ico';
+  }
+  if(tgaPlausible(d,name))return 'tga';
+  if(pictOffset(d)>=0)return 'pict';
+  return '';
+}
+async function decodeImage(kind,d){
+  if(kind==='pcx')return pcxDecode(d);
+  if(kind==='tga')return tgaDecode(d);
+  if(kind==='tiff')return tiffDecode(d);
+  if(kind==='ilbm')return ilbmDecode(d);
+  if(kind==='ico')return icoDecode(d);
+  if(kind==='pict')return pictDecode(d);
+  throw Error('unknown image kind');
+}
+const IMAGE_LABEL={pcx:'PCX',tga:'Targa',tiff:'TIFF',ilbm:'IFF ILBM',ico:'Icon',pict:'PICT'};
+function isSvg(name,d){
+  if(extOf(name)==='svg')return true;
+  const head=ascii(d,0,Math.min(d.length,1024));
+  return /^\s*(<\?xml[^>]*\?>\s*)?(<!--[\s\S]*?-->\s*)*(<!DOCTYPE svg[^>]*>\s*)?<svg[\s>]/i.test(head);
+}
+function isPdf(d){return d.length>=8&&ascii(d,0,5)==='%PDF-'}
+function pdfInfo(d){
+  const s=ascii(d,0,Math.min(d.length,8*1024*1024)),ver=s.slice(5,8);
+  const pages=(s.match(/\/Type\s*\/Page(?![s\w])/g)||[]).length;
+  const meta=k=>{const m=new RegExp('/'+k+'\\s*\\(((?:[^()\\\\]|\\\\.)*)\\)').exec(s);return m?m[1].replace(/\\(.)/g,'$1'):''};
+  return {version:ver,pages,title:meta('Title'),author:meta('Author'),producer:meta('Producer')};
+}
+
+/* ================= RTF ================= */
+const CP437='ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0';
+function isRtf(d){return d.length>=6&&ascii(d,0,5)==='{\\rtf'}
+function rtfToText(d){
+  const s=ascii(d,0,d.length);let cp='windows-1252';
+  const dec=(b)=>{ if(cp==='cp437')return b>=128?CP437[b-128]:String.fromCharCode(b);
+    try{return new TextDecoder(cp).decode(Uint8Array.of(b))}catch(_){return String.fromCharCode(b)} };
+  const SKIP=new Set(['fonttbl','colortbl','stylesheet','info','pict','header','footer','headerl','headerr','footerl','footerr','object','fldinst','themedata','colorschememapping','datastore','latentstyles','listtable','listoverridetable','rsidtbl','generator','xmlnstbl','filetbl','revtbl','private','bkmkstart','bkmkend','shpinst','nonshppict','mmathPr']);
+  const stack=[];let skip=false,uc=1,out='',ucSkip=0,i=0;
+  const SYM={emdash:'—',endash:'–',bullet:'•',lquote:'‘',rquote:'’',ldblquote:'“',rdblquote:'”',tab:'\t',emspace:' ',enspace:' ',qmspace:' ',page:'\f',line:'\n',par:'\n',sect:'\n\n',row:'\n',cell:'\t'};
+  while(i<s.length){
+    const c=s[i];
+    if(c==='{'){stack.push([skip,uc]);i++;
+      if(s[i]==='\\'&&s[i+1]==='*'){skip=true;i+=2}
+      else if(s[i]==='\\'){const m=/^\\([a-zA-Z]+)/.exec(s.slice(i,i+40));if(m&&SKIP.has(m[1]))skip=true}
+      continue}
+    if(c==='}'){const t=stack.pop();if(t){skip=t[0];uc=t[1]}i++;continue}
+    if(c==='\\'){
+      const n=s[i+1];
+      if(n==='\\'||n==='{'||n==='}'){if(!skip&&!ucSkip)out+=n;else if(ucSkip)ucSkip--;i+=2;continue}
+      if(n==="'"){const b=parseInt(s.substr(i+2,2),16);if(!skip){if(ucSkip)ucSkip--;else if(!isNaN(b))out+=dec(b)}i+=4;continue}
+      if(n==='~'){if(!skip)out+='\u00a0';i+=2;continue}
+      if(n==='_'){if(!skip)out+='-';i+=2;continue}
+      if(n==='-'||n==='|'||n===':'){i+=2;continue}
+      if(n==='\n'||n==='\r'){if(!skip)out+='\n';i+=2;continue}
+      const m=/^\\([a-zA-Z]+)(-?\d+)?\s?/.exec(s.slice(i,i+60));
+      if(!m){i++;continue}
+      i+=m[0].length;const w=m[1],v=m[2]!==undefined?parseInt(m[2],10):null;
+      if(w==='ansi')cp='windows-1252';else if(w==='mac')cp='macintosh';else if(w==='pc')cp='cp437';else if(w==='ansicpg'&&v)cp=v===437?'cp437':'windows-'+v;
+      else if(w==='uc'&&v!==null)uc=v;
+      else if(w==='u'&&v!==null&&!skip){out+=String.fromCharCode(v<0?v+65536:v);ucSkip=uc}
+      else if(!skip&&SYM[w]!==undefined)out+=SYM[w];
+      continue;
+    }
+    if(c==='\r'||c==='\n'){i++;continue}
+    if(!skip){if(ucSkip)ucSkip--;else out+=c}
+    i++;
+  }
+  return out.replace(/\n{3,}/g,'\n\n').trim()+'\n';
+}
+
+/* ================= archives ================= */
+const dosDate=(date,time)=>{const y=1980+(date>>9),m=(date>>5)&15,dd=date&31;if(!date||m<1||m>12||dd<1)return '';return y+'-'+String(m).padStart(2,'0')+'-'+String(dd).padStart(2,'0')+' '+String((time>>11)&31).padStart(2,'0')+':'+String((time>>5)&63).padStart(2,'0')};
+const unixDate=t=>{if(!t)return '';const D=new Date(t*1000);if(isNaN(D))return '';return D.toISOString().slice(0,16).replace('T',' ')};
+const latin1=(b,o,n)=>ascii(b,o,n);
+const cstr=(b,o,n)=>{let s='';for(let i=0;i<n&&b[o+i];i++)s+=String.fromCharCode(b[o+i]);return s};
+const cp437Str=(b,o,n)=>{let s='';for(let i=0;i<n;i++){const c=b[o+i];s+=c>=128?CP437[c-128]:String.fromCharCode(c)}return s};
+const utf8Str=(b,o,n)=>{try{return new TextDecoder('utf-8',{fatal:true}).decode(b.subarray(o,o+n))}catch(_){return latin1(b,o,n)}};
+const sjisStr=(b,o,n)=>{let hi=false;for(let i=0;i<n;i++)if(b[o+i]>127)hi=true;if(!hi)return latin1(b,o,n);try{return new TextDecoder('shift_jis').decode(b.subarray(o,o+n))}catch(_){return latin1(b,o,n)}};
+
+/* run a codec; on damaged data keep whatever was decoded and attach a warning */
+function runCodec(e,fn){
+  try{return fn()}
+  catch(err){
+    if(err&&err.limitHit)throw Error('output exceeds the '+(ENTRY_LIMIT>>20)+' MiB preview limit');
+    if(err&&err.partial&&err.partial.length){e.warn='data damaged ('+err.message+'); showing the part that could be decoded';return err.partial}
+    throw err;
+  }
+}
+function mkEntry(o){return Object.assign({name:'',dir:false,size:null,csize:null,method:'',when:'',crc:'',enc:false,supported:true,why:'',read:null,warn:''},o)}
+function checkSize(e){if(e.size!==null&&e.size>ENTRY_LIMIT)throw Error('entry is larger than the '+(ENTRY_LIMIT>>20)+' MiB preview limit; not extracted')}
+
+/* ---- ZIP ---- */
+function zipEntryFrom(d,cd){ /* parse one central-directory record at cd; returns entry or null */
+  if(u32(d,cd)!==0x02014b50)return null;
+  const flags=u16(d,cd+8),method=u16(d,cd+10),crc=u32(d,cd+16);
+  let csize=u32(d,cd+20),size=u32(d,cd+24);
+  const nl=u16(d,cd+28),xl=u16(d,cd+30),cl=u16(d,cd+32);let lho=u32(d,cd+42);
+  if(cd+46+nl+xl>d.length)return null;
+  const name=(flags&0x800)?utf8Str(d,cd+46,nl):cp437Str(d,cd+46,nl);
+  /* ZIP64 extra */
+  for(let x=cd+46+nl,xe=x+xl;x+4<=xe;){const id=u16(d,x),sz=u16(d,x+2);if(id===1){let q=x+4;if(size===0xFFFFFFFF){size=u32(d,q)+u32(d,q+4)*4294967296;q+=8}if(csize===0xFFFFFFFF){csize=u32(d,q)+u32(d,q+4)*4294967296;q+=8}if(lho===0xFFFFFFFF){lho=u32(d,q)+u32(d,q+4)*4294967296}}x+=4+sz}
+  return {e:{flags,method,crc,csize,size,name,lho,time:u16(d,cd+12),date:u16(d,cd+14)},next:cd+46+nl+xl+cl};
+}
+const ZIP_METHODS={0:'Stored',1:'Shrunk',2:'Reduced-1',3:'Reduced-2',4:'Reduced-3',5:'Reduced-4',6:'Imploded',8:'Deflated',9:'Deflate64',12:'BZip2',14:'LZMA',93:'Zstandard',95:'XZ',98:'PPMd'};
+function zipMake(d,r){
+  const dir=/\/$/.test(r.name);
+  const e=mkEntry({name:r.name,dir,size:r.size,csize:r.csize,method:ZIP_METHODS[r.method]||('method '+r.method),when:dosDate(r.date,r.time),crc:r.crc.toString(16).padStart(8,'0').toUpperCase(),enc:!!(r.flags&1)});
+  if(r.flags&1){e.supported=false;e.why='encrypted entry'}
+  else if(![0,1,2,3,4,5,6,8,9,12,14,95].includes(r.method)){e.supported=false;e.why=e.method+' compression is not supported in the preview'}
+  e.read=async()=>{
+    checkSize(e);if(!e.supported)throw Error(e.why);
+    const lo=r.lho;if(u32(d,lo)!==0x04034b50)throw Error('local header not found at offset '+lo);
+    const s=lo+30+u16(d,lo+26)+u16(d,lo+28);
+    let csz=r.csize;if(s+csz>d.length)e.warn='archive is truncated; data may be incomplete';
+    const raw=d.subarray(s,Math.min(d.length,s+csz));let out;
+    if(r.method===0)out=raw.slice();
+    else if(r.method===8&&typeof DecompressionStream!=='undefined'){const rr=await inflate(raw,'deflate-raw',ENTRY_LIMIT);out=rr.data;if(rr.error)e.warn='deflate stream damaged ('+rr.error+'); showing the part that could be decoded'}
+    else if(r.method===95)out=runCodec(e,()=>PvCodec.xzDecode(raw,ENTRY_LIMIT,crc32));
+    else out=runCodec(e,()=>PvCodec.zipDecode(r.method,raw,r.size,r.flags,ENTRY_LIMIT));
+    if(!e.warn&&crc32(out)!==r.crc)e.warn='CRC-32 mismatch: the extracted data does not match the stored checksum';
+    return out;
+  };
+  return e;
+}
+function zipList(d){
+  let eocd=-1;
+  for(let p=d.length-22;p>=Math.max(0,d.length-22-65535);p--)if(d[p]===0x50&&d[p+1]===0x4b&&d[p+2]===5&&d[p+3]===6){eocd=p;break}
+  const entries=[];let note='';
+  if(eocd>=0){
+    let n=u16(d,eocd+10),cd=u32(d,eocd+16);
+    /* ZIP64 end record locator */
+    if((n===0xFFFF||cd===0xFFFFFFFF)&&eocd>=20&&u32(d,eocd-20)===0x07064b50){const z=u32(d,eocd-12)+u32(d,eocd-8)*4294967296;if(u32(d,z)===0x06064b50){n=u32(d,z+32);cd=u32(d,z+48)}}
+    const comment=u16(d,eocd+20)?cp437Str(d,eocd+22,Math.min(u16(d,eocd+20),d.length-eocd-22)):'';
+    for(let i=0;i<n&&i<MAX_ENTRIES;i++){const r=zipEntryFrom(d,cd);if(!r){note='central directory is damaged after '+entries.length+' of '+n+' entries';break}entries.push(zipMake(d,r.e));cd=r.next}
+    if(comment)note+=(note?' · ':'')+'comment: '+comment.slice(0,200);
+    if(entries.length||!n)return {type:'ZIP',entries,note};
+  }
+  /* no usable central directory: walk local headers */
+  let p=0;note='central directory not found; entries recovered by scanning local headers';
+  while(p+30<=d.length&&entries.length<MAX_ENTRIES){
+    if(u32(d,p)!==0x04034b50){let q=p+1;while(q+4<=d.length&&u32(d,q)!==0x04034b50)q++;if(q+4>d.length)break;p=q;continue}
+    const flags=u16(d,p+6),method=u16(d,p+8),nl=u16(d,p+26),xl=u16(d,p+28);let csize=u32(d,p+18),size=u32(d,p+22);
+    if(flags&8&&!csize){ /* sizes live in a trailing descriptor: look for the next header */
+      let q=p+30+nl+xl;while(q+4<=d.length&&u32(d,q)!==0x04034b50&&u32(d,q)!==0x02014b50)q++;csize=q-(p+30+nl+xl);
+    }
+    const name=(flags&0x800)?utf8Str(d,p+30,nl):cp437Str(d,p+30,nl);
+    entries.push(zipMake(d,{flags,method,crc:u32(d,p+14),csize,size,name,lho:p,time:u16(d,p+10),date:u16(d,p+12)}));
+    p+=30+nl+xl+csize;
+  }
+  if(!entries.length)throw Error('no ZIP entries found');
+  return {type:'ZIP',entries,note};
+}
+
+/* ---- GZIP / TAR ---- */
+function tarOctal(d,o,n){if(d[o]&0x80){let v=0;for(let i=1;i<n;i++)v=v*256+d[o+i];return v}const s=cstr(d,o,n).trim();return s?parseInt(s,8):0}
+function tarValid(d,o){
+  if(o+512>d.length)return false;
+  let sum=0;for(let i=0;i<512;i++)sum+=(i>=148&&i<156)?32:d[o+i];
+  const stored=parseInt(cstr(d,o+148,8).trim(),8);
+  return !isNaN(stored)&&stored===sum;
+}
+function isTar(d){return d.length>=512&&tarValid(d,0)}
+function tarList(d,label){
+  const entries=[];let p=0,longName=null,pax=null,note='';
+  while(p+512<=d.length&&entries.length<MAX_ENTRIES){
+    if(!tarValid(d,p)){if(d.subarray(p,p+512).every(v=>v===0))break;note='stopped at an invalid header at offset '+p;break}
+    const type=String.fromCharCode(d[p+156]||48),size=tarOctal(d,p+124,12),mtime=tarOctal(d,p+136,12);
+    let name=cstr(d,p,100);
+    if(ascii(d,p+257,5)==='ustar'){const pre=cstr(d,p+345,155);if(pre)name=pre+'/'+name}
+    const dataOff=p+512;p=dataOff+Math.ceil(size/512)*512;
+    if(type==='L'){longName=utf8Str(d,dataOff,Math.max(0,cstr(d,dataOff,size).length));continue}
+    if(type==='x'||type==='g'){const txt=utf8Str(d,dataOff,size);const m=/\d+ path=([^\n]*)\n/.exec(txt);if(type==='x'&&m)pax=m[1];continue}
+    if(longName){name=longName;longName=null}
+    if(pax){name=pax;pax=null}
+    const dir=type==='5'||/\/$/.test(name);
+    const e=mkEntry({name,dir,size,csize:size,method:type==='2'?'symlink → '+cstr(d,dataOff-512+157,100):type==='1'?'hard link':'Stored',when:unixDate(mtime)});
+    if(type==='2'||type==='1'||type==='3'||type==='4'||type==='6'){e.supported=false;e.why='special file ('+(type==='2'?'symbolic link':type==='1'?'hard link':'device/fifo')+') has no data'}
+    e.read=async()=>{checkSize(e);if(!e.supported)throw Error(e.why);const s=dataOff,x=Math.min(d.length,s+size);if(s+size>d.length)e.warn='archive is truncated; data may be incomplete';return d.slice(s,x)};
+    entries.push(e);
+  }
+  return {type:label||'TAR',entries,note};
+}
+async function gzipList(name,d){
+  let p=10;const flg=d[3];let fname='';
+  if(flg&4)p+=2+u16(d,p);
+  if(flg&8){const e=d.indexOf(0,p);fname=latin1(d,p,e-p);p=e+1}
+  if(flg&16){p=d.indexOf(0,p)+1}
+  if(flg&2)p+=2;
+  const isize=d.length>=4?u32(d,d.length-4):0,trailerCrc=d.length>=8?u32(d,d.length-8):0;
+  const base=String(name||'').replace(/^.*[\/\\]/,'');
+  const inner=fname||base.replace(/\.(gz|tgz|z)$/i,m=>/tgz/i.test(m)?'.tar':'')||'data';
+  /* look inside for a TAR when plausible */
+  if(isize<=128*1024*1024&&(/\.(tgz|tar\.gz)$/i.test(base)||isize>=512)){
+    try{
+      const head=await inflate(d,'gzip',Math.min(ENTRY_LIMIT*2,isize+1024));
+      if(!head.error&&isTar(head.data)){const t=tarList(head.data,'TAR.GZ');t.note=(t.note?t.note+' · ':'')+'compressed tar: '+d.length.toLocaleString('en-US')+' → '+head.data.length.toLocaleString('en-US')+' B';return t}
+    }catch(_){}
+  }
+  const e=mkEntry({name:inner,size:isize,csize:d.length,method:'Deflated (gzip)',when:unixDate(u32(d,4)),crc:trailerCrc.toString(16).padStart(8,'0').toUpperCase()});
+  e.read=async()=>{checkSize(e);const rr=await inflate(d,'gzip',ENTRY_LIMIT);if(rr.error)e.warn='gzip stream damaged ('+rr.error+'); showing the part that could be decoded';else if(crc32(rr.data)!==trailerCrc)e.warn='CRC-32 mismatch against the gzip trailer';return rr.data};
+  return {type:'GZIP',entries:[e],note:''};
+}
+
+/* ---- single-file compressors: .Z (compress), .bz2, .xz, .lzma ---- */
+const SINGLE={z:{label:'compress (.Z)',type:'Z',strip:/\.(z|taz)$/i,fn:d=>PvCodec.uncompressZ(d,ENTRY_LIMIT*2)},
+  bz2:{label:'bzip2',type:'BZIP2',strip:/\.(bz2?|tbz2?|tb2)$/i,fn:d=>PvCodec.bunzip2(d,ENTRY_LIMIT*2)},
+  xz:{label:'XZ (LZMA2)',type:'XZ',strip:/\.(xz|txz)$/i,fn:d=>PvCodec.xzDecode(d,ENTRY_LIMIT*2,crc32)},
+  lzma:{label:'LZMA',type:'LZMA',strip:/\.(lzma|tlz)$/i,fn:d=>PvCodec.lzmaDecode(d,13,d.length,d[0],lzmaSize(d),ENTRY_LIMIT*2)}};
+function lzmaSize(d){let lo=u32(d,5),hi=u32(d,9);return (lo===0xFFFFFFFF&&hi===0xFFFFFFFF)?-1:hi*4294967296+lo}
+function lzmaPlausible(d){if(d.length<14||d[0]>=225)return false;const dict=u32(d,1);if(dict<4096||dict>0x40000000)return false;const lo=u32(d,5),hi=u32(d,9);return (lo===0xFFFFFFFF&&hi===0xFFFFFFFF)||hi<=0x100}
+function singleList(kind,name,d){
+  const S=SINGLE[kind];let data=null,err='',partial=false;
+  try{data=S.fn(d)}catch(e){if(e.partial&&e.partial.length){data=e.partial;partial=true;err=e.message}else throw e}
+  const base=String(name||'').replace(/^.*[\/\\]/,'');
+  const inner=base.replace(S.strip,m=>/^\.t/i.test(m)?'.tar':'')||'data';
+  if(isTar(data)){const t=tarList(data,'TAR.'+S.type);t.note=(t.note?t.note+' · ':'')+'compressed tar: '+d.length.toLocaleString('en-US')+' → '+data.length.toLocaleString('en-US')+' B'+(err?' · '+err:'');return t}
+  const e=mkEntry({name:inner,size:data.length,csize:d.length,method:S.label});
+  if(partial)e.warn='data damaged ('+err+'); showing the part that could be decoded';
+  e.read=async()=>{checkSize(e);return data.length>ENTRY_LIMIT?data.subarray(0,ENTRY_LIMIT):data};
+  return {type:S.type,entries:[e],note:partial?err:''};
+}
+
+/* ---- ARC ---- */
+const ARC_METHODS={1:'Stored (old)',2:'Stored',3:'Packed',4:'Squeezed',5:'Crunched (5)',6:'Crunched (6)',7:'Crunched (7)',8:'Crunched',9:'Squashed',10:'Crushed',11:'Distilled'};
+function arcPlausible(d){
+  if(d.length<30||d[0]!==0x1a||d[1]<1||d[1]>11)return false;
+  const nm=cstr(d,2,13);if(!nm||/[\x00-\x1f\x7f-\xff]/.test(nm))return false;
+  const cs=u32(d,15),hl=d[1]===1?25:29;return hl+cs<=d.length+1;
+}
+function arcList(d){
+  const entries=[];let p=0,note='';
+  while(p+25<=d.length&&entries.length<MAX_ENTRIES){
+    if(d[p]!==0x1a){note='stopped at an invalid header at offset '+p;break}
+    const m=d[p+1];if(m===0)break;
+    const name=cstr(d,p+2,13),cs=u32(d,p+15),crc=u16(d,p+23),hl=m===1?25:29,us=m===1?cs:u32(d,p+25),off=p+hl;
+    const e=mkEntry({name,size:us,csize:cs,method:ARC_METHODS[m]||('method '+m),when:dosDate(u16(d,p+19),u16(d,p+21)),crc:crc.toString(16).padStart(4,'0').toUpperCase()});
+    if(m>4&&m!==8&&m!==9){e.supported=false;e.why=e.method+' compression is not supported in the preview'}
+    e.read=async()=>{
+      checkSize(e);if(!e.supported)throw Error(e.why);
+      const raw=d.subarray(off,Math.min(d.length,off+cs));if(off+cs>d.length)e.warn='archive is truncated; data may be incomplete';
+      let out;
+      if(m<=2)out=raw.slice();
+      else if(m===3)out=rle90(raw,ENTRY_LIMIT);
+      else if(m===4)out=runCodec(e,()=>rle90(PvCodec.arcUnsqueeze(raw,ENTRY_LIMIT),ENTRY_LIMIT));
+      else{ /* crunched (8) / squashed (9): LZW dialects; try the plausible layouts and keep the one whose CRC matches */
+        const tries=m===8?[{skip:1,bits:12,rle:true},{skip:0,bits:12,rle:true},{skip:1,bits:12,rle:false}]:[{skip:0,bits:13,rle:false},{skip:0,bits:13,rle:true},{skip:1,bits:13,rle:false}];
+        let best=null;
+        for(const t of m===8?tries:tries)for(const quirk of [false,true]){
+          try{
+            let o=PvCodec.lzwDecode(raw,t.skip,{maxBits:t.skip&&raw[0]>=9&&raw[0]<=16?raw[0]:t.bits,block:true,quirk},ENTRY_LIMIT,us);
+            if(t.rle)o=rle90(o,ENTRY_LIMIT);
+            if(!best)best=o;
+            if(crc16(o)===crc){best=o;e.warn='';break}
+          }catch(_){}
+        }
+        if(!best)throw Error('could not decode this '+e.method+' entry');
+        out=best;
+      }
+      if(!e.warn&&crc16(out)!==crc)e.warn='CRC-16 mismatch: the extracted data does not match the stored checksum';
+      return out;
+    };
+    entries.push(e);
+    if(off+cs>d.length){note='archive is truncated';break}
+    p=off+cs;
+  }
+  return {type:'ARC',entries,note};
+}
+
+/* ---- LZH / LHA ---- */
+function lzhPlausible(d){return d.length>=24&&d[2]===0x2d&&d[6]===0x2d&&d[3]===0x6c&&/^[hz0-9ds]$/.test(String.fromCharCode(d[4]))&&d[20]<=2&&d[0]>=19}
+const dirStr=(d,o,n)=>sjisStr(d.slice(o,o+n).map(v=>v===0xff?0x2f:v),0,n);
+function lzhList(d){
+  const entries=[];let p=0,note='';
+  while(p+21<=d.length&&entries.length<MAX_ENTRIES){
+    if(d[p]===0&&d[p+1]===0)break;
+    if(d[p+2]!==0x2d||d[p+6]!==0x2d){note='stopped at an invalid header at offset '+p;break}
+    const lvl=d[p+20],method=ascii(d,p+2,5);let csize=u32(d,p+7),usize=u32(d,p+11),when='',name='',dirPart='',crc=null,dataOff;
+    if(lvl===0||lvl===1){
+      const hs=d[p],nl=d[p+21];name=sjisStr(d,p+22,nl);const q=p+22+nl;crc=u16(d,q);
+      when=dosDate(u32(d,p+15)>>>16,u32(d,p+15)&0xffff);
+      let cur=p+2+hs;
+      if(lvl===1){
+        let sz=u16(d,q+3),ep=cur,tot=0;
+        while(sz>0&&ep+sz<=d.length){
+          const t=d[ep];
+          if(t===1)name=sjisStr(d,ep+1,sz-3);else if(t===2)dirPart=dirStr(d,ep+1,sz-3);
+          tot+=sz;ep+=sz;sz=u16(d,ep-2);
+        }
+        csize-=tot;cur=ep;
+      }
+      dataOff=cur;
+    }else{
+      const hs=u16(d,p);crc=u16(d,p+21);when=unixDate(u32(d,p+15));
+      let sz=u16(d,p+24),ep=p+26;
+      while(sz>0&&ep+sz<=d.length){
+        const t=d[ep];
+        if(t===1)name=sjisStr(d,ep+1,sz-3);else if(t===2)dirPart=dirStr(d,ep+1,sz-3);
+        ep+=sz;sz=u16(d,ep-2);
+      }
+      dataOff=p+hs;
+    }
+    const full=(dirPart?dirPart.replace(/\/?$/,'/'):'')+name.replace(/\\/g,'/');
+    const isDir=method==='-lhd-';
+    const e=mkEntry({name:full||'(unnamed)',dir:isDir,size:usize,csize,method:method.replace(/-/g,''),when,crc:crc===null?'':crc.toString(16).padStart(4,'0').toUpperCase()});
+    const lhaOk=/^-lh[4-7]-$/.test(method);
+    if(method!=='-lh0-'&&method!=='-lz4-'&&!isDir&&!lhaOk){e.supported=false;e.why=method+' compression is not supported in the preview'}
+    e.read=async()=>{
+      checkSize(e);if(!e.supported)throw Error(e.why);
+      let out=d.slice(dataOff,Math.min(d.length,dataOff+csize));if(dataOff+csize>d.length)e.warn='archive is truncated; data may be incomplete';
+      if(lhaOk)out=runCodec(e,()=>PvCodec.lhaDecode(d,dataOff,Math.min(d.length,dataOff+csize),method[3],usize,ENTRY_LIMIT));
+      if(!e.warn&&crc!==null&&crc16(out)!==crc)e.warn='CRC-16 mismatch: the extracted data does not match the stored checksum';
+      return out;
+    };
+    entries.push(e);
+    if(dataOff+csize>d.length){note='archive is truncated';break}
+    p=dataOff+csize;
+  }
+  return {type:'LHA/LZH',entries,note};
+}
+
+/* ---- StuffIt (classic SIT!) ---- */
+function sitPlausible(d){return d.length>=22&&ascii(d,10,4)==='rLau'&&/^(SIT!|ST[0-9a-z]{2})$/.test(ascii(d,0,4))}
+function isSit5(d){return d.length>=20&&ascii(d,0,16)==='StuffIt (c)1997-'}
+const SIT_METHODS={0:'None',1:'RLE90',2:'Compress (LZW)',3:'Huffman',5:'LZAH',6:'FixedHuff',8:'Installer',13:'LZ+Huffman',14:'Installer',15:'Arsenic'};
+function sitList(d){
+  const entries=[];let p=22,note='',path=[];
+  const total=Math.min(u32(d,6)||d.length,d.length);
+  while(p+112<=d.length&&entries.length<MAX_ENTRIES){
+    const rm=d[p],dm=d[p+1],nl=Math.min(d[p+2],63);
+    const name=latin1(d,p+3,nl);
+    const rm6=rm&0x6f,dm6=dm&0x6f;
+    if(rm6===32||dm6===32){path.push(name);entries.push(mkEntry({name:path.join('/')+'/',dir:true,when:macDate(b32(d,p+80))}));p+=112;continue}
+    if(rm6===33||dm6===33){path.pop();p+=112;continue}
+    const type=latin1(d,p+66,4),creator=latin1(d,p+70,4),rl=b32(d,p+84),dl=b32(d,p+88),rc=b32(d,p+92),dc=b32(d,p+96),rcrc=b16(d,p+100),dcrc=b16(d,p+102);
+    const when=macDate(b32(d,p+80)),pre=path.length?path.join('/')+'/':'';
+    const dOff=p+112+rc;
+    const mk=(label,m,usz,csz,off,crcv)=>{
+      const e=mkEntry({name:pre+name+label,size:usz,csize:csz,method:(SIT_METHODS[m&0x0f]||('method '+(m&0x0f)))+(m&0x10?' (encrypted)':''),when,crc:crcv.toString(16).padStart(4,'0').toUpperCase()});
+      const mm=m&0x0f;
+      if(m&0x10){e.supported=false;e.enc=true;e.why='encrypted entry'}
+      else if(mm!==0&&mm!==1&&mm!==2&&mm!==3){e.supported=false;e.why=e.method+' compression is not supported in the preview'}
+      e.read=async()=>{
+        checkSize(e);if(!e.supported)throw Error(e.why);
+        const raw=d.subarray(off,Math.min(d.length,off+csz));if(off+csz>d.length)e.warn='archive is truncated; data may be incomplete';
+        let out;
+        if(mm===0)out=raw.slice();
+        else if(mm===1)out=rle90(raw,ENTRY_LIMIT);
+        else if(mm===2)out=runCodec(e,()=>PvCodec.lzwDecode(raw,0,{maxBits:14,block:true,quirk:true},ENTRY_LIMIT,usz));
+        else{ /* Huffman: bit order is the only uncertain detail, so let the stored CRC decide */
+          let best=null,lastErr=null;
+          for(const v of [{msb:true,leafOne:true},{msb:false,leafOne:true},{msb:true,leafOne:false},{msb:false,leafOne:false}]){
+            try{const o=PvCodec.sitHuffman(raw,usz,ENTRY_LIMIT,v);if(!best)best=o;if(crc16(o)===crcv){best=o;break}}catch(er){lastErr=er}
+          }
+          if(!best)throw lastErr||Error('could not decode this Huffman entry');
+          out=best;
+        }
+        if(!e.warn&&crc16(out)!==crcv)e.warn='CRC-16 mismatch: the extracted data does not match the stored checksum';
+        return out;
+      };
+      return e;
+    };
+    if(dl>0||rl===0){const e=mk('',dm,dl,dc,dOff,dcrc);e.note=type+'/'+creator;entries.push(e)}
+    if(rl>0){const e=mk(dl>0?' (resource fork)':'',rm,rl,rc,p+112,rcrc);e.note=type+'/'+creator;entries.push(e)}
+    if(p+112+rc+dc>d.length){note='archive is truncated';break}
+    p+=112+rc+dc;
+  }
+  return {type:'StuffIt',entries,note};
+}
+const macDate=s=>{if(!s)return '';const D=new Date((s-2082844800)*1000);return isNaN(D)?'':D.toISOString().slice(0,16).replace('T',' ')};
+
+/* ---- dispatch ---- */
+function sniffArchive(name,d){
+  if(d.length<4)return '';
+  if(d[0]===0x50&&d[1]===0x4b&&((d[2]===3&&d[3]===4)||(d[2]===5&&d[3]===6)))return 'zip';
+  if(d[0]===0x1f&&d[1]===0x8b&&d[2]===8)return 'gzip';
+  if(isTar(d))return 'tar';
+  if(d[0]===0x42&&d[1]===0x5a&&d[2]===0x68&&d[3]>=0x31&&d[3]<=0x39)return 'bz2';
+  if(d.length>=6&&d[0]===0xFD&&d[1]===0x37&&d[2]===0x7A&&d[3]===0x58&&d[4]===0x5A&&d[5]===0)return 'xz';
+  if(d[0]===0x1f&&d[1]===0x9d)return 'z';
+  if(/\.(lzma|tlz)$/i.test(String(name||''))&&lzmaPlausible(d))return 'lzma';
+  if(sitPlausible(d))return 'sit';
+  if(isSit5(d))return 'sit5';
+  if(lzhPlausible(d))return 'lzh';
+  if(arcPlausible(d))return 'arc';
+  return '';
+}
+async function listArchive(kind,name,d){
+  if(kind==='zip')return zipList(d);
+  if(kind==='gzip')return gzipList(name,d);
+  if(kind==='tar')return tarList(d);
+  if(SINGLE[kind])return singleList(kind,name,d);
+  if(kind==='arc')return arcList(d);
+  if(kind==='lzh')return lzhList(d);
+  if(kind==='sit')return sitList(d);
+  if(kind==='sit5')throw Error('StuffIt 5 archives are not supported in the preview');
+  throw Error('unknown archive kind');
+}
+
+return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,sniffArchive,listArchive,crc32,crc16,ENTRY_LIMIT,
+  _t:{packBits,lzwTiff,rle90,inflate,PvCodec}};
+})();
+
+</script>
+<script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.6'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.7'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -4444,6 +6042,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
   let fsViewMode = 'folder'; // 'folder' | 'flat'
   let activePreviewMode = 'formatted'; // 'formatted' | 'hex'
   let currentFileBytes = null;
+  let previewSeq = 0; // async-render token
   let audioContext = null, audioBuffer = null, audioSource = null, isPlayingAudio = false;
 
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -4895,20 +6494,22 @@ return {detect,convert,parseKFSet,version:'1.1'};
     finally{fluxInfo=saved.fluxInfo;currentName=saved.currentName;retroInfo=saved.retroInfo;bytes=saved.bytes;view=saved.view;disk=saved.disk}
   }
   const tick=()=>new Promise(r=>setTimeout(r,0));
-  async function analyzeAll(){
+  /* only: null = every image still without a result (or all again when none are left); array of item indexes = exactly those images, always re-run */
+  async function analyzeRun(only){
     if(!library||exportRunning)return;
     if(library.analyzing){library.stop=true;$('libAnalyze').disabled=true;$('libAnalyze').textContent='Stopping…';return}
-    const lib=library;
-    let todo=lib.items.filter(it=>!it.result);const rerun=!todo.length;
-    if(rerun)todo=lib.items.slice();
-    lib.analyzing=true;lib.stop=false;lib.analyzedAt=null;
+    const lib=library,partial=Array.isArray(only);
+    let todo,rerun=false;
+    if(partial){todo=only.filter(i=>lib.items[i]).map(i=>lib.items[i]);if(!todo.length)return}
+    else{todo=lib.items.filter(it=>!it.result);rerun=!todo.length;if(rerun)todo=lib.items.slice()}
+    lib.analyzing=true;lib.stop=false;if(!partial)lib.analyzedAt=null;
     const t0=Date.now();let done=0,lastPaint=0;
     $('libProg').classList.remove('hidden');
     renderLibrary();
     for(const it of todo){
       if(library!==lib||lib.stop)break;
       $('libProgBar').max=todo.length;$('libProgBar').value=done;
-      $('libProgText').textContent='Analyzing '+(done+1)+' of '+fmt(todo.length)+' — '+it.name;
+      $('libProgText').textContent='Analyzing '+(partial?'selected ':'')+(done+1)+' of '+fmt(todo.length)+' — '+it.name;
       await tick();
       let res;
       try{const rb=(it.rb||await readItemBuffers(it));res=analyzeOffscreen(rb.ab,rb.name,rb.extra)}catch(e){res=failedResult(e.message)}
@@ -4918,12 +6519,14 @@ return {detect,convert,parseKFSet,version:'1.1'};
     const stopped=lib.stop;
     lib.analyzing=false;lib.stop=false;
     if(library!==lib)return;
-    lib.analyzedAt=new Date();lib.elapsed=Date.now()-t0;
+    lib.analyzedAt=new Date();if(!partial)lib.elapsed=Date.now()-t0;
     $('libProg').classList.add('hidden');
     renderLibrary();
-    setStatus((stopped?'Analysis stopped after ':'Analyzed ')+fmt(done)+' image'+(done===1?'':'s')+' in '+((Date.now()-t0)/1000).toFixed(1)+' s.');
-    if(!stopped||done)openReport();
+    setStatus((stopped?'Analysis stopped after ':'Analyzed ')+fmt(done)+(partial?' selected':'')+' image'+(done===1?'':'s')+' in '+((Date.now()-t0)/1000).toFixed(1)+' s.');
+    if(!partial&&(!stopped||done))openReport();
   }
+  const analyzeAll=()=>analyzeRun(null);
+  const analyzeSelected=()=>{if(!library||library.analyzing||exportRunning)return;analyzeRun([...libSelSet()].filter(i=>i<library.items.length).sort((a,b)=>a-b))};
   const libCounts=()=>{
     const c={total:library.items.length,done:0,error:0,warn:0,ok:0};
     for(const it of library.items){if(!it.result)continue;c.done++;c[it.result.status]++}
@@ -5021,6 +6624,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
   $('repJson').onclick=()=>{if(reportCache)downloadBlob(new Blob([JSON.stringify(reportCache,null,2)],{type:'application/json'}),reportBase()+'.json')};
   $('repPrint').onclick=()=>{try{const w=$('repFrame').contentWindow;w.focus();w.print()}catch(e){setStatus('Printing is not available here — use Download HTML and print that file.',true)}};
   $('libAnalyze').onclick=analyzeAll;
+  $('libAnalyzeSel').onclick=analyzeSelected;
   $('libReport').onclick=()=>openReport();
 
   /* ===================== Bulk export: IMG / IMD / HFE / extracted files, ZIP or folder, with manifest ===================== */
@@ -5276,7 +6880,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
   /* Decode one library item and build every requested output. Synchronous; module globals are saved/restored around it. */
   function exDecode(it,rb,want){
     const saved={fluxInfo,currentName,retroInfo,bytes,view,disk};
-    const rec={name:it.name,path:(it.rel?it.rel+'/':'')+it.name,type:it.kind==='kf'?'KryoFlux trackset':it.ext.toUpperCase(),sourceBytes:it.size,status:'ok',outputs:[],notes:[]};
+    const rec={name:it.name,path:(it.rel?it.rel+'/':'')+it.name,type:it.kind==='kf'?'KryoFlux track set':it.ext.toUpperCase(),sourceBytes:it.size,status:'ok',outputs:[],notes:[]};
     const outs=[];
     try{
       const dn=prepareImage(rb.ab,rb.name,rb.extra);
@@ -5572,6 +7176,7 @@ return {detect,convert,parseKFSet,version:'1.1'};
     {const c=libCounts(),az=$('libAnalyze');
      if(library.analyzing){az.textContent=library.stop?'Stopping…':'Stop';az.disabled=!!library.stop;az.classList.remove('primary')}
      else{az.disabled=false;az.classList.add('primary');az.textContent=library.single?'Re-analyze':c.done===c.total?'Re-analyze all':(c.done?'Analyze remaining ('+fmt(c.total-c.done)+')':'Analyze all')}
+     {const nsel=libSelSet().size,bs=$('libAnalyzeSel');bs.classList.toggle('hidden',!nsel||!!library.single);bs.disabled=!!library.analyzing||exportRunning;bs.textContent='Analyze selected ('+fmt(nsel)+')'}
      $('libReport').disabled=!c.done;
      {const ns=libSelSet().size;$('libExport').textContent=ns?'Export ('+fmt(ns)+')…':'Export…';$('libExport').disabled=!!library.analyzing||exportRunning;$('libSelInfo').textContent=ns?fmt(ns)+' selected':'';$('libSelClear').disabled=!ns}
      $('libSum').innerHTML=c.done?'<span class="fc-chip">Analyzed '+fmt(c.done)+' of '+fmt(c.total)+'</span>'+(c.error?'<span class="fc-chip warn">'+fmt(c.error)+' with errors</span>':'')+(c.warn?'<span class="fc-chip amber">'+fmt(c.warn)+' with warnings</span>':'')+(c.ok?'<span class="fc-chip ok">'+fmt(c.ok)+' no problems</span>':''):''}
@@ -6930,13 +8535,16 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
     $('previewText').classList.toggle('preview-hidden',kind!=='text'&&kind!=='hex');
     $('previewAudio').classList.toggle('preview-hidden',kind!=='audio');
     $('previewExe').classList.toggle('preview-hidden',kind!=='exe');
+    $('previewPdf').classList.toggle('preview-hidden',kind!=='pdf');
+    $('previewArchive').classList.toggle('preview-hidden',kind!=='archive');
+    if(file&&file.warn)note='⚠ '+file.warn+(note?' · '+note:'');
     $('previewPlaceholder').classList.toggle('preview-hidden',kind!=='none');
     
     $('previewModeToggle').classList.toggle('hidden', !file || file.directory || kind === 'none');
 
-    $('previewBadge').textContent=file?(file.directory?'Directory':(file.deleted?'Deleted file':(file.size===0?'Empty file':'Selected file'))):'No file selected';
+    $('previewBadge').textContent=file?(file.archive?'Archive':file.directory?'Directory':(file.deleted?'Deleted file':(file.size===0?'Empty file':'Selected file'))):'No file selected';
     $('previewNote').textContent=note||'';
-    $('previewMeta').textContent=file?(file.path+' · '+(file.directory?'directory':sizeFmt(file.size))):'Select a file entry to preview text, images, executable headers, or retro audio formats.';
+    $('previewMeta').textContent=file?(file.path+' · '+(file.directory?'directory':sizeFmt(file.size))):'Select a file entry to preview text, images, PDF, archives, executable headers, or retro audio formats.';
   }
 
   /* Audio Web Audio API Player & Visualizer */
@@ -7173,14 +8781,27 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
   }
 
   function updateFilePreview(file){
-    clearPreviewObjectUrl(); stopAudio();
-    const image=$('previewImage'), text=$('previewText');
-    image.removeAttribute('src'); text.textContent='';
-    $('downloadFile').disabled=!file||file.directory;
+    previewSeq++;
+    resetPreviewSurfaces();
+    $('downloadFile').disabled=!file||(file.directory&&!file.archive);
     currentFileBytes = null;
 
     if(!file){ setPreviewState(null,'none',''); return; }
+    if(file.archive){ setPreviewState(file,'none',archiveSummary(file)); return; }
     if(file.directory){ setPreviewState(file,'none','Preview and download are unavailable for directories.'); return; }
+    if(file.virtual){
+      /* an entry inside an opened archive: unpack it on demand */
+      if(file.unsupported){ $('downloadFile').disabled=true; setPreviewState(file,'none','This entry cannot be unpacked here: '+String(file.note).replace(/\.?\s*$/,'.')+' It is listed only.'); return; }
+      const seq=previewSeq;
+      setPreviewState(file,'none','Extracting '+file.name+'…');
+      entryBytes(file).then(data=>{
+        if(seq!==previewSeq)return;
+        currentFileBytes=data;
+        if(!data.length){ setPreviewState(file,'none','This file is empty.'); return; }
+        renderPayload(file,data);
+      }).catch(err=>{ if(seq===previewSeq)setPreviewState(file,'none','Could not extract '+file.name+': '+err.message); });
+      return;
+    }
     if(!disk||(!disk.valid&&!disk.foreign&&disk.fsType!=='NEXTSTEP_UFS1'&&disk.fsType!=='SUN_TAR'&&!(disk.fsType&&disk.fsType.startsWith('MAC_')))){ setPreviewState(file,'none','No supported filesystem parser is available, so file data cannot be reconstructed.'); return; }
     if(!file.size){
       const isMac=!!(disk&&disk.fsType&&disk.fsType.startsWith('MAC_'));
@@ -7195,7 +8816,18 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
     try {
       const data = extractFileBytes(file);
       currentFileBytes = data;
+      renderPayload(file, data);
 
+    } catch(err) {
+      setPreviewState(file, 'none', 'Could not preview file: ' + err.message);
+    }
+  }
+
+
+  /* Type dispatch for a payload (a selected file, or an entry opened from an archive). */
+  function renderPayload(file, data) {
+    const image=$('previewImage'), text=$('previewText');
+    try {
       if (activePreviewMode === 'hex') {
         text.textContent = renderHexDump(data.subarray(0, Math.min(data.length, TEXT_PREVIEW_LIMIT)));
         setPreviewState(file, 'hex', data.length > TEXT_PREVIEW_LIMIT ? 'Hex dump truncated at 256 KiB.' : 'Raw payload hex view.');
@@ -7228,6 +8860,28 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
         return;
       }
 
+      if (data.length <= 8*1024*1024 && PvFmt.isSvg(file.name, sample)) {
+        previewObjectUrl = URL.createObjectURL(new Blob([data], {type: 'image/svg+xml'}));
+        image.src = previewObjectUrl;
+        setPreviewState(file, 'image', 'SVG image · rendered as a picture only (scripts and external references do not run).');
+        return;
+      }
+
+      const imgKind = PvFmt.sniffImage(file.name, data);
+      if (imgKind) { showDecodedImage(file, imgKind, data); return; }
+
+      if (PvFmt.isPdf(data)) { showPdf(file, data); return; }
+
+      if (PvFmt.isRtf(data)) {
+        const over = data.length > TEXT_PREVIEW_LIMIT*4;
+        text.textContent = PvFmt.rtfToText(over ? data.subarray(0, TEXT_PREVIEW_LIMIT*4) : data);
+        setPreviewState(file, 'text', 'RTF document · text only, formatting and embedded pictures removed.' + (over ? ' Truncated.' : ''));
+        return;
+      }
+
+      const arcKind = PvFmt.sniffArchive(file.name, data);
+      if (arcKind) { showArchive(file, arcKind, data); return; }
+
       if (isAudioFile(file, sample)) {
         setupAudioPreview(file, data);
         return;
@@ -7251,6 +8905,173 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
       setPreviewState(file, 'hex', 'Binary file detected. Showing raw payload hex dump.');
     } catch(err) {
       setPreviewState(file, 'none', 'Could not preview file: ' + err.message);
+    }
+  }
+
+  /* ---------- Extra formats: decoded images, PDF, archive browser ---------- */
+  function resetPreviewSurfaces(){
+    clearPreviewObjectUrl(); stopAudio();
+    const image=$('previewImage');
+    image.removeAttribute('src'); image.style.width=''; image.style.imageRendering='';
+    $('previewText').textContent='';
+    $('previewPdf').removeAttribute('src');
+    $('previewArchive').textContent='';
+  }
+  function hexFallback(file, data, note) {
+    $('previewText').textContent = renderHexDump(data.subarray(0, Math.min(data.length, 2048)));
+    setPreviewState(file, 'hex', note);
+  }
+  async function showDecodedImage(file, kind, data) {
+    const seq = previewSeq, label = PvFmt.IMAGE_LABEL[kind] || kind;
+    setPreviewState(file, 'none', 'Decoding ' + label + ' image…');
+    try {
+      const r = await PvFmt.decodeImage(kind, data);
+      let blob;
+      if (r.png) blob = new Blob([r.png], {type: 'image/png'});
+      else {
+        const cv = document.createElement('canvas'); cv.width = r.w; cv.height = r.h;
+        cv.getContext('2d').putImageData(new ImageData(r.rgba, r.w, r.h), 0, 0);
+        blob = await new Promise((res, rej) => cv.toBlob(b => b ? res(b) : rej(Error('could not encode the preview')), 'image/png'));
+      }
+      if (seq !== previewSeq) return;
+      clearPreviewObjectUrl();
+      previewObjectUrl = URL.createObjectURL(blob);
+      const image = $('previewImage'), small = r.w <= 256 && r.h <= 256, k = Math.floor(Math.min(480 / r.w, 360 / r.h));
+      image.style.imageRendering = small ? 'pixelated' : '';
+      image.style.width = small && k >= 2 ? (r.w * k) + 'px' : '';
+      image.src = previewObjectUrl;
+      setPreviewState(file, 'image', r.note + ' · decoded in the browser' + (small && k >= 2 ? ' · shown at ' + k + '×' : ''));
+    } catch (err) {
+      if (seq !== previewSeq) return;
+      hexFallback(file, data, label + ' image could not be decoded (' + err.message + '). Showing the raw payload instead.');
+    }
+  }
+  function showPdf(file, data) {
+    const info = PvFmt.pdfInfo(data), bits = ['PDF ' + info.version];
+    if (info.pages) bits.push('≈' + info.pages + ' page' + (info.pages > 1 ? 's' : ''));
+    if (info.title) bits.push('title “' + info.title.slice(0, 80) + '”');
+    if (info.author) bits.push('author ' + info.author.slice(0, 60));
+    clearPreviewObjectUrl();
+    previewObjectUrl = URL.createObjectURL(new Blob([data], {type: 'application/pdf'}));
+    $('previewPdf').src = previewObjectUrl;
+    setPreviewState(file, 'pdf', bits.join(' · ') + ' · shown in the browser’s own PDF viewer; if nothing appears, use Download file.');
+  }
+  /* ---------- Archives open as folders in the file browser ----------
+     The browser works on a "browse list": the disk's own entries, plus (once an archive has been opened) the archive's
+     contents as virtual entries. The archive's own entry is swapped for a folder-like copy; the disk entries are never changed. */
+  const browseStates = new WeakMap();
+  const browseList = () => { if (!disk) return []; const st = browseStates.get(disk); return st ? st.list : (disk.fileEntries || []); };
+  async function entryBytes(f, limit) {
+    const o = f.origin || f;
+    if (typeof o.aread === 'function') return o.aread();
+    return extractFileBytes(o, limit);
+  }
+  function archiveSummary(f) {
+    const kids = browseList().filter(x => x.virtual && x.path.startsWith(f.path + '/')), nf = kids.filter(x => !x.directory).length, nd = kids.length - nf,
+      bad = kids.filter(x => x.unsupported).length;
+    return f.archiveType + ' archive opened · ' + nf.toLocaleString('en-US') + ' file' + (nf === 1 ? '' : 's') + (nd ? ' · ' + nd + ' folder' + (nd === 1 ? '' : 's') : '')
+      + (f.archiveNote ? ' · ' + f.archiveNote : '') + '. Browse it in the list, tick files or folders to export them, or use Download file for the archive itself.'
+      + (bad ? ' ' + bad + ' entr' + (bad === 1 ? 'y uses' : 'ies use') + ' a method or encryption that cannot be unpacked here; ' + (bad === 1 ? 'it is' : 'they are') + ' listed only.' : '');
+  }
+  const ARCHIVE_ENTRY_LIMIT = 20000;
+  function cleanArchiveName(name) {
+    const parts = String(name).replace(/\\/g, '/').split('/').filter(p => p && p !== '.' && p !== '..');
+    return parts.map(p => p.replace(/[\u0000-\u001f]/g, '?'));
+  }
+  function mountArchive(file, listing) {
+    const st = browseStates.get(disk) || {list: (disk.fileEntries || []).slice()};
+    const list = st.list.slice(), idx = list.indexOf(file);
+    if (idx < 0) {
+      const at = st.list.findIndex(f => f.archive && f.origin === (file.origin || file));
+      return at < 0 ? null : {proxy: st.list[at], idx: at, existing: true};
+    }
+    const depth = (file.depth || 0) + 1;
+    if (depth > 4) throw Error('archives are nested too deeply');
+    const root = file.path, proxy = Object.assign({}, file, {directory: true, archive: true, origin: file.origin || file, archiveType: listing.type, archiveNote: listing.note || '', depth, kind: listing.type + ' archive'});
+    list[idx] = proxy;
+    const seen = new Set(list.filter(f => f.directory).map(f => f.path));
+    const addDir = (parts, when) => {
+      const path = root + '/' + parts.join('/');
+      if (seen.has(path)) return;
+      seen.add(path);
+      list.push({name: parts[parts.length - 1], path, directory: true, virtual: true, size: 0, modified: when || '', kind: 'Folder', depth});
+    };
+    let n = 0, skipped = 0;
+    for (const e of listing.entries) {
+      const parts = cleanArchiveName(e.name); if (!parts.length) continue;
+      if (++n > ARCHIVE_ENTRY_LIMIT) { skipped++; continue; }
+      for (let i = 1; i < parts.length; i++) addDir(parts.slice(0, i));
+      if (e.dir) { addDir(parts, e.when); continue; }
+      const f = {name: parts[parts.length - 1], path: root + '/' + parts.join('/'), directory: false, virtual: true, textEnc: '', depth,
+        size: e.size === null ? 0 : e.size, modified: e.when || '', kind: e.method + (e.enc ? ' 🔒' : ''), unsupported: !e.supported,
+        note: e.supported ? (e.method + (e.crc ? ' · CRC ' + e.crc : '')) : (e.why || 'unsupported'), warn: ''};
+      f.aread = async () => { const d = await e.read(); f.warn = e.warn || ''; f.size = d.length; return d; };
+      list.push(f);
+    }
+    if (skipped) proxy.archiveNote = (proxy.archiveNote ? proxy.archiveNote + ' · ' : '') + 'only the first ' + ARCHIVE_ENTRY_LIMIT.toLocaleString('en-US') + ' entries are listed';
+    st.list = list; browseStates.set(disk, st);
+    return {proxy, idx};
+  }
+  /* a ticked archive means "export its contents"; archives start collapsed in the tree so a disk full of them stays tidy */
+  function afterMount(m) {
+    if (m.existing) return;
+    if (selectedExportFiles.has(m.idx)) setExportSelection(browseList(), m.idx, true);
+    treeCollapsed.add(m.proxy.path);
+  }
+  /* Archives are opened in the background as soon as a disk is shown, so they appear as folders without needing a click.
+     Large archives (and anything past the budgets) stay ordinary files until clicked. */
+  const ARCHIVE_NAME_RE = /\.(zip|tar|tgz|taz|tbz2?|txz|tlz|gz|bz2|xz|lzma|z|arc|lzh|lha|sit)$/i;
+  const EAGER_ARCHIVE_BYTES = 32 * 1024 * 1024, EAGER_TOTAL_BYTES = 256 * 1024 * 1024, EAGER_ENTRY_BUDGET = 50000;
+  let autoMountToken = 0, autoMountEnabled = true;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  async function autoMountArchives() {
+    const myDisk = disk, token = ++autoMountToken;
+    if (!myDisk || !autoMountEnabled) return;
+    const tried = new WeakSet(), queue = [];
+    let entryBudget = EAGER_ENTRY_BUDGET, byteBudget = EAGER_TOTAL_BYTES, changed = false, lastPaint = Date.now();
+    const enqueue = list => { for (const f of list) if (!f.directory && !f.deleted && !f.archive && f.size > 0 && f.size <= EAGER_ARCHIVE_BYTES && ARCHIVE_NAME_RE.test(f.name) && !tried.has(f)) queue.push(f); };
+    const stale = () => token !== autoMountToken || disk !== myDisk;
+    enqueue(browseList());
+    await wait(0);
+    while (queue.length && entryBudget > 0 && byteBudget > 0) {
+      if (stale()) return;
+      const f = queue.shift(); tried.add(f);
+      try {
+        if (!browseList().includes(f)) continue;
+        const data = await entryBytes(f);
+        if (stale()) return;
+        const kind = PvFmt.sniffArchive(f.name, data); if (!kind) continue;
+        const listing = await PvFmt.listArchive(kind, f.name, data);
+        if (stale()) return;
+        const m = mountArchive(f, listing); if (!m || m.existing) continue;
+        afterMount(m);
+        entryBudget -= listing.entries.length; byteBudget -= data.length; changed = true;
+        enqueue(browseList().filter(x => x.virtual && x.path.startsWith(m.proxy.path + '/')));
+      } catch (_) { /* unreadable or unsupported: it simply stays an ordinary file */ }
+      if (changed && Date.now() - lastPaint > 400) { renderDirectoryView(); lastPaint = Date.now(); }
+      await wait(0);
+    }
+    if (!stale() && changed) renderDirectoryView();
+  }
+
+  async function showArchive(file, kind, data) {
+    const seq = previewSeq, quiet = !!file.quietOpen; delete file.quietOpen;
+    if (!file.virtual && !(disk && browseList().includes(file))) { hexFallback(file, data, 'Archive preview is only available for files listed in the file browser.'); return; }
+    setPreviewState(file, 'none', 'Reading archive…');
+    try {
+      const listing = await PvFmt.listArchive(kind, file.name, data);
+      if (seq !== previewSeq) return;
+      const m = mountArchive(file, listing);
+      if (!m) throw Error('the file is no longer in the list');
+      const {proxy, idx} = m;
+      afterMount(m);
+      selectedFile = proxy; if (!quiet) currentFolderPath = proxy.path; /* ticking a checkbox must not move the user to another folder */
+      $('fileSelection').textContent = 'Opened ' + proxy.name + ' · ' + proxy.archiveType + ' archive';
+      updateFilePreview(proxy);
+      renderDirectoryView();
+    } catch (err) {
+      if (seq !== previewSeq) return;
+      hexFallback(file, data, 'Archive could not be read (' + err.message + '). Showing the raw payload instead.');
     }
   }
 
@@ -7290,7 +9111,7 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
   const treeCollapsed = new Set();
 
   function renderFolderTree() {
-    const files = disk && disk.fileEntries || [];
+    const files = browseList();
     const rootTree = buildFolderTree(files);
     if($('treeDirCount')) $('treeDirCount').textContent = rootTree.children.size;
 
@@ -7300,6 +9121,7 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
       while (p) { treeCollapsed.delete(p); p = parentPath(p); }
     }
 
+    const archivePaths = new Set(files.filter(f => f.archive).map(f => f.path));
     function treeNodeHtml(node) {
       const hasChildren = node.children.size > 0;
       const isActive = currentFolderPath === node.path;
@@ -7307,7 +9129,7 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
       let html = `<div class="tree-node" role="none">`;
       html += `<div class="tree-node-content${isActive ? ' active' : ''}" role="treeitem" aria-selected="${isActive}"${hasChildren ? ` aria-expanded="${isOpen}"` : ''} data-tree-path="${esc(node.path)}">`;
       html += `<span class="tree-toggle${hasChildren ? '' : ' leaf'}" aria-hidden="true">${hasChildren ? (isOpen ? '\u25BC' : '\u25B6') : ''}</span>`;
-      html += `<span class="tree-icon">${isOpen || isActive ? FOLDER_SVG_OPEN : FOLDER_SVG_CLOSED}</span>`;
+      html += `<span class="tree-icon">${archivePaths.has(node.path) ? '\uD83D\uDCE6' : isOpen || isActive ? FOLDER_SVG_OPEN : FOLDER_SVG_CLOSED}</span>`;
       html += `<span class="tree-label">${esc(node.name || 'ROOT')}</span>`;
       html += `</div>`;
       if (hasChildren) {
@@ -7337,6 +9159,8 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
       }
       const node = e.target.closest('.tree-node-content[data-tree-path]');
       if (node) {
+        const arc = browseList().find(f => f.archive && f.path === node.dataset.treePath);
+        if (arc) { selectFile(arc); return; }
         currentFolderPath = node.dataset.treePath;
         renderDirectoryView();
       }
@@ -7427,7 +9251,7 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
     renderFolderTree();
     renderBreadcrumbs();
 
-    const allFiles = disk && disk.fileEntries || [];
+    const allFiles = browseList();
     const isMac = !!(disk && disk.fsType && disk.fsType.startsWith('MAC_'));
     const cols = fsColumns(), colKeys = cols.map(c => c.key);
     if (fsSortKey && !colKeys.includes(fsSortKey)) { fsSortKey = null; fsSortDir = 1; }
@@ -7474,7 +9298,8 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
 
     // folders first in folder view; otherwise honour the chosen column (default: name / path)
     filtered = filtered.slice().sort((a, b) => {
-      if (fsViewMode === 'folder' && !!a.directory !== !!b.directory) return a.directory ? -1 : 1;
+      const fa = a.directory && !a.archive, fb = b.directory && !b.archive;
+      if (fsViewMode === 'folder' && fa !== fb) return fa ? -1 : 1;
       let r = eff.key ? fsCompare(a, b, eff.key, isMac) * eff.dir
                         : fsCollator.compare(fsViewMode === 'folder' ? a.name : a.path, fsViewMode === 'folder' ? b.name : b.path);
       return r || fsCollator.compare(a.name, b.name);
@@ -7489,6 +9314,8 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
         const originalIndex = idxOf.get(x), del = !!x.deleted;
         const typeCell = del
           ? '<span class="badge del-badge" data-recover="' + esc(x.recover.status) + '" title="' + esc(deletedNote(x)) + '">' + esc(RECOVER_LABEL[x.recover.status] || 'Deleted') + '</span>'
+          : x.archive ? '<span class="badge" title="' + esc(x.archiveType + ' archive, opened') + '">ARCHIVE</span>'
+          : x.unsupported ? '<span class="badge del-badge" title="' + esc(x.note) + '">NOT UNPACKABLE</span>'
           : '<span class="badge">' + (x.directory ? 'DIR' : 'FILE') + '</span>';
         const extra = cols.map(c => {
           if (c.key === 'mactype') {
@@ -7504,12 +9331,12 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
           if (c.key === 'mod') return '<td class="mono">' + esc(x.modified || '\u2014') + '</td>';
           return '';
         }).join('');
-        return `<tr class="file-row${del ? ' deleted' : ''}" tabindex="0" data-file-index="${originalIndex}" data-cluster="${x.cluster}">
+        return `<tr class="file-row${del ? ' deleted' : ''}" tabindex="0" data-file-index="${originalIndex}" data-cluster="${x.cluster === undefined ? '' : x.cluster}">
           <td class="file-select-cell"><input class="file-select" type="checkbox" aria-label="Select ${x.directory ? 'folder ' : ''}${esc(x.path)}" ${x.directory && x.deleted ? 'disabled' : ''} ${selectedExportFiles.has(originalIndex) ? 'checked' : ''}></td>
-          <td><span class="filename"${x.note ? ' title="' + esc(x.note) + '"' : ''}>${x.directory ? '<span class="ico-folder">' + FOLDER_SVG_CLOSED + '</span>' : '\uD83D\uDCC4 '}${esc(x.name)}</span><br><span class="filekind">${esc(x.path)}</span></td>
+          <td><span class="filename"${x.note ? ' title="' + esc(x.note) + '"' : ''}>${x.archive ? '\uD83D\uDCE6 ' : x.directory ? '<span class="ico-folder">' + FOLDER_SVG_CLOSED + '</span>' : '\uD83D\uDCC4 '}${esc(x.name)}</span><br><span class="filekind">${esc(x.path)}</span></td>
           <td>${typeCell}</td>${extra}
-          <td class="mono">${x.directory ? '\u2014' : isMac ? sizeFmt((Number(x.size)||0) + (Number(x.resourceSize)||0)) : sizeFmt(x.size)}</td>
-          <td class="mono">${fmt(fsIdValue(x))}</td>
+          <td class="mono">${x.directory && !x.archive ? '\u2014' : isMac && !x.virtual ? sizeFmt((Number(x.size)||0) + (Number(x.resourceSize)||0)) : sizeFmt(x.size)}</td>
+          <td class="mono">${x.virtual ? '\u2014' : fmt(fsIdValue(x))}</td>
         </tr>`;
       }).join('') : `<tr><td colspan="${cols.length + 1}"><div class="empty">No entries found in this directory.</div></td></tr>`;
     }
@@ -7591,16 +9418,66 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
     });
   }
   
-  $('downloadFile').onclick=()=>{try{if(!selectedFile||selectedFile.directory)return;const data=extractFileBytes(selectedFile),mime=mimeFor(selectedFile,data),blob=new Blob([data],{type:mime});downloadBlob(blob,String(selectedFile.exportName||selectedFile.name||'extracted-file').replace(/[\\/:*?"<>|]/g,'_')||'extracted-file')}catch(err){$('previewNote').textContent='Download failed: '+err.message}};
+  $('downloadFile').onclick=async()=>{try{if(!selectedFile||(selectedFile.directory&&!selectedFile.archive))return;const f=selectedFile,data=await entryBytes(f),mime=mimeFor(f,data),blob=new Blob([data],{type:mime});downloadBlob(blob,String(f.exportName||f.name||'extracted-file').replace(/[\\/:*?"<>|]/g,'_')||'extracted-file')}catch(err){$('previewNote').textContent='Download failed: '+err.message}};
   $('downloadResource').onclick=()=>{try{if(!selectedFile||!selectedFile.macForks||!selectedFile.resourceSize)return;downloadBlob(new Blob([macReadFork(selectedFile.macForks.resource)],{type:'application/octet-stream'}),String(selectedFile.name||'file').replace(/[\\/:*?"<>|]/g,'_')+'.resourcefork')}catch(err){$('previewNote').textContent='Resource fork download failed: '+err.message}};
-  $('exportSelected').onclick=()=>{try{const files=disk&&disk.fileEntries||[],picked=[...selectedExportFiles].map(i=>files[i]).filter(f=>f&&!f.directory),pickedDirs=[...selectedExportFiles].map(i=>files[i]).filter(f=>f&&f.directory);const liveTotal=files.filter(f=>!f.directory&&!f.deleted).length,isFullExport=picked.length>0&&picked.length===liveTotal;const total=picked.reduce((sum,f)=>sum+(Number(f.size)||0)+(disk.fsType&&disk.fsType.startsWith('MAC_')?(Number(f.resourceSize)||0):0),0);if(total>ZIP_EXPORT_LIMIT)throw Error('Checked files exceed the 256 MiB export limit.');if(!picked.length&&!pickedDirs.length)throw Error('Check one or more files or folders to export.');const entries=[],failures=[];for(const file of picked){const path=safeZipPath(file);try{entries.push({path,data:extractFileBytes(file),mtime:modMs(file.modified)||(currentItem&&currentItem.mtime)||0})}catch(err){failures.push(path+' [data fork]: '+err.message)}if(disk.fsType&&disk.fsType.startsWith('MAC_')&&Number(file.resourceSize)>0){try{entries.push({path:path+'.resourcefork',data:macReadFork(file.macForks&&file.macForks.resource),mtime:modMs(file.modified)||(currentItem&&currentItem.mtime)||0})}catch(err){failures.push(path+' [resource fork]: '+err.message)}}}if(isFullExport){const hasLiveDescendant=new Set();for(const f of files){if(f.directory||f.deleted)continue;let p=parentPath(f.path);while(p){hasLiveDescendant.add(p);p=parentPath(p)}}const emptyDirs=files.filter(f=>f.directory&&!hasLiveDescendant.has(f.path));for(const dir of emptyDirs){entries.push({path:safeZipPath(dir),directory:true})}}{const haveDirs=new Set(entries.filter(e=>e.directory).map(e=>e.path));for(const dir of pickedDirs){const dp=safeZipPath(dir);if(!haveDirs.has(dp)){haveDirs.add(dp);entries.push({path:dp,directory:true})}}}if(!entries.length){$('previewNote').textContent='Export failed: none of the selected forks could be read. '+failures.slice(0,5).join(' | ')+(failures.length>5?' | '+(failures.length-5)+' more failures':'');return}if(failures.length){const report=['FloppoScope partial export report','Some selected file forks could not be read and are not included in this archive.','',...failures.map(x=>'- '+x)].join('\n');entries.push({path:'FloppoScope export report.txt',data:new TextEncoder().encode(report)})}downloadBlob(makeStoredZip(entries),(String(currentName||'disk').replace(/\.[^.]+$/,'')||'disk')+'.zip');$('previewNote').textContent=failures.length?'Created a partial ZIP with '+entries.length+' entries; '+failures.length+' fork(s) were skipped. See FloppoScope export report.txt inside the archive.':'Exported '+entries.length+' data/resource-fork entries as a ZIP archive; the disk image was not modified.'}catch(err){$('previewNote').textContent='Export failed: '+err.message}};
+  $('exportSelected').onclick=async()=>{
+    try{
+      const files=browseList(),chosen=[...selectedExportFiles].map(i=>files[i]).filter(Boolean),
+        picked=chosen.filter(f=>!f.directory),pickedDirs=chosen.filter(f=>f.directory);
+      const isMacDisk=!!(disk.fsType&&disk.fsType.startsWith('MAC_'));
+      const liveTotal=files.filter(f=>!f.directory&&!f.deleted).length,isFullExport=picked.length>0&&picked.length===liveTotal;
+      const total=picked.reduce((sum,f)=>sum+(Number(f.size)||0)+(isMacDisk&&!f.virtual?(Number(f.resourceSize)||0):0),0);
+      if(total>ZIP_EXPORT_LIMIT)throw Error('Checked files exceed the 256 MiB export limit.');
+      if(!picked.length&&!pickedDirs.length)throw Error('Check one or more files or folders to export.');
+      $('exportSelected').disabled=true;
+      const entries=[],failures=[],fallbackMtime=(currentItem&&currentItem.mtime)||0;
+      let done=0;
+      for(const file of picked){
+        const path=safeZipPath(file);
+        try{entries.push({path,data:await entryBytes(file),mtime:modMs(file.modified)||fallbackMtime})}
+        catch(err){failures.push(path+(file.virtual?'':' [data fork]')+': '+err.message)}
+        if(isMacDisk&&!file.virtual&&Number(file.resourceSize)>0){
+          try{entries.push({path:path+'.resourcefork',data:macReadFork(file.macForks&&file.macForks.resource),mtime:modMs(file.modified)||fallbackMtime})}
+          catch(err){failures.push(path+' [resource fork]: '+err.message)}
+        }
+        if(++done%25===0)$('previewNote').textContent='Exporting… '+done+' of '+picked.length+' files';
+      }
+      if(isFullExport){
+        const hasLiveDescendant=new Set();
+        for(const f of files){if(f.directory||f.deleted)continue;let p=parentPath(f.path);while(p){hasLiveDescendant.add(p);p=parentPath(p)}}
+        for(const dir of files.filter(f=>f.directory&&!hasLiveDescendant.has(f.path)))entries.push({path:safeZipPath(dir),directory:true});
+      }
+      {const haveDirs=new Set(entries.filter(e=>e.directory).map(e=>e.path));
+       for(const dir of pickedDirs){const dp=safeZipPath(dir);if(!haveDirs.has(dp)){haveDirs.add(dp);entries.push({path:dp,directory:true})}}}
+      if(!entries.length){$('previewNote').textContent='Export failed: none of the selected files could be read. '+failures.slice(0,5).join(' | ')+(failures.length>5?' | '+(failures.length-5)+' more failures':'');return}
+      if(failures.length){
+        const report=['FloppoScope partial export report','Some selected files (or forks) could not be read and are not included in this archive.','',...failures.map(x=>'- '+x)].join('\n');
+        entries.push({path:'FloppoScope export report.txt',data:new TextEncoder().encode(report)});
+      }
+      downloadBlob(makeStoredZip(entries),(String(currentName||'disk').replace(/\.[^.]+$/,'')||'disk')+'.zip');
+      $('previewNote').textContent=failures.length?'Created a partial ZIP with '+entries.length+' entries; '+failures.length+' item(s) were skipped. See FloppoScope export report.txt inside the archive.':'Exported '+entries.length+' entries as a ZIP archive; the disk image was not modified.';
+    }catch(err){$('previewNote').textContent='Export failed: '+err.message}
+    finally{updateExportControls(browseList())}
+  };
   
   function selectFile(file){
     selectedFile=file||null;selectedCluster=null;selectedFileSectors.clear();selectedClusterSectors.clear();
     
     if (file && file.directory) {
       currentFolderPath = file.path;
+      if (file.archive) { $('fileSelection').textContent = 'Opened ' + file.name + ' · ' + file.archiveType + ' archive'; updateFilePreview(file); }
       renderDirectoryView();
+      return;
+    }
+    if (file && file.virtual) { /* an entry inside an opened archive: no sectors of its own */
+      const isMacV = !!(disk && disk.fsType && disk.fsType.startsWith('MAC_'));
+      if (disk && (disk.fsType === 'NEXTSTEP_UFS1' || disk.fsType === 'SUN_TAR' || isMacV || trackMapped(disk))) renderDiskLayout();
+      else document.querySelectorAll('.disk-sector[data-lba]').forEach(path => { path.classList.remove('file-highlight', 'cluster-current'); });
+      $('fileSelection').textContent = 'Selected ' + file.name + ' · inside an archive, so it has no sectors of its own';
+      renderClusterChain(null);
+      updateFilePreview(file);
+      $('downloadResource').hidden = true; $('downloadResource').disabled = true;
+      $('downloadFile').textContent = 'Download file';
       return;
     }
 
@@ -7625,9 +9502,6 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
     
     $('bpbRows').innerHTML=d.boot.map(r=>'<tr data-glean-id="metadata-row-'+esc(String(r[1]).toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'"><td class="mono">'+esc(r[0])+'</td><td>'+esc(r[1])+'</td><td class="mono">'+esc(r[2])+'</td></tr>').join('');
     renderBootInspector(d);
-    
-    const files=d.fileEntries||[];
-    
     
     const fatMeterEl = $('fatmeter');
     const fatLegendEl = $('fatlegend');
@@ -7685,26 +9559,29 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
     if($('fileRows')) {
       $('fileRows').onclick=e=>{
         const row=e.target.closest('tr[data-file-index]');if(!row)return;
-        const index=Number(row.dataset.fileIndex),file=files[index],box=e.target.closest('input.file-select');
+        const files=browseList(),index=Number(row.dataset.fileIndex),file=files[index],box=e.target.closest('input.file-select');
+        if(!file)return;
         if(box){
           setExportSelection(files,index,box.checked);
           updateExportControls(files);
           if(file.directory)return; /* ticking a folder must not navigate into it */
+          file.quietOpen=true; /* ...and an archive that opens because it was ticked stays where it is */
         } else if(file.directory&&e.target.closest('.file-select-cell'))return;
         selectFile(file);
       };
-      $('fileRows').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&!e.target.closest('input.file-select')){const row=e.target.closest('tr[data-file-index]');if(row){e.preventDefault();selectFile(files[Number(row.dataset.fileIndex)])}}};
+      $('fileRows').onkeydown=e=>{if((e.key==='Enter'||e.key===' ')&&!e.target.closest('input.file-select')){const row=e.target.closest('tr[data-file-index]');if(row){e.preventDefault();selectFile(browseList()[Number(row.dataset.fileIndex)])}}};
     }
 
     if($('selectAllFiles')) {
-      $('selectAllFiles').onchange=e=>{selectedExportFiles.clear();if(e.target.checked)files.forEach((file,index)=>{if(!file.deleted||(fsShowDeleted&&!file.directory))selectedExportFiles.add(index)});updateExportControls(files)};
+      $('selectAllFiles').onchange=e=>{const files=browseList();selectedExportFiles.clear();if(e.target.checked)files.forEach((file,index)=>{if(!file.deleted||(fsShowDeleted&&!file.directory))selectedExportFiles.add(index)});updateExportControls(files)};
     }
 
     $('chainRows').onclick=e=>{const row=e.target.closest('tr[data-chain-cluster],tr[data-ufs-lba]');if(!row)return;if(row.dataset.chainCluster!==undefined)selectCluster(Number(row.dataset.chainCluster));else showSector(Number(row.dataset.ufsLba))};
     $('chainRows').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const row=e.target.closest('tr[data-chain-cluster],tr[data-ufs-lba]');if(row){e.preventDefault();if(row.dataset.chainCluster!==undefined)selectCluster(Number(row.dataset.chainCluster));else showSector(Number(row.dataset.ufsLba))}}};
     
     renderClusterChain(null);
-    updateExportControls(files);
+    updateExportControls(browseList());
+    autoMountArchives();
     
     const count=Math.min(d.total,Math.floor(bytes.length/(d.bps||512)));
     $('sectorInput').max=Math.max(0,count-1);
