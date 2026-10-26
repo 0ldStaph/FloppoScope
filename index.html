@@ -6032,7 +6032,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.8'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.7'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -9738,73 +9738,6 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
   $('vzOldBtn').onclick=()=>vzExportOne(false);
   window.addEventListener('error',e=>{setStatus('Parser issue: '+e.message,true)});
   window.addEventListener('unhandledrejection',e=>{const r=e.reason;setStatus('Error: '+(r&&r.message||r),true)});
-  /* ---------- Open images straight from a link: index.html?url=https://host/path/disk.img ----------
-     Repeat url= to open several images as a list; an optional name= (same order) overrides a file name. */
-  const URL_MAX_BYTES=256*1024*1024;
-  async function loadFromUrlParams(){
-    let params;
-    try{params=new URLSearchParams(window.location.search||'')}catch(_){return}
-    const urls=params.getAll('url').map(s=>s.trim()).filter(Boolean);
-    if(!urls.length)return;
-    const names=params.getAll('name');
-    const hostOf=u=>{try{return new URL(u).host}catch(_){return String(u)}};
-    try{
-      if(typeof fetch!=='function')throw Error('this browser cannot download files from a link.');
-      const list=[];let total=0;
-      for(let i=0;i<urls.length;i++){
-        let u;
-        try{u=new URL(urls[i],window.location.href)}catch(_){throw Error('"'+urls[i]+'" is not a valid link.')}
-        if(u.protocol!=='http:'&&u.protocol!=='https:')throw Error('only http:// and https:// links can be opened (got '+u.protocol+').');
-        const label=urls.length>1?' ('+(i+1)+'/'+urls.length+')':'';
-        const host=u.host;
-        setStatus('Downloading from '+host+label+'…');
-        let resp;
-        try{resp=await fetch(u.href,{credentials:'omit',referrerPolicy:'no-referrer',redirect:'follow'})}
-        catch(e){throw Error('could not download from '+host+'. The server may be unreachable, may not allow cross-origin requests (CORS), or an https page cannot load an http link. Download the file and open it here instead.')}
-        if(!resp.ok)throw Error(host+' answered '+resp.status+(resp.statusText?' '+resp.statusText:'')+'.');
-        const declared=Number(resp.headers.get('content-length'))||0;
-        if(declared>URL_MAX_BYTES||total+declared>URL_MAX_BYTES)throw Error('the file is larger than the 256 MiB safety limit.');
-        let buf;
-        if(resp.body&&resp.body.getReader){
-          const rd=resp.body.getReader(),chunks=[];let got=0,last=0;
-          for(;;){
-            const {done,value}=await rd.read();if(done)break;
-            got+=value.length;
-            if(total+got>URL_MAX_BYTES){try{rd.cancel()}catch(_){}throw Error('the file is larger than the 256 MiB safety limit.')}
-            chunks.push(value);
-            const now=Date.now();
-            if(now-last>200){last=now;setStatus('Downloading from '+host+label+'… '+(got/1048576).toFixed(1)+' MiB'+(declared?' of '+(declared/1048576).toFixed(1):''))}
-          }
-          const out=new Uint8Array(got);let o=0;for(const c of chunks){out.set(c,o);o+=c.length}
-          buf=out;
-        }else{
-          const ab=await resp.arrayBuffer();
-          if(total+ab.byteLength>URL_MAX_BYTES)throw Error('the file is larger than the 256 MiB safety limit.');
-          buf=new Uint8Array(ab);
-        }
-        total+=buf.length;
-        if(!buf.length)throw Error('the download from '+host+' was empty.');
-        const ct=String(resp.headers.get('content-type')||'');
-        let k=0;while(k<buf.length&&k<64&&(buf[k]===32||buf[k]===9||buf[k]===10||buf[k]===13))k++;
-        if(/text\/html/i.test(ct)&&buf[k]===0x3C)throw Error(host+' returned a web page, not a disk image (for GitHub, use the Raw link).');
-        /* file name: name= override, else Content-Disposition, else the last part of the link's path */
-        let name=(names[i]||'').trim();
-        if(!name){const cd=String(resp.headers.get('content-disposition')||'');const m=/filename\*=(?:UTF-8'')?([^;]+)/i.exec(cd)||/filename="?([^";]+)"?/i.exec(cd);if(m){try{name=decodeURIComponent(m[1].trim())}catch(_){name=m[1].trim()}}}
-        if(!name){const seg=u.pathname.split('/').filter(Boolean).pop()||'';try{name=decodeURIComponent(seg)}catch(_){name=seg}}
-        name=String(name||'download').replace(/[\\\/\x00-\x1f]/g,'_');
-        const lm=Date.parse(resp.headers.get('last-modified')||'')||Date.now();
-        let file;
-        try{file=new File([buf],name,{lastModified:lm})}
-        catch(_){file={name,size:buf.length,lastModified:lm,arrayBuffer:async()=>buf.buffer}}
-        list.push({file,path:name});
-      }
-      await handleSelection(list,false);
-    }catch(e){
-      try{console.error('FloppoScope link error:',e)}catch(_){}
-      setStatus('Could not open the link: '+(e&&e.message||e),true);
-    }
-  }
-  loadFromUrlParams();
 })();
 </script>
 <script>
