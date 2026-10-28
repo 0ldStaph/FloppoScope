@@ -568,7 +568,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
       <!-- Tab 1: Disk Explorer -->
       <div id="disk-explorer-tab" class="tab-pane active">
         <section class="section" data-glean-id="disk-map-section">
-          <div class="sectionhead"><div><h2>Disk layout</h2><p id="mapcaption">Each square is one logical sector. Select a sector to inspect its bytes.</p></div><div class="map-head-r"><label class="unm-toggle hidden" id="unmToggleWrap" title="Sectors that hold data but are not owned by any live file or folder"><span id="unmToggleLabel">Unmapped data</span><select id="unmMode" aria-label="Unmapped data display"><option value="off">Off</option><option value="del">Show only deleted-file remnants</option><option value="oth">Show only unmapped (not deleted)</option><option value="both">Show both, colored separately</option></select></label><span class="zoomctl" id="zoomCtl" role="group" aria-label="Disk layout zoom and sides"><select id="sideView" aria-label="Sides shown" title="Show both sides or a single, larger side"><option value="both">Both sides</option><option value="0">Side 0 only</option><option value="1">Side 1 only</option></select><button type="button" class="btn zbtn" id="zoomOut" title="Zoom out (-)" aria-label="Zoom out">−</button><input type="range" id="zoomRange" min="0" max="100" value="0" aria-label="Zoom level" title="Zoom (Ctrl or ⌘ + mouse wheel over a disk, or trackpad pinch; drag a box to zoom in (Shift+drag when zoomed); drag to pan; double-click to zoom in/out)"><button type="button" class="btn zbtn" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in">+</button><span id="zoomPct" class="zpct">100%</span><button type="button" class="btn zbtn" id="zoomFit" title="Fit whole disk (0)">Fit</button><button type="button" class="btn zbtn" id="zoomBox" aria-pressed="false" title="Box zoom: drag a rectangle on the disk to zoom into it. Always available with Shift+drag, and with a plain drag when the whole disk is shown. Click to keep it on while zoomed in (Esc cancels a box)">&#9634; Box</button><label class="zlink" title="Zoom and pan both sides together"><input type="checkbox" id="zoomLink" checked> Link</label></span><span id="maptype" class="badge">RAW IMAGE</span></div></div>
+          <div class="sectionhead"><div><h2>Disk layout</h2><p id="mapcaption">Each square is one logical sector. Select a sector to inspect its bytes.</p></div><div class="map-head-r"><label class="unm-toggle hidden" id="unmToggleWrap" title="Sectors that hold data but are not owned by any live file or folder"><span id="unmToggleLabel">Unmapped data</span><select id="unmMode" aria-label="Unmapped data display"><option value="off">Off</option><option value="del">Show only deleted-file remnants</option><option value="oth">Show only unmapped (not deleted)</option><option value="both">Show both, colored separately</option></select></label><label class="unm-toggle hidden" id="recAlignWrap" title="Off: sectors at their real positions, with interleave and skew. On: sectors in logical order in equal slots, like a plain sector image; every track is stretched to a full circle (gap sizes are not to scale)"><input type="checkbox" id="recAlign" aria-label="Aligned layout"><span>Aligned layout</span></label><span class="zoomctl" id="zoomCtl" role="group" aria-label="Disk layout zoom and sides"><select id="sideView" aria-label="Sides shown" title="Show both sides or a single, larger side"><option value="both">Both sides</option><option value="0">Side 0 only</option><option value="1">Side 1 only</option></select><button type="button" class="btn zbtn" id="zoomOut" title="Zoom out (-)" aria-label="Zoom out">−</button><input type="range" id="zoomRange" min="0" max="100" value="0" aria-label="Zoom level" title="Zoom (Ctrl or ⌘ + mouse wheel over a disk, or trackpad pinch; drag a box to zoom in (Shift+drag when zoomed); drag to pan; double-click to zoom in/out)"><button type="button" class="btn zbtn" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in">+</button><span id="zoomPct" class="zpct">100%</span><button type="button" class="btn zbtn" id="zoomFit" title="Fit whole disk (0)">Fit</button><button type="button" class="btn zbtn" id="zoomBox" aria-pressed="false" title="Box zoom: drag a rectangle on the disk to zoom into it. Always available with Shift+drag, and with a plain drag when the whole disk is shown. Click to keep it on while zoomed in (Esc cancels a box)">&#9634; Box</button><label class="zlink" title="Zoom and pan both sides together"><input type="checkbox" id="zoomLink" checked> Link</label></span><span id="maptype" class="badge">RAW IMAGE</span></div></div>
 		 <div class="diskmap">
             <div class="maplegend">
               <span class="legend"><i class="swatch" style="background:var(--artifact-empty); border:1px solid var(--artifact-border-dark);"></i>Empty</span>
@@ -587,6 +587,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
             </div>
             <div class="maplegend hidden" id="maplegendRec">
               <span class="legend"><i class="swatch" style="background:#5f6f86"></i>Sector ID field</span>
+              <span class="legend hidden" id="legSync" title="Self-sync bytes (0xFF) that GCR formats write between and around the fields"><i class="swatch" style="background:#151b24;border:1px solid #5f6f86"></i>Sync gap (FF bytes)</span>
               <span class="legend"><i class="swatch" style="background:#0c1117;border:1px solid var(--artifact-border-dark)"></i>Gap between fields</span>
               <span class="legend" title="A sector arc shorter than its neighbours holds less data than its ID field announces">Arc length = bytes actually recorded</span>
             </div>
@@ -3391,8 +3392,18 @@ function macData(nb,p){
   const tv=v.subarray(699),k1=((tv[0]&0x30)<<2)|tv[1],k2=((tv[0]&0x0c)<<4)|tv[2],k3=((tv[0]&3)<<6)|tv[3];
   return {out,inval,ok:!inval&&k1===c1&&k2===c2&&k3===c3};
 }
+/* Self-sync gap: the nibbles in [lo,hi) when they are (nearly) all 0xFF sync bytes, otherwise only the unbroken run of FF directly before hi. */
+function macSync(nb,lo,hi){
+  if(hi-lo<2)return {from:hi,n:0};
+  let ff=0;for(let k=lo;k<hi;k++)if(nb[k]===0xff)ff++;
+  if(ff>=(hi-lo)*0.85)return {from:lo,n:ff};
+  let k=hi;while(k>lo&&nb[k-1]===0xff)k--;
+  return {from:k,n:hi-k};
+}
 function decodeMac(bits){
   const nb=nibbles(bits),res=[],n=nb.length,lay=[],NA=k=>nb.at[Math.min(k,n-1)];
+  const cellsRev=bits.revCells||bits.length;
+  let prevEnd=0,lastEnd=0;
   for(let i=0;i<n-12;i++){
     if(nb[i]!==0xd5||nb[i+1]!==0xaa||nb[i+2]!==0x96)continue;
     const v=[];let bad=false;
@@ -3403,6 +3414,10 @@ function decodeMac(bits){
     let found=-1;
     for(let j=i+8;j<i+8+60&&j<n-3;j++){if(nb[j]===0xd5&&nb[j+1]===0xaa&&nb[j+2]===0xad){found=j+3;break}}
     const base={k:trk+'.'+side+'.'+sec,name:'sector '+sec+' (track '+trk+' side '+side+', 512 B)',tn:trk*2+side,sn:sec,size:512,idOk:true,at:NA(i),idEnd:NA(i+10)+8};
+    {const sy=macSync(nb,prevEnd,i);if(sy.n>=2){base.gs=NA(sy.from);base.gn=sy.n}
+     if(found>=0){const hs=macSync(nb,i+11,found-3);if(hs.n>=2&&hs.from===i+11){base.hs=true;base.hn=hs.n}}}
+    if(NA(i)<cellsRev){lastEnd=found>=0?found+706:i+10}
+    prevEnd=found>=0?found+706:i+10;
     if(found<0||found+704>n){lay.push(Object.assign(base,{hasData:false}));res.push({trk,side,sec,fmt,data:new Uint8Array(512),tags:new Uint8Array(12),ok:false,hOk:true,dOk:false,noData:true});continue}
     const d=macData(nb,found),dOk=d.ok&&A62INV[nb[found]]===sec;
     const so={trk,side,sec,fmt,data:d.out.slice(12,524),tags:d.out.slice(0,12),ok:dOk,hOk:true,dOk};
@@ -3411,6 +3426,8 @@ function decodeMac(bits){
     lay.push(Object.assign(base,{hasData:true,dAt:NA(found-3),dEnd:NA(found+704)+8,dOk,sec:so}));
     i=found+700;
   }
+  {let hi=lastEnd;while(hi<n&&nb.at[hi]<cellsRev)hi++;
+   if(hi-lastEnd>=2){let ff=0;for(let k=lastEnd;k<hi;k++)if(nb[k]===0xff)ff++;if(ff>=(hi-lastEnd)*0.85)res.tail={at:NA(lastEnd),n:ff}}}
   res.layout=lay;res.revCells=bits.revCells||bits.length;
   return res;
 }
@@ -3707,7 +3724,7 @@ function analyzeTrack(kind,t,all,want,anoms){
       if(s.unsupported13){if(!anoms.some(a=>a.cat==='unsupported13'&&a.track==='C'+t.cyl+' H'+t.head))push('unsupported13','13-sector (DOS 3.2) address marks — that layout is not decoded');continue}
       const k=keyOf(kind,t,s);let g=groups.get(k);
       if(!g){g={s0:s,copies:[],dup:false};groups.set(k,g)}
-      s._ri=ri;g.copies.push(s);
+      s._ri=ri;s._rv=arr._rev!==undefined?arr._rev:ri;g.copies.push(s);
       const p=seen.get(k);if(!s._alt&&p&&p.ok&&s.ok&&!dataEq(payload(p),payload(s)))g.dup=true;
       seen.set(k,s);
     }
@@ -3717,7 +3734,10 @@ function analyzeTrack(kind,t,all,want,anoms){
     const allc=g.copies,altOk=allc.some(x=>x._alt&&x.ok);
     g.copies=allc.filter(x=>!x._alt);
     if(!g.copies.length||(!g.copies.some(x=>x.ok)&&altOk)){if(altOk)anoms.push({cat:'recovered',track:'C'+t.cyl+' H'+t.head,msg:secLabel(kind,g.s0)+': only verified with alternative clock recovery (marginal / uneven flux timing)',info:true,recov:true});continue}
-    const c=g.copies,s0=g.s0,lab=secLabel(kind,s0),okc=c.filter(x=>x.ok),revsSeen=new Set(c.map(x=>x._ri)).size,revsOk=new Set(okc.map(x=>x._ri)).size;
+    const c=g.copies,s0=g.s0,lab=secLabel(kind,s0),okc=c.filter(x=>x.ok),revsSeen=new Set(c.map(x=>x._ri)).size,okRevs=new Set(okc.map(x=>x._rv));
+    /* a revolution whose default read failed but that verifies with another clock-recovery pass (same data) still counts as a good read of this sector */
+    if(okc.length)for(const x of allc)if(x._alt&&x.ok&&dataEq(payload(x),payload(okc[0])))okRevs.add(x._rv);
+    const revsOk=okRevs.size;
     if(g.dup)push('dup-id',lab+': the same sector ID occurs more than once in a revolution with different data');
     if(!okc.length){
       if(c.every(x=>x.hOk===false))push('header-crc',lab+': address/ID field fails its checksum'+(c.length>1?' in every revolution':''));
@@ -3761,6 +3781,11 @@ function analyzeTrack(kind,t,all,want,anoms){
       if(dev>0.04||dev<-0.08)push(dev>0?'long-track':'short-track','revolution lasts '+ms.toFixed(1)+' ms (nominal '+nom+' ms, '+(dev>0?'+':'')+(dev*100).toFixed(1)+'%)')}catch(_){}
   }
 }
+function altOpts(kind,best){
+  const ALT=(kind==='ibm'||kind==='amiga'?[{mode:'ph',pAdj:0.005,phAdj:0.05},{mode:'ph',pAdj:0.01,phAdj:0.05},{mode:'ph',pAdj:0.02,phAdj:0.05},{mode:'ph',pAdj:0.04,phAdj:0.6},{mode:'ph',pAdj:0.005,phAdj:0.1},{mode:'ph',pAdj:0.02,phAdj:0.3},{mode:'std',tol:0.15,gain:0.08}]:[]).concat([{mode:'cls',gain:0.03},{mode:'cls',gain:0.08},{mode:'std',tol:0.25,gain:0.03},{mode:'std',tol:0.25,gain:0.15},{mode:'cls',gain:0.015}])
+    .filter(o=>!(best.opt&&best.opt.mode===o.mode&&best.opt.gain===o.gain&&best.opt.tol===o.tol));
+  return ALT;
+}
 function decodeAll(src,best){
   const map=new Map(),kind=best.kind,anoms=[],layout=[];
   let lastCell=best.cell;
@@ -3792,15 +3817,38 @@ function decodeAll(src,best){
       if(okCount()<wantT-lostShort){
         /* Inner tracks of 1.2 MB / HD media can show 0.3-cell peak shift. The default PLL then slips a cell mid-sector; carrying 95% of the phase error forward with a slow clock
            (phAdj 0.05) keeps lock and recovered every sector of a worn BASF 1.2 MB dump that the default settings missed. */
-        const ALT=(kind==='ibm'||kind==='amiga'?[{mode:'ph',pAdj:0.005,phAdj:0.05},{mode:'ph',pAdj:0.01,phAdj:0.05},{mode:'ph',pAdj:0.02,phAdj:0.05},{mode:'ph',pAdj:0.04,phAdj:0.6},{mode:'ph',pAdj:0.005,phAdj:0.1},{mode:'ph',pAdj:0.02,phAdj:0.3},{mode:'std',tol:0.15,gain:0.08}]:[]).concat([{mode:'cls',gain:0.03},{mode:'cls',gain:0.08},{mode:'std',tol:0.25,gain:0.03},{mode:'std',tol:0.25,gain:0.15},{mode:'cls',gain:0.015}])
-          .filter(o=>!(best.opt&&best.opt.mode===o.mode&&best.opt.gain===o.gain&&best.opt.tol===o.tol));
+        const ALT=altOpts(kind,best);
         outer:for(const o of ALT){
           for(let r=0;r<t.revCount;r++){
             const arr=runKind(kind,t,r,bestCell,o);
             for(const s of arr)s._alt=true;
+            arr._alt=true;arr._rev=r;
             all.push(arr);
             if(okCount()>=wantT-lostShort)break outer;
           }
+        }
+      }
+    }
+    /* Sectors verified in some revolutions but not in all: re-read only the failing revolutions with the other clock-recovery strategies.
+       If one of them verifies the same data, that revolution counts as a good read, so a PLL slip is not reported as an intermittent read. */
+    if(t.src==='flux'&&t.revCount>1){
+      const gaps=()=>{
+        const seen=new Map();
+        all.forEach((arr,ri)=>{const rv=arr._rev!==undefined?arr._rev:ri;for(const s of arr){if(s.unsupported13)continue;const k=keyOf(kind,t,s);let e=seen.get(k);if(!e){e={seen:new Set(),ok:new Set(),any:false};seen.set(k,e)}if(!arr._alt)e.seen.add(rv);if(s.ok){e.ok.add(rv);e.any=true}}});
+        const miss=new Set();
+        for(const e of seen.values())if(e.any)for(const rv of e.seen)if(!e.ok.has(rv))miss.add(rv);
+        return miss;
+      };
+      let miss=gaps();
+      if(miss.size){
+        rescue:for(const o of altOpts(kind,best)){
+          for(const r of miss){
+            const arr=runKind(kind,t,r,bestCell,o);
+            for(const s of arr)s._alt=true;
+            arr._alt=true;arr._rev=r;
+            all.push(arr);
+          }
+          miss=gaps();if(!miss.size)break rescue;
         }
       }
     }
@@ -3915,15 +3963,37 @@ function trackLayoutGen(kind,t,all){
   const a0=all[0],cells=a0.revCells||1;
   let ms=0;try{const f=t.get(0);let sum=0;for(let i=0;i<f.length;i++)sum+=f[i];ms=sum/1e6}catch(_){}
   const others=[];for(const arr of all)for(const q of arr)if(!q._alt&&!q.unsupported13)others.push(q);
-  const ents=(a0.layout||[]).filter(e=>e.at<cells).sort((a,b)=>a.at-b.at);
-  const f=v=>Math.round(v/cells*100000)/100000,out=[];
+  let ents=(a0.layout||[]).filter(e=>e.at<cells).sort((a,b)=>a.at-b.at);
+  const F=(v,c)=>Math.round(v/c*100000)/100000,out=[];
+  let f=v=>F(v,cells);
+  /* Mac: a sector whose header or data failed in the first revolution but read in another revolution / clock-recovery pass is shown where that read found it */
+  if(kind==='mac'){
+    const have=new Map();for(const e of ents)have.set(e.k,e);
+    for(const arr of all){
+      if(!arr.layout||!arr.revCells)continue;
+      for(const e2 of arr.layout){
+        const wrapped=e2.at>=arr.revCells;
+        if(arr===a0&&!wrapped)continue;
+        if(!e2.hasData||!(e2.sec&&e2.sec.ok)||e2.at>=arr.revCells*2)continue;
+        const cur=have.get(e2.k);
+        if(cur&&(cur.hasData&&cur.dOk))continue;
+        const sc=cells/arr.revCells,sh=wrapped?arr.revCells:0,e3=Object.assign({},e2,{dOk:true});
+        for(const kk of ['at','idEnd','dAt','dEnd','gs'])if(e3[kk]!==undefined)e3[kk]=(e3[kk]-sh)*sc;
+        e3.borrowed=true;
+        if(cur){const i=ents.indexOf(cur);if(i>=0)ents.splice(i,1)}
+        ents.push(e3);have.set(e3.k,e3);
+      }
+    }
+    ents.sort((a,b)=>a.at-b.at);
+  }
   for(const e of ents){
     let weak=false;
     if(e.sec&&!e.dOk){for(const q of others){if(q!==e.sec&&!q.noData&&!q.invalid&&keyOf(kind,t,q)===e.k&&!dataEq(payload(q),payload(e.sec))){weak=true;break}}}
     out.push({name:e.name,tn:e.tn,sn:e.sn,size:e.size,idOk:e.idOk,hasData:e.hasData,dOk:!!e.dOk,deleted:false,weak,short:false,keptBytes:e.size,
-      a:f(e.at),b:f(e.idEnd),c0:e.hasData?f(e.dAt):null,d:f(e.hasData?e.dEnd:e.idEnd),lba:-1});
+      a:f(e.at),b:f(e.idEnd),c0:e.hasData?f(e.dAt):null,d:f(e.hasData?e.dEnd:e.idEnd),lba:-1,
+      gs:e.gs!==undefined?f(Math.min(e.gs,e.at)):undefined,gn:e.gn,hs:!!e.hs,hn:e.hn});
   }
-  return {cyl:t.cyl,head:t.head,ms,sectors:out};
+  return {cyl:t.cyl,head:t.head,ms,sectors:out,tail:a0.tail?{a:f(a0.tail.at),n:a0.tail.n}:undefined};
 }
 function badSector(size){const o=new Uint8Array(size);for(let i=0;i<size;i++)o[i]=MARK[i%MARK.length];return o} /* whole sector = repeated -=[BAD SECTOR]=- marker */
 
@@ -6032,7 +6102,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.7'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.8'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -7932,7 +8002,26 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
     return tracks.length?{tracks,size:bps,synth:true}:null;
   }
   let cpcLay=null;
-  function recLayoutOf(){if(fluxInfo&&fluxInfo.layout&&fluxInfo.layout.tracks&&fluxInfo.layout.tracks.length)return fluxInfo.layout;
+  /* Flux/bitstream sources: 'rec' draws every sector where it was recorded; 'aligned' puts each track's sectors in logical order in equal slots (as the nominal view does) */
+  let recAlign='rec',alignCache=null;
+  function fluxLayoutBase(){return fluxInfo&&fluxInfo.layout&&fluxInfo.layout.tracks&&fluxInfo.layout.tracks.length?fluxInfo.layout:null}
+  function alignLayout(L){
+    const key=(q,i)=>q.lba>=0?q.lba:1e6+(q.sn!==undefined?q.sn:q.r!==undefined?q.r:0)*1000+i;
+    /* each track is stretched to a full circle: n sectors get slots of 1/n, with sector 0 at the top */
+    const tracks=L.tracks.map(t=>{
+      const ord=t.sectors.map((q,i)=>({q,i,k:key(q,i)})).sort((x,y)=>x.k-y.k||x.i-y.i).map(o=>o.q);
+      const w=1/(ord.length||1);
+      const sectors=ord.map((q,i)=>{
+        const base=i*w,a=base+0.054*w,b=a+0.013*w,hasD=q.hasData&&q.c0!==null&&q.c0!==undefined;
+        return Object.assign({},q,{_p:{a:q.a,b:q.b,c0:q.c0,d:q.d,gs:q.gs},a,b,gs:q.gs!==undefined?base:undefined,
+          c0:hasD?b+0.007*w:q.c0,d:hasD?base+0.995*w:b});
+      });
+      return Object.assign({},t,{sectors,tail:undefined});
+    });
+    return Object.assign({},L,{tracks,aligned:true});
+  }
+  function recLayoutOf(){const fl=fluxLayoutBase();
+    if(fl){if(recAlign!=='aligned')return fl;if(!alignCache||alignCache.s!==fl)alignCache={s:fl,v:alignLayout(fl)};return alignCache.v}
     if(retroInfo&&retroInfo.hint&&retroInfo.hint.cpcTracks&&disk&&disk.bps){if(!cpcLay||cpcLay.d!==disk||cpcLay.b!==bytes)cpcLay={d:disk,b:bytes,v:cpcSynthLayout(retroInfo.hint.cpcTracks,disk.bps)};if(cpcLay.v)return cpcLay.v}
 if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:nominalLayout()};return nomCache.v}
   function recHasAnomaly(L){
@@ -7963,17 +8052,20 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     const cFiller=style.getPropertyValue('--artifact-disk-filler')||'#94a3b8';
     const cEmpty=style.getPropertyValue('--artifact-empty')||'#dfe3ea';
     const cGap=style.getPropertyValue('--artifact-disk-background')||'#0c1117';
-    const cId='#5f6f86',TAU=Math.PI*2,A0=-Math.PI/2,band=(outer-inner)*2/drawCyl;
+    const cSync='#151b24',cId='#5f6f86',TAU=Math.PI*2,A0=-Math.PI/2,band=(outer-inner)*2/drawCyl;
     const arc=(ro,ri,a0,a1,col)=>{ctx.fillStyle=col;ctx.beginPath();ctx.arc(0,0,ro,a0,a1);ctx.arc(0,0,ri,a1,a0,true);ctx.closePath();ctx.fill()};
     const byCyl=new Map();for(const t of tracks)if(t.head===h)byCyl.set(t.cyl,t);
     for(let c=0;c<drawCyl;c++){
       const ro=outer*2-c*band,ri=ro-band,t=byCyl.get(c);
       if(!t)continue;
       if(LOD.on&&!lodVisible(ro,ri,0,TAU))continue;
-      arc(ro,ri,0,TAU,cGap);
+      if(t.span)arc(ro,ri,A0+t.span.s*TAU,A0+t.span.e*TAU,cGap);else arc(ro,ri,0,TAU,cGap);
       const rO=ro-0.06,rI=ri+0.06;
+      if(t.tail&&t.tail.a<1)arc(rO,rI,A0+t.tail.a*TAU,A0+TAU,cSync);
       for(const q of t.sectors){
         if(LOD.on&&!lodVisible(ro,ri,A0+Math.min(q.a,q.c0===undefined?q.a:q.c0)*TAU,A0+Math.max(q.b===undefined?q.a:q.b,q.d===undefined?0:q.d,q.a)*TAU+0.01))continue;
+        if(q.gs!==undefined&&q.gs<q.a)arc(rO,rI,A0+q.gs*TAU,A0+q.a*TAU,cSync);
+        if(q.hs&&q.c0>q.b)arc(rO,rI,A0+q.b*TAU,A0+q.c0*TAU,cSync);
         if(!q.noId)arc(rO,rI,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU,(q.idOk&&q.hasData)?cId:cBad);
         if(!q.hasData)continue;
         const lba=q.lba>=0&&q.lba*size<bytes.length?q.lba:-1,a0=A0+q.c0*TAU,a1=A0+Math.max(q.d,q.c0+0.0005)*TAU;
@@ -8014,24 +8106,27 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
         for(const t of tracks){
           if(t.head!==h||t.cyl>=drawCyl)continue;
           const ro=outer-t.cyl*band,ri=outer-(t.cyl+1)*band,ra=ro,rb=ri;
+          if(!nom&&t.tail&&t.tail.a<0.9995)g+='<path class="rec-sec" data-gap="1" data-glean-id="rec-tail-'+t.cyl+'-'+h+'" data-title="'+esc('Side '+h+' · cylinder '+t.cyl+(L.aligned?' · sync gap left over at the end of the track · '+t.tail.n+' × FF self-sync bytes':' · sync gap at the end of the track · '+t.tail.n+' × FF self-sync bytes · '+(t.tail.a*360).toFixed(1)+'°–360.0° after index'))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+t.tail.a*TAU,A0+TAU-0.0005)+'"></path>';
           for(const q of t.sectors){
             const st=recStatus(q),loc='Side '+h+' · cylinder '+t.cyl+' · '+(q.name||('sector '+q.r+' (C'+q.c+' H'+q.h+' N'+q.n+', '+q.size+' B)'));
-            const ang=(x,y)=>' · '+(x*360).toFixed(1)+'°–'+(y*360).toFixed(1)+'° after index';
-            if(!nom)g+='<path class="rec-sec" data-glean-id="rec-id-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-id="1" data-ok="'+(q.idOk?1:0)+'" data-title="'+esc(loc+' · address field'+(q.idOk?' OK':' checksum ERROR')+ang(q.a,q.b))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU)+'"></path>';
+            const pv=q._p||q,wrap=x=>(((x%1)+1)%1)*360,ang=(x,y)=>' · '+wrap(x).toFixed(1)+'°–'+wrap(y).toFixed(1)+'° after index'+(L.aligned?' (physical position; drawn in logical order)':'');
+            if(!nom)g+='<path class="rec-sec" data-glean-id="rec-id-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-id="1" data-ok="'+(q.idOk?1:0)+'" data-title="'+esc(loc+' · address field'+(q.idOk?' OK':' checksum ERROR')+ang(pv.a,pv.b))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU)+'"></path>';
+            if(!nom&&q.gs!==undefined&&q.gs<q.a-0.0002)g+='<path class="rec-sec" data-gap="1" data-glean-id="rec-gap-'+t.cyl+'-'+h+'-'+q.sn+'" data-title="'+esc(loc+' · sync gap leading into this sector\'s address field · '+q.gn+' × FF self-sync bytes'+ang(pv.gs,pv.a))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.gs*TAU,A0+q.a*TAU)+'"></path>';
+            if(!nom&&q.hs&&q.hasData&&q.c0>q.b+0.0002)g+='<path class="rec-sec" data-gap="1" data-glean-id="rec-hgap-'+t.cyl+'-'+h+'-'+q.sn+'" data-title="'+esc(loc+' · sync gap between address and data field · '+q.hn+' × FF self-sync bytes'+ang(pv.b,pv.c0))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.b*TAU,A0+q.c0*TAU)+'"></path>';
             if(q.hasData){
               const lbaI=q.lba>=0&&q.lba*size<bytes.length?q.lba:-1,lba=lbaI>=0?toD(lbaI):-1;
               const region=lba>=0&&d.regions?d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors):null,kind=region?region.kind:'data';
               const density=lbaI>=0?recSectorStats(q,lbaI,size,densityLevels):null;
               const cluster=lba>=0&&d.valid&&lba>=d.dataStart?2+Math.floor((lba-d.dataStart)/d.spc):-1;
               const isBad=lba>=0&&(badClusters.has(cluster)||density.isBadContent),isFiller=!!(density&&density.isF6);
-              const title=loc+(lba>=0?' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:''):' · not part of the decoded image')+(st[2]?'':' · '+st[1])+(isBad?' · Bad sector (red)':'')+(isFiller?' · Filler (0xF6)':'')+(nom?'':ang(q.c0,q.d));
+              const title=loc+(lba>=0?' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:''):' · not part of the decoded image')+(st[2]?'':' · '+st[1])+(isBad?' · Bad sector (red)':'')+(isFiller?' · Filler (0xF6)':'')+(nom?'':ang(pv.c0,pv.d));
               g+='<path class="rec-sec'+(lba>=0?' disk-sector '+(ufs?'ufs-map-cell ':'')+kind+(lba===selectedSector?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':''):'')+'"'+(lba>=0?' data-lba="'+lba+'"':'')+(ufs&&lba>=0?' data-lba-end="'+lba+'"':'')+' data-glean-id="rec-data-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" aria-label="'+esc(loc+(lba>=0?', LBA '+lba+', '+density.percent+' percent non-zero bytes'+(isBad?', bad sector shown in red':''):''))+'" data-ok="'+(st[2]&&!isBad?1:0)+'" data-title="'+esc(title)+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.c0*TAU,A0+Math.max(q.d,q.c0+0.0005)*TAU)+'"></path>';
             }
           }
         }
       }else g='<text class="side-empty" x="120" y="120">NO HEAD</text>';
       const nsec=tracks.filter(t=>t.head===h).reduce((n,t)=>n+t.sectors.length,0);
-      host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="disk-side-'+h+'"><div class="side-title"><span>Disk side '+h+'</span><span>'+(h<nheads?'HEAD '+h+' · '+tracks.filter(t=>t.head===h).length+' TRACKS · '+nsec+(nom?' SECTORS':' SECTORS FOUND'):'HEAD '+h+' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<nheads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+(nom?' with the image sectors laid out on nominal tracks':' with the sectors found on each track, drawn at their recorded positions')+'">'+g+'<circle class="hub" cx="120" cy="120" r="22"/><path class="rec-idx" d="M120 9 L116.5 2.5 L123.5 2.5 Z"><title>Index hole: start of the revolution</title></path><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">'+(nom?'NOMINAL':'AS RECORDED')+'</text></svg></div></div>');
+      host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="disk-side-'+h+'"><div class="side-title"><span>Disk side '+h+'</span><span>'+(h<nheads?'HEAD '+h+' · '+tracks.filter(t=>t.head===h).length+' TRACKS · '+nsec+(nom?' SECTORS':' SECTORS FOUND'):'HEAD '+h+' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<nheads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+(nom?' with the image sectors laid out on nominal tracks':L.aligned?' with the sectors found on each track, drawn aligned in logical order':' with the sectors found on each track, drawn at their recorded positions')+'">'+g+'<circle class="hub" cx="120" cy="120" r="22"/><path class="rec-idx" d="M120 9 L116.5 2.5 L123.5 2.5 Z"><title>Index hole: start of the revolution</title></path><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">'+(nom?'NOMINAL':L.aligned?'ALIGNED':'AS RECORDED')+'</text></svg></div></div>');
       if(h<nheads)drawRecordedCanvas(h,tracks,drawCyl,outer,inner,densityLevels,size);
     }
     $('mapstart').textContent=ncyl+' cylinders · '+nheads+' head'+(nheads===1?'':'s')+' · outer ring = cylinder 0';
@@ -8039,6 +8134,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     if(nom)$('mapstart').textContent=fmt(Math.min(d.total,Math.floor(bytes.length/d.bps)))+' sectors · '+ncyl+' cylinders · '+nheads+' head'+(nheads===1?'':'s')+' · outer ring = cylinder 0';
     if(nom)$('mapcaption').textContent='Nominal layout: each ring is one track, with its sectors evenly spaced from the top, clockwise. A plain sector image has no timing, so real sector positions, gaps and interleave are not shown. Select a sector to inspect its bytes.';
     else if(L.synth)$('mapcaption').textContent='Each ring is one track of the CPC DSK, sectors in the order the container lists them (interleave and per-track sector counts and sizes are real; cylinder 0 side 1 holds 16 short sectors). A DSK file has no timing, so positions and gaps are modelled from standard MFM byte counts, not measured. Select a sector to inspect its bytes.';
+    else if(L.aligned)$('mapcaption').textContent='Aligned view: each ring is one track, sectors in logical order from the top, equally spaced. Positions, interleave and gap lengths are not to scale; hover for the physical angle. Select a sector to inspect its bytes.';
     else $('mapcaption').textContent='Each ring is one track as recorded: sectors are drawn at their real position after the index mark (top, clockwise). Dark areas are gaps. Select a sector to inspect its bytes.'+(tracks.some(t=>t.indexed===false)?' This source has no index mark, so each track starts at an arbitrary point and angles are only relative.':'');
     host.onclick=e=>{const hit=e.target.closest('.rec-sec[data-lba]');if(!hit)return;const lba=Number(hit.dataset.lba);showSector(lba);if(selectedFile&&disk.valid&&lba>=disk.dataStart){const cluster=2+Math.floor((lba-disk.dataStart)/disk.spc);if((selectedFile.chain||[]).includes(cluster))selectCluster(cluster)}};
   }
@@ -8185,7 +8281,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     let bad=0;ps.forEach(p=>{const o=p.getAttribute('data-ok');if(o==='0'||(o===null&&/Bad sector/.test(p.getAttribute('data-title')||'')))bad++});
     const fi=fluxInfo,rev=!!(fi&&/\(reversed\)/.test(fi.container||''));
     const f=hubFormat(fi,disk).join(' / ');
-    const al=(svg.getAttribute('aria-label')||'').toLowerCase(),mode=al.indexOf('nominal')>=0?'NOMINAL':al.indexOf('recorded positions')>=0?'AS RECORDED':'CYL / SECTOR';
+    const al=(svg.getAttribute('aria-label')||'').toLowerCase(),mode=al.indexOf('nominal')>=0?'NOMINAL':al.indexOf('aligned in logical')>=0?'ALIGNED':al.indexOf('recorded positions')>=0?'AS RECORDED':'CYL / SECTOR';
     return [{t:'SIDE '+side+(rev?' REV':''),c:'hub-strong',fs:5.6},{t:f,fs:4.6},{t:(ps.length-bad)+'/'+ps.length+' OK',c:bad?'hub-bad':'hub-ok',fs:4.6},{t:mode,c:'hub-dim',fs:3.6}];
   }
   let hubLast=null,hubLastEl=null;
@@ -8200,7 +8296,8 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     const isId=el.getAttribute('data-id')==='1',ok=el.getAttribute('data-ok'),bad=ok==='0'||/Bad sector/.test(t);
     const L=[{t:(cyl!==null?'C'+cyl+' \u00b7 ':'')+'H'+(svg.dataset.hubSide||0),c:'hub-strong',fs:5.6}];
     if(sec!==null||lba!==null)L.push({t:(sec!==null?'S'+sec:'')+(sec!==null&&lba!==null?' \u00b7 ':'')+(lba!==null?'LBA '+lba:''),fs:4.8});
-    L.push({t:isId?(ok==='1'?'ID OK':'ID ERROR'):(bad?'BAD':'OK')+(pct!==null?' \u00b7 '+pct+'%':''),c:bad?'hub-bad':'hub-ok',fs:4.8});
+    if(el.getAttribute('data-gap')==='1')L.push({t:'SYNC GAP',fs:4.8});
+    else L.push({t:isId?(ok==='1'?'ID OK':'ID ERROR'):(bad?'BAD':'OK')+(pct!==null?' \u00b7 '+pct+'%':''),c:bad?'hub-bad':'hub-ok',fs:4.8});
     hubSet(svg,L);
   }
   function setupHubs(){
@@ -8467,6 +8564,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     refreshUnmappedUI();applyUnmappedOverlay();updateUnmBanner(selectedSector);
   }
   try{
+    $('recAlign').onchange=e=>{recAlign=e.target.checked?'aligned':'rec';renderDiskLayout()};
     $('unmMode').onchange=e=>{unmMode=e.target.value;refreshUnmappedUI();applyUnmappedOverlay()};
     $('unmPrev').onclick=()=>unmStep(-1);$('unmNext').onclick=()=>unmStep(1);$('unmExport').onclick=exportUnmapped;
     $('unmRows').onclick=e=>{const tr=e.target.closest&&e.target.closest('tr[data-unm-run]');if(tr)selectUnmRun(Number(tr.dataset.unmRun))};
@@ -8474,7 +8572,9 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
   function syncMapMode(){
     const rec=!!recLayoutOf();
     const L=rec?recLayoutOf():null;
+    {const w=$('recAlignWrap');if(w){w.classList.toggle('hidden',!fluxLayoutBase());$('recAlign').checked=recAlign==='aligned'}}
     $('maplegendRec').classList.toggle('hidden',!rec||!!(L&&L.nominal));
+    {const ls=$('legSync');if(ls)ls.classList.toggle('hidden',!(L&&L.tracks&&L.tracks.some(t=>t.tail||t.sectors.some(q=>q.gs!==undefined||q.hs))))}
     if(!rec)$('mapcaption').textContent=REC_CAPTION_LOGICAL;
     return rec;
   }
