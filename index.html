@@ -689,7 +689,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
               <div class="preview-title">
                 <h3>File preview &amp; visualizer</h3>
                 <span id="previewBadge" class="badge">No file selected</span>
-</div>
+              </div>
               <div class="preview-actions">
                 <!-- Dual Text/Hex Mode Switch -->
                 <div class="preview-mode-toggle hidden" id="previewModeToggle">
@@ -2565,6 +2565,64 @@ function decodeLisaPreboot(bytes){
     fileEntries:entries,idLabel:'First sector (LBA)',kindLabel:'File type',lbaLabel:l=>'sector '+l});
 }
 
+/* ---------- GenRad 2620 Field Maintenance Processor system disk, 1984 ----------
+   Reverse-engineered from a 5.25" 80-track image; every entry below was checked against the image.
+   - Logical sector = 1,024 bytes, LBA n starts at byte n*1024. Boot sector 0 starts with JP C100h and carries the geometry at 0x0B..0x10:
+     sectors per track (byte 0x0B = 5), sector size (LE16 at 0x0C = 1024) and total sectors (LE16 at 0x0F = 400); 80 tracks x 5 = 400.
+   - Directory: sector 5 onward, 32-byte entries: 10-byte space-padded name, type byte (0x01 on every file seen), 24-bit LE length, LE16 first sector,
+     LE16 last sector, 14 zero bytes. Files are contiguous; length lies in ((last-first)*1024, (last-first+1)*1024]. Unused slots are 0xE5-filled.
+   - Unused space is formatted with 0xE5. */
+function decodeGenRad(bytes){
+  const SS=1024;
+  if(bytes.length<SS*8||bytes[0]!==0xc3)return null;
+  const head=String.fromCharCode(...bytes.subarray(0,SS));
+  if(!/GenRad Service Products/.test(head)||!/\$ROOT/.test(head))return null;
+  const total=Math.floor(bytes.length/SS);
+  const spt=bytes[0x0b]||5,ss=le16(bytes,0x0c),declared=le16(bytes,0x0f);
+  const entries=[],used=new Set();
+  const printable=c=>c>=0x21&&c<0x7f;
+  let dirEnd=5;
+  for(let sec=5;sec<9&&(sec+1)*SS<=bytes.length;sec++){
+    let any=false;
+    for(let i=0;i<SS;i+=32){
+      const o=sec*SS+i,e=bytes.subarray(o,o+32);
+      if(e[0]===0xe5||e[0]===0)continue;
+      let nl=0;while(nl<10&&e[nl]!==0x20&&e[nl]!==0)nl++;
+      if(!nl||![...e.subarray(0,nl)].every(printable))continue;
+      const len=e[11]|(e[12]<<8)|(e[13]<<16),a=le16(e,14),b=le16(e,16);
+      if(b<a||b>=total||len>(b-a+1)*SS||(b>a&&len<=(b-a)*SS))continue;
+      any=true;
+      const nm=String.fromCharCode(...e.subarray(0,nl)),chain=[];for(let k=a;k<=b;k++){chain.push(k);used.add(k)}
+      const sys=nm[0]==='$';
+      entries.push({name:segName(nm),path:segName(nm),size:len,directory:false,cluster:a,chain,
+        kind:(sys?'System file':'Data file')+' · type '+e[10].toString(16).padStart(2,'0')+' · sectors '+a+'–'+b,
+        reader:segReader(bytes,[{off:a*SS,len}],len),textEnc:'',exportName:segName(nm)});
+    }
+    if(any)dirEnd=sec;else if(sec>5)break;
+  }
+  if(entries.length<2)return null;
+  const dirLbas=new Set();for(let k=5;k<=dirEnd;k++)dirLbas.add(k);
+  const order=[];let left=total;for(let c=0;c<80&&left>0;c++){const n=Math.min(spt,left);order.push({cylinder:c,head:0,sectors:n});left-=n}
+  const geo=makeGeo({order,label:'GenRad 5.25" '+(spt*SS*80/1024)+'K',badge:'GENRAD 2620',hub:'TRACK / SECTOR',
+    facts:[['Format','GenRad 2620 Field Maintenance Processor system disk (1984)'],['Media','5.25-inch, 1 side, 80 tracks, '+spt+' × '+SS+' B sectors per track'],['Sector size',fmtN(SS)+' B'],['Sectors in image',fmtN(total)+(declared&&declared!==total?' of '+fmtN(declared)+' declared in the boot sector':'')]],
+    note:'Geometry from the boot sector header (sectors per track, sector size, total sectors).',
+    locFmt:p=>'Track '+p.cylinder+' · Sector '+(p.sector-1)});
+  const regions=regionsFrom(total,[
+    {name:'Boot sector / loader (sectors 0–4)',kind:'boot',lbas:new Set([0,1,2,3,4])},
+    {name:'Directory',kind:'root',lbas:dirLbas},
+    {name:'Files',kind:'data',lbas:used}
+  ],'Unused (E5-formatted)');
+  let blank=0;for(let k=0;k<total;k++){if(used.has(k)||k<=dirEnd)continue;let z=true;for(let q=k*SS,e=q+SS;q<e;q++)if(bytes[q]!==0xe5){z=false;break}if(z)blank++}
+  const startup=(()=>{const m=/lw demo\rmain/.exec(String.fromCharCode(...bytes.subarray(0,0x100)));return m?m[0].replace(/\r/g,' ⏎ '):''})();
+  const sizeTotal=entries.reduce((n,e)=>n+e.size,0);
+  return baseDisk({fsType:'GENRAD_2620',formatLabel:'GenRad 2620 Field Maintenance Processor system disk · read-only',name:'GenRad system disk',bps:SS,total,actualSectors:total,usable:total,spt,heads:1,geo,regions,
+    boot:[['0x000','Boot sector','JP C100h (8080/8085-compatible code)'],['0x1E5','Loader strings','$ROOT / $MAIN, "GenRad Service Products Division 1984"'],['—','Directory','Sector 5, 32-byte entries'],['—','Files',fmtN(entries.length)+' ('+fmtN(sizeTotal)+' bytes)'],['—','Geometry',spt+' × '+SS+' B sectors per track, '+total+' sectors']].concat(startup?[['0x053','Startup text',startup]]:[]),
+    bootFacts:[['Filesystem','GenRad 2620 system disk (contiguous files)'],['Sector size',fmtN(SS)+' B'],['Directory','Sector 5, 32-byte entries'],['Files',fmtN(entries.length)]],
+    bootLabel:'Sector 0 (boot code)',bootNote:'Boot sector from GenRad Service Products Division (1984). It loads $ROOT and $MAIN through the directory at sector 5.',
+    alloc:{free:blank,used:total-blank,reserved:dirEnd+1,bad:0},allocNote:'Free = E5-formatted sectors outside the files and directory.',
+    fileEntries:entries,idLabel:'First sector (LBA)',kindLabel:'File type',lbaLabel:l=>'sector '+l});
+}
+
 function sniffUnsupported(bytes,name){
   const s=(o,n)=>String.fromCharCode(...bytes.subarray(o,o+n));
   const ext=extOf(name);
@@ -2579,7 +2637,7 @@ function sniffUnsupported(bytes,name){
     [()=>s(0,3)==='SCP','SuperCard Pro flux image','SCP could not be decoded as a supported sector format.'],
     [()=>s(0,4)==='IMD '||s(0,3)==='IMD','ImageDisk (IMD)','IMD needs track re-assembly; convert to a raw IMG.'],
     [()=>(s(0,2)==='TD'||s(0,2)==='td')&&ext==='td0','Teledisk (TD0)','TD0 is compressed; convert to a raw IMG.'],
-    [()=>{const h=s(0,Math.min(1024,bytes.length));return bytes[0]===0xc3&&/GenRad Service Products/.test(h)&&/\$ROOT/.test(h)},'GenRad / Eurotest Z80 system disk','Z80 boot sector (JP C100h) from GenRad Service Products Division, 1984; it loads $ROOT and $MAIN through a proprietary directory that is not decoded. Data fills the first 80 KiB; the rest is E5-formatted.'],
+    [()=>{const h=s(0,Math.min(1024,bytes.length));return bytes[0]===0xc3&&/GenRad Service Products/.test(h)&&/\$ROOT/.test(h)},'GenRad 2620 Field Maintenance Processor system disk','Boot sector (JP C100h) from GenRad Service Products Division, 1984; it loads $ROOT and $MAIN through a proprietary directory that is not decoded. Data fills the first 80 KiB; the rest is E5-formatted.'],
     [()=>s(0,4)==='FDI\0'||ext==='fdi'&&s(0,3)==='FDI','FDI disk image','FDI stores per-track data; convert to a raw sector image.']
   ];
   for(const [test,label,msg] of table){
@@ -3123,6 +3181,7 @@ function decodeSharpCpm400(bytes,hint){
 /* ---------- entry point ---------- */
 function detect(bytes,name,hint){
   hint=hint||{};
+  try{const gr=decodeGenRad(bytes);if(gr)return gr}catch(_){}
   const sn=sniffUnsupported(bytes,name);
   if(sn){
     const total=Math.floor(bytes.length/512);
@@ -5126,7 +5185,7 @@ return {sitHuffman,bunzip2,lzmaDecode,lzma2Decode,xzDecode,uncompressZ,lzwDecode
   }};
 })();
 
-/* ---------- PvFmt: extra file-preview formats (images, RTF,PDF/SVG sniffing, archive listings). Pure functions, no DOM. ---------- */
+/* ---------- PvFmt: extra file-preview formats (images, RTF, PDF/SVG sniffing, archive listings). Pure functions, no DOM. ---------- */
 const PvFmt=(function(){
 'use strict';
 const u16=(b,o)=>b[o]|(b[o+1]<<8);
@@ -6164,7 +6223,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.10'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.11'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
