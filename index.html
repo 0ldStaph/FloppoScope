@@ -3240,6 +3240,37 @@ function pllCls(fl,cell,u,gain){
   }
   const rr=out.subarray(0,n);rr.bi=bi;rr.ti=ti;return rr;
 }
+/* Fixed-threshold interval classifier (C64 GCR fallback). Some drives show strong, pattern-dependent peak shift: the 1-, 2- and 3-cell intervals sit at e.g. 3.8 / 6.9 / 9.8 us
+   instead of n x cell. The adaptive classifiers can slip inside a data field there. This pass fits the three interval clusters of the whole revolution (1-D k-means),
+   cuts at the midpoints between them and does not adapt while decoding, so a field is either read consistently or fails its checksum. It is only used to add verified copies. A field with intervals within ~1% of a cut is
+   re-read with the cuts scaled by a few small factors (opt.sc), and with a lower glitch-merge limit (opt.gl, a genuine short 1-cell interval can be as low as ~0.58 of the cell centre under peak shift); only a checksum-valid result is kept. */
+function pllThr(fl,cell,sc,gl){
+  sc=sc||1;gl=gl||0.62; /* gl: intervals shorter than gl x (1-cell centre) are treated as a glitch and merged into the next one */
+  let c=[cell*1.05,cell*2,cell*3];
+  for(let it=0;it<25;it++){
+    const sum=[0,0,0],cnt=[0,0,0];
+    for(let i=0;i<fl.length;i++){
+      const d=fl[i];if(d<0.6*cell||d>c[2]*1.25)continue;
+      let k=0,bd=1e18;for(let j=0;j<3;j++){const e=Math.abs(d-c[j]);if(e<bd){bd=e;k=j}}
+      sum[k]+=d;cnt[k]++;
+    }
+    let moved=0;
+    for(let j=0;j<3;j++)if(cnt[j]>20){const v=sum[j]/cnt[j];moved+=Math.abs(v-c[j]);c[j]=v}
+    if(moved<1)break;
+  }
+  const t1=sc*(c[0]+c[1])/2,t2=sc*(c[1]+c[2])/2,t3=sc*(c[2]+(c[2]-c[1])/2),step=(c[2]-c[0])/2;
+  let total=0;for(let i=0;i<fl.length;i++)total+=fl[i];
+  const out=new Uint8Array(Math.ceil(total/(cell*0.7))+64);
+  const bi=[],ti=[];let T=0,n=0,carry=0;
+  for(let i=0;i<fl.length;i++){T+=fl[i];
+    const dt=fl[i]+carry;carry=0;
+    if(dt<c[0]*gl){carry=dt;continue}
+    const k=dt<t1?1:dt<t2?2:dt<t3?3:Math.max(4,Math.round((dt-(c[0]-step))/step));
+    n+=k-1;if(n>=out.length-1)break;
+    bi.push(n);ti.push(T);out[n++]=1;
+  }
+  const rr=out.subarray(0,n);rr.bi=bi;rr.ti=ti;return rr;
+}
 function extFlux(track,rev){
   const fl=track.get(rev),nx=track.revCount>1?track.get((rev+1)%track.revCount):fl;
   const k=Math.min(nx.length,9000),o=new Float64Array(fl.length+k);
@@ -3639,6 +3670,7 @@ function bitsOf(track,rev,cell,kind,opt){
   let out;
   if(opt.mode==='ph'||(!opt.mode&&(kind==='ibm'||kind==='amiga')))out=pllPh(fl,cell,opt.pAdj,opt.phAdj);
   else if(opt.mode==='cls')out=pllCls(fl,cell,(kind==='ibm'||kind==='amiga')?2:1,opt.gain);
+  else if(opt.mode==='thr')out=pllThr(fl,cell,opt.sc,opt.gl);
   else out=pll(fl,cell,opt.tol||0.15,opt.gain||0.08);
   /* number of bit cells in one revolution (the array also carries a wrap-around copy of the next revolution's start) */
   try{const own=track.get(rev);let a=0,b=0;for(let i=0;i<own.length;i++)a+=own[i];for(let i=own.length;i<fl.length;i++)b+=fl[i];out.revCells=a+b>0?Math.round(out.length*a/(a+b)):out.length;out.revTime=a}catch(_){out.revCells=out.length}
@@ -3774,7 +3806,7 @@ function analyzeTrack(kind,t,all,want,anoms){
   if(sizes.size>1)push('size','mixed sector sizes on one track ('+[...sizes].map(n=>128<<Math.min(n,6)).join(', ')+' bytes)');
   const distinct=groups.size;
   if(want>0&&distinct>want)push('extra-sectors',distinct+' sectors on the track (normally '+want+')');
-  else if(want>0&&distinct>0&&distinct<want&&!anoms.some(a=>a.cat==='layout'))push('missing-sectors',distinct+' of '+want+' expected sectors found');
+  else if(want>0&&distinct>0&&distinct<want&&!anoms.some(a=>a.cat==='layout')){let nm='';if(kind==='c64'){const tn=t.cyl+1,ms=[];for(let k=0;k<want;k++)if(!groups.has(tn+'.'+k))ms.push('S'+k);if(ms.length&&ms.length<=6)nm=' — not found: T'+tn+' '+ms.join(', ')}push('missing-sectors',distinct+' of '+want+' expected sectors found'+nm)}
   if(!distinct&&!(kind==='apple'&&(t.head===1||t.cyl>=35))){let n=0;try{n=t.get(0).length}catch(_){}if(n>(t.src==='flux'?4000:2000))push('no-data','track carries data but no decodable sectors (unformatted, another encoding, or a protection track)')}
   if(t.src==='flux'&&t.indexed){
     try{const f=t.get(0);let sum=0;for(let i=0;i<f.length;i++)sum+=f[i];const ms=sum/1e6,nom=Math.abs(ms-200)<Math.abs(ms-166.7)?200:166.7,dev=(ms-nom)/nom;
@@ -3782,7 +3814,7 @@ function analyzeTrack(kind,t,all,want,anoms){
   }
 }
 function altOpts(kind,best){
-  const ALT=(kind==='ibm'||kind==='amiga'?[{mode:'ph',pAdj:0.005,phAdj:0.05},{mode:'ph',pAdj:0.01,phAdj:0.05},{mode:'ph',pAdj:0.02,phAdj:0.05},{mode:'ph',pAdj:0.04,phAdj:0.6},{mode:'ph',pAdj:0.005,phAdj:0.1},{mode:'ph',pAdj:0.02,phAdj:0.3},{mode:'std',tol:0.15,gain:0.08}]:[]).concat([{mode:'cls',gain:0.03},{mode:'cls',gain:0.08},{mode:'std',tol:0.25,gain:0.03},{mode:'std',tol:0.25,gain:0.15},{mode:'cls',gain:0.015}])
+  const ALT=(kind==='ibm'||kind==='amiga'?[{mode:'ph',pAdj:0.005,phAdj:0.05},{mode:'ph',pAdj:0.01,phAdj:0.05},{mode:'ph',pAdj:0.02,phAdj:0.05},{mode:'ph',pAdj:0.04,phAdj:0.6},{mode:'ph',pAdj:0.005,phAdj:0.1},{mode:'ph',pAdj:0.02,phAdj:0.3},{mode:'std',tol:0.15,gain:0.08}]:[]).concat([{mode:'cls',gain:0.03},{mode:'cls',gain:0.08},{mode:'std',tol:0.25,gain:0.03},{mode:'std',tol:0.25,gain:0.15},{mode:'cls',gain:0.015}]).concat(kind==='c64'?[0.62,0.5].reduce((a,gl)=>a.concat([1,1.015,0.985,1.03,0.97,1.05,0.95].map(sc=>({mode:'thr',sc,gl}))),[]):[])
     .filter(o=>!(best.opt&&best.opt.mode===o.mode&&best.opt.gain===o.gain&&best.opt.tol===o.tol));
   return ALT;
 }
@@ -3966,8 +3998,8 @@ function trackLayoutGen(kind,t,all){
   let ents=(a0.layout||[]).filter(e=>e.at<cells).sort((a,b)=>a.at-b.at);
   const F=(v,c)=>Math.round(v/c*100000)/100000,out=[];
   let f=v=>F(v,cells);
-  /* Mac: a sector whose header or data failed in the first revolution but read in another revolution / clock-recovery pass is shown where that read found it */
-  if(kind==='mac'){
+  /* Mac / C64: a sector whose header or data failed in the first revolution but read in another revolution / clock-recovery pass is shown where that read found it */
+  if(kind==='mac'||kind==='c64'){
     const have=new Map();for(const e of ents)have.set(e.k,e);
     for(const arr of all){
       if(!arr.layout||!arr.revCells)continue;
@@ -3986,12 +4018,41 @@ function trackLayoutGen(kind,t,all){
     }
     ents.sort((a,b)=>a.at-b.at);
   }
+  /* C64: the capture can overlap the index mark, so the sector that straddles it is seen at both ends of the revolution (once clipped at the start, once at the end).
+     It is one physical sector: keep one copy, preferring a copy whose data verified. */
+  if(kind==='c64'){
+    const good=x=>x.hasData&&x.dOk,keep=new Map();
+    for(const e of ents){const p=keep.get(e.k);if(p&&Math.abs(e.at-p.at)>cells*0.8){if(good(e)||!good(p))keep.set(e.k,e)}else if(!p)keep.set(e.k,e)}
+    ents=ents.filter(e=>{const kk=keep.get(e.k);return kk===e||!ents.some(o=>o!==e&&o.k===e.k&&Math.abs(o.at-e.at)>cells*0.8)});
+  }
   for(const e of ents){
     let weak=false;
     if(e.sec&&!e.dOk){for(const q of others){if(q!==e.sec&&!q.noData&&!q.invalid&&keyOf(kind,t,q)===e.k&&!dataEq(payload(q),payload(e.sec))){weak=true;break}}}
     out.push({name:e.name,tn:e.tn,sn:e.sn,size:e.size,idOk:e.idOk,hasData:e.hasData,dOk:!!e.dOk,deleted:false,weak,short:false,keptBytes:e.size,
       a:f(e.at),b:f(e.idEnd),c0:e.hasData?f(e.dAt):null,d:f(e.hasData?e.dEnd:e.idEnd),lba:-1,
       gs:e.gs!==undefined?f(Math.min(e.gs,e.at)):undefined,gn:e.gn,hs:!!e.hs,hn:e.hn});
+  }
+  /* C64: a sector with no decodable address field in any revolution leaves no trace to draw. Put a placeholder in the empty slot between its neighbours so it shows
+     as a red (unreadable) sector in the map instead of a dark hole. Only used when the number of sectors found is below the zone's sector count. */
+  if(kind==='c64'){
+    const trk=t.cyl+1,exp=C64_SPT(trk),have=new Set();
+    for(const q of out)if(q.tn===trk&&q.sn>=0&&q.sn<exp)have.add(q.sn);
+    const miss=[];for(let k=0;k<exp;k++)if(!have.has(k))miss.push(k);
+    if(miss.length&&out.length>=3){
+      const srt=out.slice().sort((x,y)=>x.a-y.a),n=srt.length,gaps=srt.map((q,i)=>{let g=srt[(i+1)%n].a-q.a;if(g<=0)g+=1;return g}),pitch=gaps.slice().sort((x,y)=>x-y)[n>>1];
+      const left=new Set(miss);
+      srt.forEach((q,i)=>{
+        const k=Math.round(gaps[i]/pitch)-1;
+        if(gaps[i]<pitch*1.5||k<1)return;
+        for(let j=0;j<k&&left.size;j++){
+          let sn=(q.sn+j+1)%exp;if(!left.has(sn))sn=left.values().next().value;
+          left.delete(sn);
+          const pos=(q.a+pitch*(j+1))%1;
+          out.push({name:'sector '+sn+' (track '+trk+', 256 B) · not found',tn:trk,sn,size:256,idOk:false,hasData:false,dOk:false,lost:true,deleted:false,weak:false,short:false,keptBytes:256,a:pos,b:Math.min(1,pos+0.0006),c0:null,d:Math.min(1,pos+0.0006),lba:-1});
+        }
+      });
+      out.sort((x,y)=>x.a-y.a);
+    }
   }
   return {cyl:t.cyl,head:t.head,ms,sectors:out,tail:a0.tail?{a:f(a0.tail.at),n:a0.tail.n}:undefined};
 }
@@ -4072,16 +4133,16 @@ function assembleIBM(entries,label){
       img.set(s,lba*size);filled[lba]=2;padded.set(e,{lba,fill});
     }
   }
-  let missing=0;
+  let missing=0;const missList=[];
   for(let l=0;l<total;l++){
     const sn=contiguous?(l%spt+base):rs[l%spt];
     if(filled[l]===1)good_++;
     else if(filled[l]===2){bad++;badLbas.push(l);if(badList.length<12)badList.push('C'+Math.floor(l/spt/heads)+' H'+(Math.floor(l/spt)%heads)+' S'+sn)}
-    else{missing++;badLbas.push(l);img.set(badSector(size),l*size)}
+    else{missing++;badLbas.push(l);if(missList.length<12)missList.push('C'+Math.floor(l/spt/heads)+' H'+(Math.floor(l/spt)%heads)+' S'+sn);img.set(badSector(size),l*size)}
   }
   const useSet=new Set(use),dropped=entries.filter(e=>!useSet.has(e)&&!padded.has(e)&&!repack.has(e.cyl+'.'+e.head+'.'+e.r)),ignored=dropped.length;
   const lbaOf=(cyl,head,r)=>{if(head>=heads||cyl%step)return -1;const idx=contiguous?r-base:(rIndex.has(r)?rIndex.get(r):-1);if(idx<0||idx>=spt)return -1;const l=(Math.floor(cyl/step)*heads+head)*spt+idx;return l>=0&&l<total?l:-1};
-  return {img,dropped,lbaOf,repack,repacked,padded,stats:{good:good_,bad,missing,total,badList},badLbas,size,geom:cyls+' cylinders × '+heads+' head(s) × '+spt+' sectors × '+size+' B (sector IDs '+base+'–'+maxR+')'+(step===2?' (40-track disk in an 80-track drive)':'')+(repacked.length?' · '+repacked.map(x=>'C'+x.cyl+' H'+x.head+' holds '+x.n+' × '+x.sz+' B sectors (IDs '+x.ids+'), kept unchanged at the start of its slots').join('; '):'')+(ignored?' · '+ignored+' stray/inconsistent sector(s) ignored':''),name:'disk.img',geo:{cyls,heads,spt,size,base,step}};
+  return {img,dropped,lbaOf,repack,repacked,padded,stats:{good:good_,bad,missing,total,badList,missList},badLbas,size,geom:cyls+' cylinders × '+heads+' head(s) × '+spt+' sectors × '+size+' B (sector IDs '+base+'–'+maxR+')'+(step===2?' (40-track disk in an 80-track drive)':'')+(repacked.length?' · '+repacked.map(x=>'C'+x.cyl+' H'+x.head+' holds '+x.n+' × '+x.sz+' B sectors (IDs '+x.ids+'), kept unchanged at the start of its slots').join('; '):'')+(ignored?' · '+ignored+' stray/inconsistent sector(s) ignored':''),name:'disk.img',geo:{cyls,heads,spt,size,base,step}};
 }
 function assembleLoose(entries){
   const sizeCount=new Map();for(const e of entries)sizeCount.set(e.data.length,(sizeCount.get(e.data.length)||0)+1);
@@ -4157,13 +4218,13 @@ function assembleFixed(kind,map){
   return r64;
 }
 function fin(img,filled,total,size,name,geom,lbl,extra){
-  let good=0,bad=0,missing=0;const badList=[],badLbas=[];
+  let good=0,bad=0,missing=0;const badList=[],badLbas=[],missList=[];
   for(let l=0;l<total;l++){
     if(filled[l]===1)good++;
     else if(filled[l]===2){bad++;badLbas.push(l);if(badList.length<12)badList.push(lbl(l))}
-    else{missing++;badLbas.push(l);img.set(badSector(size),l*size)}
+    else{missing++;badLbas.push(l);if(missList.length<12)missList.push(lbl(l));img.set(badSector(size),l*size)}
   }
-  return {img,badLbas,size,stats:{good,bad,missing,total,badList},geom:geom+(extra||''),name};
+  return {img,badLbas,size,stats:{good,bad,missing,total,badList,missList},geom:geom+(extra||''),name};
 }
 
 const CATN={'recovered':'recovered with alternate clock','crc-stable':'repeatable checksum error','weak':'weak / unstable data','intermittent':'intermittent reads','crc-error':'checksum error','header-crc':'bad address field','id-mismatch':'ID/track mismatch','dup-id':'duplicate sector ID','extra-sectors':'extra sectors','missing-sectors':'missing sectors','size':'mixed sector sizes','deleted':'deleted-data mark','no-data':'track with no decodable sectors','long-track':'long track','short-track':'short track','unsupported13':'13-sector format','stray':'stray sector IDs','layout':'irregular layout','short-sector':'data field shorter than its ID announces'};
@@ -4334,6 +4395,7 @@ function summarize(src,best,res,covered,anoms){
   rows.push(['—','Sector recovery',fmtN(st.good)+' good · '+fmtN(st.bad)+' with errors · '+fmtN(st.missing)+' unreadable/missing of '+fmtN(st.total)+' ('+covered+' tracks read)']);
   if(best.loose)rows.push(['—','Note','No sector had a verified data checksum; the layout was inferred from address fields only (heavily protected or damaged disk).']);
   if(st.badList.length)rows.push(['—','Sectors with errors',st.badList.join(', ')+(st.bad>st.badList.length?' …':'')]);
+  if(st.missList&&st.missList.length)rows.push(['—','Unreadable/missing sectors',st.missList.join(', ')+(st.missing>st.missList.length?' …':'')]);
   if(st.missing)rows.push(['—','Unreadable sectors','Filled completely with a repeated "-=[BAD SECTOR]=-" marker; unreadable and CRC-failed sectors are drawn red in the sector map']);
   for(const r of anomalyRows(anoms))rows.push(r);
   return rows;
@@ -6102,7 +6164,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.8'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.9'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -6490,7 +6552,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
         const m=/([\d,]+) good · ([\d,]+) with errors · ([\d,]+) unreadable\/missing of ([\d,]+)/.exec(row('Sector recovery'));
         if(m){
           r.flux={good:num(m[1]),bad:num(m[2]),missing:num(m[3]),total:num(m[4])};
-          if(r.flux.missing)add('error','sec-missing',fmt(r.flux.missing)+' of '+fmt(r.flux.total)+' sector(s) unreadable or missing');
+          if(r.flux.missing)add('error','sec-missing',fmt(r.flux.missing)+' of '+fmt(r.flux.total)+' sector(s) unreadable or missing'+(row('Unreadable/missing sectors')?' ('+row('Unreadable/missing sectors')+')':''));
           if(r.flux.bad)add('error','sec-crc',fmt(r.flux.bad)+' sector(s) read with checksum errors'+(row('Sectors with errors')?' (e.g. '+row('Sectors with errors')+')':''));
         }
         const an=row('Protection / anomaly scan');
@@ -8030,6 +8092,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     return L.tracks.some(t=>t.sectors.length!==mode||t.sectors.some(q=>!q.idOk||!q.hasData||!q.dOk||q.short||q.weak||q.deleted));
   }
   function recStatus(q){
+    if(q.lost)return ['rec-lost','sector not found: no address field could be decoded in any revolution'];
     if(!q.idOk)return ['rec-idbad','address field checksum error'];
     if(!q.hasData)return ['rec-nodata','no data field found after this ID'];
     if(q.short)return ['rec-short','data cut short: only about '+q.keptBytes+' of '+q.size+' bytes are recorded, then gap filler'+(q.dOk?'':' (checksum does not verify)')];
@@ -8043,6 +8106,13 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     let nz=0,f6=0;for(let i=q.off;i<end;i++){if(bytes[i]!==0)nz++;if(bytes[i]===0xF6)f6++}
     const sig=[45,61,91,66,65,68,32,83,69,67,84,79,82,93,61,45];let isSig=n>=16;for(let i=0;isSig&&i<16;i++)if(bytes[q.off+i]!==sig[i])isSig=false;
     return {nonzero:nz,byteCount:n,percent:n?Math.round(nz/n*100):0,isF6:n>0&&f6===n,isBadContent:isSig||!q.dOk};
+  }
+  function noDataSpan(t,q){
+    /* a sector whose address field was found but whose data field was not: its slot runs from the end of the ID to the start of the next ID (capped at one nominal slot) */
+    const ord=t._ord||(t._ord=t.sectors.filter(x=>!x.noId).sort((x,y)=>x.a-y.a)),i=ord.indexOf(q),n=ord.length;
+    let e=n>1?ord[(i+1)%n].a:q.b+1/Math.max(1,n);if(e<=q.b)e+=1;
+    const cap=q.b+1.15/Math.max(1,n);
+    return [q.b,Math.min(e-0.0008,cap)];
   }
   function drawRecordedCanvas(h,tracks,drawCyl,outer,inner,densityLevels,size){
     const canvas=(LOD.on&&LOD.canvas)||document.getElementById('diskCanvas-'+h);if(!canvas)return;
@@ -8067,7 +8137,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
         if(q.gs!==undefined&&q.gs<q.a)arc(rO,rI,A0+q.gs*TAU,A0+q.a*TAU,cSync);
         if(q.hs&&q.c0>q.b)arc(rO,rI,A0+q.b*TAU,A0+q.c0*TAU,cSync);
         if(!q.noId)arc(rO,rI,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU,(q.idOk&&q.hasData)?cId:cBad);
-        if(!q.hasData)continue;
+        if(!q.hasData){if(!q.noId){const sp=noDataSpan(t,q);if(sp[1]>sp[0])arc(rO,rI,A0+sp[0]*TAU,A0+sp[1]*TAU,cBad)}continue}
         const lba=q.lba>=0&&q.lba*size<bytes.length?q.lba:-1,a0=A0+q.c0*TAU,a1=A0+Math.max(q.d,q.c0+0.0005)*TAU;
         const density=lba>=0?recSectorStats(q,lba,size,densityLevels):{};
         const startByte=lba>=0?(q.off!==undefined?q.off:lba*size):0,secLen=q.len||size;
@@ -8110,9 +8180,10 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
           for(const q of t.sectors){
             const st=recStatus(q),loc='Side '+h+' · cylinder '+t.cyl+' · '+(q.name||('sector '+q.r+' (C'+q.c+' H'+q.h+' N'+q.n+', '+q.size+' B)'));
             const pv=q._p||q,wrap=x=>(((x%1)+1)%1)*360,ang=(x,y)=>' · '+wrap(x).toFixed(1)+'°–'+wrap(y).toFixed(1)+'° after index'+(L.aligned?' (physical position; drawn in logical order)':'');
-            if(!nom)g+='<path class="rec-sec" data-glean-id="rec-id-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-id="1" data-ok="'+(q.idOk?1:0)+'" data-title="'+esc(loc+' · address field'+(q.idOk?' OK':' checksum ERROR')+ang(pv.a,pv.b))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU)+'"></path>';
+            if(!nom&&!q.lost)g+='<path class="rec-sec" data-glean-id="rec-id-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-id="1" data-ok="'+(q.idOk?1:0)+'" data-title="'+esc(loc+' · address field'+(q.idOk?' OK':' checksum ERROR')+ang(pv.a,pv.b))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU)+'"></path>';
             if(!nom&&q.gs!==undefined&&q.gs<q.a-0.0002)g+='<path class="rec-sec" data-gap="1" data-glean-id="rec-gap-'+t.cyl+'-'+h+'-'+q.sn+'" data-title="'+esc(loc+' · sync gap leading into this sector\'s address field · '+q.gn+' × FF self-sync bytes'+ang(pv.gs,pv.a))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.gs*TAU,A0+q.a*TAU)+'"></path>';
             if(!nom&&q.hs&&q.hasData&&q.c0>q.b+0.0002)g+='<path class="rec-sec" data-gap="1" data-glean-id="rec-hgap-'+t.cyl+'-'+h+'-'+q.sn+'" data-title="'+esc(loc+' · sync gap between address and data field · '+q.hn+' × FF self-sync bytes'+ang(pv.b,pv.c0))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.b*TAU,A0+q.c0*TAU)+'"></path>';
+            if(!nom&&!q.hasData&&!q.noId){const sp=noDataSpan(t,q);if(sp[1]>sp[0])g+='<path class="rec-sec" data-glean-id="rec-nodata-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-ok="0" data-title="'+esc(loc+' · '+st[1]+' · unreadable (red)'+ang(sp[0],sp[1]))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+sp[0]*TAU,A0+sp[1]*TAU)+'"></path>'}
             if(q.hasData){
               const lbaI=q.lba>=0&&q.lba*size<bytes.length?q.lba:-1,lba=lbaI>=0?toD(lbaI):-1;
               const region=lba>=0&&d.regions?d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors):null,kind=region?region.kind:'data';
@@ -8125,7 +8196,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
           }
         }
       }else g='<text class="side-empty" x="120" y="120">NO HEAD</text>';
-      const nsec=tracks.filter(t=>t.head===h).reduce((n,t)=>n+t.sectors.length,0);
+      const nsec=tracks.filter(t=>t.head===h).reduce((n,t)=>n+t.sectors.filter(q=>!q.lost).length,0);
       host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="disk-side-'+h+'"><div class="side-title"><span>Disk side '+h+'</span><span>'+(h<nheads?'HEAD '+h+' · '+tracks.filter(t=>t.head===h).length+' TRACKS · '+nsec+(nom?' SECTORS':' SECTORS FOUND'):'HEAD '+h+' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<nheads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+(nom?' with the image sectors laid out on nominal tracks':L.aligned?' with the sectors found on each track, drawn aligned in logical order':' with the sectors found on each track, drawn at their recorded positions')+'">'+g+'<circle class="hub" cx="120" cy="120" r="22"/><path class="rec-idx" d="M120 9 L116.5 2.5 L123.5 2.5 Z"><title>Index hole: start of the revolution</title></path><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">'+(nom?'NOMINAL':L.aligned?'ALIGNED':'AS RECORDED')+'</text></svg></div></div>');
       if(h<nheads)drawRecordedCanvas(h,tracks,drawCyl,outer,inner,densityLevels,size);
     }
