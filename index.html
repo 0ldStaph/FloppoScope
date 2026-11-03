@@ -471,7 +471,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
   <main>
     <section class="hero" data-glean-id="hero">
       <div><div class="eyebrow">RAW DISK IMAGE / FLOPPY EXPLORER</div><h1>See what’s on the disk.</h1><p>Open a floppy image to inspect its boot record, allocation table, directory and raw sectors — visually, without mounting it.</p></div>
-      <div class="actions"><button class="btn primary" id="pickBtn" type="button">Open disk image</button><button class="btn" id="pickFolderBtn" type="button">Open folder</button><input id="folderInput" class="hidden" type="file" webkitdirectory directory multiple><input id="fileInput" class="hidden" type="file" accept=".img,.ima,.dsk,.bin,.d64,.d71,.d81,.adf,.atr,.xfd,.st,.msa,.po,.do,.2mg,.2img,.hdv,.trd,.ssd,.dsd,.msx,.mdi,.woz,.nib,.g64,.dms,.ipf,.hfe,.scp,.raw,.imd,.td0,.fdi,.mzf,.mzt,.dvz,application/octet-stream" multiple></div>
+      <div class="actions"><button class="btn primary" id="pickBtn" type="button">Open disk image</button><button class="btn" id="pickFolderBtn" type="button">Open folder</button><input id="folderInput" class="hidden" type="file" webkitdirectory directory multiple><input id="fileInput" class="hidden" type="file" accept=".img,.ima,.dsk,.bin,.d64,.d71,.d81,.adf,.atr,.xfd,.st,.msa,.ddi,.po,.do,.2mg,.2img,.hdv,.trd,.ssd,.dsd,.msx,.mdi,.woz,.nib,.g64,.dms,.ipf,.hfe,.scp,.raw,.imd,.td0,.fdi,.mzf,.mzt,.dvz,application/octet-stream" multiple></div>
     </section>
     <div class="loadbox" id="dropzone" data-glean-id="load-source">
       <div class="dz-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4M7.5 8.5 12 4l4.5 4.5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></div>
@@ -1334,6 +1334,155 @@ function unwrap(ab,name){
         }
       }
       return {ab:out.buffer,container:'MSA',hint:{atariSt:true},note:'Atari ST Magic Shadow Archiver (MSA) decompressed: '+spt+' sectors/track, '+sides+' side(s), tracks '+st+'–'+en};
+    }
+  }
+
+  /* DiskDupe (Micro System Designs) .DDI: "IM" 00 00 ... header, then the raw sector data. The header is a track table padded with zeros; its length depends on the
+     DiskDupe version (the first 1.44 MB images use 9216 = one track, a 1.2 MB / 15-sector image uses 7680 = one track, version 5 uses 1280). Rather than trust a
+     fixed length, the header is skipped up to the first offset that holds a plausible FAT boot sector (BIOS parameter block). Tracks after the last used one are not
+     stored, so the data is padded back to the size the boot sector describes with 0xF6, the format filler. */
+  /* Detected by content only (the file name / extension is ignored): 'IM' (not ImageDisk's 'IMD ') followed by a header that is zero-padded. */
+  const isDdiSig=(()=>{
+    if(b.length<2048||b[0]!==0x49||b[1]!==0x4d||b[2]===0x44)return false;
+    if(b[2]===0&&b[3]===0)return true;
+    let z=0;for(let i=2;i<96;i++)if(b[i]===0)z++;
+    return z>=85;
+  })();
+  if(isDdiSig){
+    const bpbAt=h=>{
+      if(h+512>b.length)return null;
+      if(!(b[h]===0xeb&&b[h+2]===0x90||b[h]===0xe9||b[h]===0xeb))return null;
+      const bps=le16(b,h+11),spc=b[h+13],res=le16(b,h+14),nf=b[h+16],root=le16(b,h+17),med=b[h+21];
+      const tot=le16(b,h+19)||(b[h+32]|(b[h+33]<<8)|(b[h+34]<<16)|(b[h+35]<<24))>>>0;
+      if(![128,256,512,1024,2048,4096].includes(bps)||!spc||(spc&(spc-1))||spc>128||res<1||nf<1||nf>2||!root||!tot||med<0xf0)return null;
+      return {bps,tot,spt:le16(b,h+24)};
+    };
+    let H=-1,info=null;
+    const std=new Set([163840,184320,327680,368640,737280,1228800,1474560,2949120]);
+    /* A known header length that leaves exactly a standard floppy size wins over the BPB scan: some disks (e.g. a non-FAT-BPB boot sector, or a boot-sector
+       copy stored as a file inside the data area) make the scan lock onto a false "boot sector" deeper in the file. */
+    for(const h of [9216,7680,4608,1280])if(std.has(b.length-h)){H=h;info=bpbAt(h);break}
+    if(H<0)for(let h=128;h<=Math.min(32768,b.length-512);h+=128){const r=bpbAt(h);if(r){H=h;info=r;break}}
+    if(H<0){                                                      /* no BPB: fall back to the known header lengths */
+      for(let h=128;h<=Math.min(32768,b.length-512);h+=128)if(std.has(b.length-h)){H=h;break}   /* a header length that leaves exactly a standard floppy size */
+      if(H<0)for(const h of [9216,7680,4608,1280])if((b.length-h)%512===0){H=h;break}
+    }
+    if(H>0){
+      const want=info?info.bps*info.tot:0,got=b.length-H;
+      const total=want>got&&want<=4194304?want:got;
+      const out=new Uint8Array(total).fill(0xf6);
+      /* Track table: one 6-byte record per logical track starting at 0x65 -- [stored position (1-based), 0, 0, 0, present flag, last-record flag...].
+         DiskDupe may store the tracks in a different order than they sit on the disk (adjacent tracks swapped), so each logical track is copied from the
+         stored position the table gives. The table is only trusted when it is a clean permutation of 1..n that fits the data; otherwise tracks are taken in file order. */
+      let tb=info&&info.spt>=1&&info.spt<=63?info.spt*info.bps:0;
+      let order=null;
+      {
+        const tab=[];
+        for(let o=0x65;o+6<=H&&tab.length<512;o+=6){
+          if(b[o]===0||b[o+4]!==1)break;
+          tab.push(b[o]);
+          if(b[o+5]!==1)break;
+        }
+        /* no usable BPB: the track size follows from the table (data length / number of tracks) */
+        if(!tb&&tab.length>1&&got%tab.length===0&&(got/tab.length)%512===0)tb=got/tab.length;
+        if(tb&&got%tb===0){
+        const n=tab.length;
+        if(n>0&&n*tb<=got&&n*tb<=total&&new Set(tab).size===n&&tab.every(v=>v>=1&&v<=n)&&tab.some((v,i)=>v!==i+1))order=tab;
+        }
+      }
+      let reordered=0;
+      if(order){
+        order.forEach((p,i)=>{if(p!==i+1)reordered++;out.set(b.subarray(H+(p-1)*tb,H+p*tb),i*tb)});
+      }else out.set(b.subarray(H,Math.min(b.length,H+total)));
+      const missing=total-got;
+      return {ab:out.buffer,container:'DDI',hint:{},note:'DiskDupe DDI header ('+fmtN(H)+' bytes) removed'+(reordered?'; '+reordered+' tracks were stored out of order and were put back using the DDI track table':'')+(missing>0?'; '+fmtN(missing)+' bytes of trailing tracks that DiskDupe did not store were filled with 0xF6':'')};
+    }
+  }
+
+  /* DiskDupe .DDI, early variant (probably the predecessor program's format) -- "Image file of a diskette by THE DUPLICATOR": a text banner plus a small parameter / checksum header (1536 bytes on the samples seen), then the plain sector data.
+     The data start is the first 512-byte boundary that holds a plausible FAT boot sector. Tracks the program did not store (e.g. the last cylinder) are filled
+     back up to the size the boot sector describes with 0xF6, the format filler. */
+  if(b.length>=2048&&String.fromCharCode(...b.subarray(0,27))==='Image file of a diskette by'){
+    const plaus=h=>{
+      if(h+512>b.length)return null;
+      if(!(b[h]===0xeb||b[h]===0xe9))return null;
+      const bps=le16(b,h+11),spc=b[h+13],res=le16(b,h+14),nf=b[h+16],root=le16(b,h+17),med=b[h+21];
+      const tot=le16(b,h+19)||(b[h+32]|(b[h+33]<<8)|(b[h+34]<<16)|(b[h+35]<<24))>>>0;
+      if(![128,256,512,1024,2048,4096].includes(bps)||!spc||(spc&(spc-1))||res<1||nf<1||nf>2||!root||!tot||med<0xf0)return null;
+      return {bps,tot};
+    };
+    let H=-1,info=null;
+    for(let h=512;h<=16384&&h+512<=b.length;h+=512){const r=plaus(h);if(r){H=h;info=r;break}}
+    if(H<0&&(b.length-1536)%512===0)H=1536;
+    if(H>0){
+      const got=b.length-H,want=info?info.bps*info.tot:0;
+      const total=want>got&&want<=4194304?want:got;
+      const out=new Uint8Array(total).fill(0xf6);
+      out.set(b.subarray(H,Math.min(b.length,H+total)));
+      const missing=total-got;
+      return {ab:out.buffer,container:'DDI',hint:{},note:'DiskDupe DDI header, early "Image file of a diskette by THE DUPLICATOR" variant ('+fmtN(H)+' bytes) removed'+(missing>0?'; '+fmtN(missing)+' bytes of trailing tracks that were not stored were filled with 0xF6':'')};
+    }
+  }
+
+  /* Per-track escape-byte RLE floppy dump (no signature; some files have a short leading header of up to 32 bytes, e.g. ff 18 0a ...): [last cylinder][sectors per track][track map, 1 byte per track: 1 = stored, 0 = not stored]
+     followed, for every stored track, by a 16-bit little-endian length and that many payload bytes. Payload byte 0 is the escape byte chosen for the track;
+     the rest is literal bytes except ESC,value,count = count copies of value (count 0 = 256). Every track must expand to the same length, and the block chain
+     must end exactly at the end of the file, which is what makes the detection safe. Tracks that are not stored are filled with 0xF6. */
+  for(let H=0;H<=32;H++){
+    const spt0=b[H+1],maxCyl=b[H];
+    if(b.length>=200+H&&spt0>=8&&spt0<=63&&maxCyl>=34&&maxCyl<=99){
+      for(let T=maxCyl+1;T<=2*(maxCyl+1)+16;T++){
+        const base=H+2+T;
+        if(base+3>b.length)break;
+        let ones=0,okTab=true;
+        for(let i=H+2;i<base;i++){const v=b[i];if(v>1){okTab=false;break}ones+=v}
+        if(!okTab||ones<1)continue;
+        const blocks=[];let pos=base,bad=false;
+        for(let k=0;k<ones;k++){
+          if(pos+3>b.length){bad=true;break}
+          const L=b[pos]|(b[pos+1]<<8);
+          if(L<2||pos+2+L>b.length){bad=true;break}
+          blocks.push([pos+2,L]);pos+=2+L;
+        }
+        if(bad||pos!==b.length)continue;
+        /* expand every block; all must give the same track length */
+        const exp=[];let tl=-1,fail=false;
+        for(const [o,L] of blocks){
+          const esc=b[o],out=[];let i=o+1;const end=o+L;
+          while(i<end){
+            const c=b[i];
+            if(c===esc){if(i+2>=end){fail=true;break}const v=b[i+1],n=b[i+2]||256;for(let q=0;q<n;q++)out.push(v);i+=3}
+            else{out.push(c);i++}
+            if(out.length>65536){fail=true;break}
+          }
+          if(fail)break;
+          if(tl<0)tl=out.length;
+          if(out.length!==tl){fail=true;break}
+          exp.push(out);
+        }
+        if(fail||tl<=0||tl%spt0)continue;
+        if(![128,256,512,1024,2048].includes(tl/spt0))continue;
+        const heads=T>maxCyl+1?2:1;
+        let nTracks=Math.max((maxCyl+1)*heads,0),lastStored=-1;
+        for(let i=0,ti=0;i<T;i++)if(b[H+2+i]){lastStored=i;ti++}
+        nTracks=Math.max(nTracks,lastStored+1);
+        let total=nTracks*tl;
+        /* a FAT boot sector in track 0 may describe a bigger disk than the nominal track count */
+        const t0=exp[0];
+        if(t0&&t0.length>=24&&(t0[0]===0xeb||t0[0]===0xe9)){
+          const bps=t0[11]|(t0[12]<<8),tot=t0[19]|(t0[20]<<8);
+          if(bps===tl/spt0&&tot&&bps*tot>total&&bps*tot<=4194304)total=bps*tot;
+        }
+        const img=new Uint8Array(total).fill(0xf6);
+        let bi=0,stored=0;
+        for(let i=0;i<T;i++){
+          if(!b[H+2+i])continue;
+          const t=exp[bi++];stored++;
+          if((i+1)*tl<=total)img.set(t,i*tl);
+        }
+        const missing=Math.max(0,nTracks-stored);
+        return {ab:img.buffer,container:'DDI',hint:{},note:'DiskDupe DDI, compressed variant: per-track RLE removed'+(H?' ('+H+'-byte leading header skipped)':'')+' ('+stored+' tracks stored, '+tl+' bytes each'+(missing?'; '+missing+' unstored track(s) filled with 0xF6':'')+')'};
+      }
     }
   }
 
@@ -2781,7 +2930,7 @@ function decodeVzDos(bytes,hint){
     if(list.some(l=>badCk.has(l)))notes.push('At least one sector fails its data checksum.');
     const lostN=list.filter(l=>lostMap.has(l)).length;
     if(lostN)notes.push(lostN+' sector'+(lostN===1?'':'s')+' of this file lost 0x0D byte(s) in transfer; their positions cannot be recovered, so data after the first lost byte in '+(lostN===1?'that sector is':'those sectors is')+' shifted.');
-    if(!it.del&&dmgTxt)fi.push(nm+': '+(st==='repaired'?'read in directory order because the sector links loop or stop early; ':'')+dmgTxt+' (directory length '+fmtN(it.len)+' B)');
+    if(!it.del&&dmgTxt)fi.push(nm+':'+(st==='repaired'?'read in directory order because the sector links loop or stop early; ':'')+dmgTxt+' (directory length '+fmtN(it.len)+' B)');
     else if(!it.del&&it.need&&(list.length<it.need||st==='nostart'||st==='invalid'||st==='loop'||st==='unreadable'))fi.push(nm+': '+(notes[0]||'chain is incomplete')+' (directory length '+fmtN(it.len)+' B, readable '+fmtN(cap)+' B)');
     else if(!it.del&&list.some(l=>badCk.has(l)))fi.push(nm+': a sector of this file fails its data checksum');
     else if(!it.del&&list.some(l=>lostMap.has(l)))fi.push(nm+': '+list.filter(l=>lostMap.has(l)).length+' sector(s) lost 0x0D byte(s) in transfer at positions that cannot be recovered; file content is shifted after them');
@@ -3116,7 +3265,7 @@ function decodeSharpCpm400(bytes,hint){
     const segs=[];for(const b of blocks)for(const s of blkSegs(b))segs.push(s);
     let rd=segReader(lb,segs,size),textTrim=false;
     if(textExt.test(first.ext)&&size>0){
-const lastRec=Math.max(0,size-128);
+      const lastRec=Math.max(0,size-128);
       try{
         const tail=segReader(lb,segs,size)();
         for(let i=lastRec;i<size;i++)if(tail[i]===0x1a){size=i;textTrim=true;break}
@@ -6357,7 +6506,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.12'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.13'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -6400,7 +6549,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
      if(entries.some(en=>en.isDirectory)){setStatus('Reading folder…');readDroppedEntries(entries).then(list=>handleSelection(list,true)).catch(err=>setStatus('Could not read the dropped folder: '+err.message,true))}
      else if(plain.length)handleSelection(plain.map(f=>({file:f,path:f.name})),false)})}
   /* ---------- Image library: open a folder (or several files) and pick the current image ---------- */
-  const DISK_EXTS=new Set('img ima dsk bin d64 d71 d81 adf atr xfd st msa po do 2mg 2img hdv trd ssd dsd msx mdi woz nib g64 dms ipf hfe scp raw imd td0 fdi dvz'.split(' '));
+  const DISK_EXTS=new Set('img ima dsk bin d64 d71 d81 adf atr xfd st msa po do 2mg 2img hdv trd ssd dsd msx mdi woz nib g64 dms ipf hfe scp raw imd td0 fdi ddi dvz'.split(' '));
   const libCollator=new Intl.Collator(undefined,{numeric:true,sensitivity:'base'});
   let library=null, libBusy=false;
   const baseName=p=>String(p||'').split('/').pop();
@@ -6811,7 +6960,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
     const f=it.files[0];if(f.size>256*1024*1024)throw Error('Image exceeds the 256 MiB safety limit.');
     return {ab:await f.arrayBuffer(),name:f.name,extra:undefined};
   }
-  /* Decode + check one image without touching the page: module globals are saved and restored around the (synchronous) work. */
+  /* Decode + check one image without touching the page: module globalsare saved and restored around the (synchronous) work. */
   function analyzeOffscreen(ab,name,extra){
     const saved={fluxInfo,currentName,retroInfo,bytes,view,disk};
     try{prepareImage(ab,name,extra);return collectFindings()}
@@ -7877,6 +8026,131 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
     };
   }
 
+  /* cpio archives (ODC "070707", newc/crc "070701"/"070702", old binary 0o070707 LE/BE) written straight to a floppy, e.g. Unix install/backup disks.
+     Presented through the same sequential-archive view as SunOS TAR: files are located by byte offset, the sector chain is only used for highlighting.
+     Multi-volume sets are handled too: a later disk starts in the middle of a file, so the first real header is searched for and the leading bytes are
+     listed as "continued from previous volume"; a last file that runs off the end of the disk is flagged as continuing on the next volume. */
+  function decodeCpioArchive() {
+    if (!bytes || bytes.length < 512) return null;
+    const asc = (o, n) => { let s = ''; for (let i = 0; i < n && o + i < bytes.length; i++) s += String.fromCharCode(bytes[o + i]); return s; };
+    const num = (o, n, radix) => { const s = asc(o, n); if (s.length !== n) return null; const re = radix === 8 ? /^[0-7]+$/ : /^[0-9a-fA-F]+$/; return re.test(s) ? parseInt(s, radix) : null; };
+    const date = t => { if (!t) return ''; const d = new Date(t * 1000); if (isNaN(d)) return ''; const p = n => String(n).padStart(2, '0'); return d.getUTCFullYear() + '-' + p(d.getUTCMonth() + 1) + '-' + p(d.getUTCDate()) + ' ' + p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()); };
+    /* Parse one header at `off` for the given kind ('odc','newc','bin-le','bin-be'); null when it is not a plausible header. */
+    function hdrAt(off, kind, strict) {
+      let hdrLen, nameSize, fileSize, mode, mtime, pad = 0;
+      if (kind === 'odc') {
+        hdrLen = 76;
+        if (off + hdrLen > bytes.length || asc(off, 6) !== '070707') return null;
+        mode = num(off + 18, 6, 8); mtime = num(off + 48, 11, 8); nameSize = num(off + 59, 6, 8); fileSize = num(off + 65, 11, 8);
+      } else if (kind === 'newc') {
+        hdrLen = 110; pad = 4;
+        const m = asc(off, 6);
+        if (off + hdrLen > bytes.length || (m !== '070701' && m !== '070702')) return null;
+        mode = num(off + 14, 8, 16); mtime = num(off + 46, 8, 16); fileSize = num(off + 54, 8, 16); nameSize = num(off + 94, 8, 16);
+      } else {
+        hdrLen = 26; pad = 2;
+        if (off + hdrLen > bytes.length) return null;
+        const le = kind === 'bin-le', w = o => le ? (bytes[o] | bytes[o + 1] << 8) : (bytes[o] << 8 | bytes[o + 1]);
+        if (w(off) !== 0o070707) return null;
+        mode = w(off + 6); mtime = w(off + 16) * 65536 + w(off + 18); nameSize = w(off + 20); fileSize = w(off + 22) * 65536 + w(off + 24);
+      }
+      if (mode === null || nameSize === null || fileSize === null || mtime === null || nameSize < 1 || nameSize > 4096) return null;
+      const nameStart = off + hdrLen;
+      let name = '', cut = false;
+      if (nameStart + nameSize > bytes.length) { if (strict) return null; cut = true; }
+      else {
+        if (bytes[nameStart + nameSize - 1] !== 0) return null;
+        for (let i = 0; i < nameSize - 1; i++) { const c = bytes[nameStart + i]; if (c < 0x20 || (strict && c > 0x7e)) return null; name += String.fromCharCode(c); }
+      }
+      let dataStart = nameStart + nameSize;
+      if (pad) dataStart += (pad - (dataStart % pad)) % pad;
+      return { off, hdrLen, nameSize, fileSize, mode, mtime, name, dataStart, pad, cut };
+    }
+    const nextOff = h => { let o = h.dataStart + h.fileSize; if (h.pad) o += (h.pad - (o % h.pad)) % pad0(h); return o; };
+    const pad0 = h => h.pad;
+    /* Find where the archive starts: offset 0, or (continuation volume) the first header that is followed by another header, the trailer or the end of the disk. */
+    let kind = null, start = -1;
+    const kindAt0 = (() => { const m = asc(0, 6); if (m === '070707') return 'odc'; if (m === '070701' || m === '070702') return 'newc'; if (bytes[0] === 0xc7 && bytes[1] === 0x71) return 'bin-le'; if (bytes[0] === 0x71 && bytes[1] === 0xc7) return 'bin-be'; return null; })();
+    if (kindAt0 && hdrAt(0, kindAt0, false)) { kind = kindAt0; start = 0; }
+    else {
+      const limit = bytes.length - 76;
+      scan: for (let o = 0; o < limit; o++) {
+        if (bytes[o] !== 0x30 || bytes[o + 1] !== 0x37 || bytes[o + 2] !== 0x30 || bytes[o + 3] !== 0x37) continue;
+        for (const k of ['odc', 'newc']) {
+          const h = hdrAt(o, k, true);
+          if (!h) continue;
+          const n = nextOff(h);
+          if (h.name === 'TRAILER!!!' || n + h.hdrLen >= bytes.length || hdrAt(n, k, true)) { kind = k; start = o; break scan; }
+        }
+      }
+    }
+    if (!kind) return null;
+    const m6 = asc(start, 6);
+    const entries = [], dirMap = new Map();
+    let trailer = false, truncated = false, endOffset = start, offset = start, lastPartial = '';
+    function ensureDirs(parts) {
+      let acc = '';
+      for (const part of parts) {
+        acc = acc ? acc + '/' + part : part;
+        if (!dirMap.has(acc)) { dirMap.set(acc, true); entries.push({ name: part, path: acc, size: 0, directory: true, cluster: 0, tarOffset: 0, chain: [], fsType: 'SUN_TAR' }); }
+      }
+    }
+    if (start > 0) {
+      const last = Math.floor((start - 1) / 512);
+      entries.push({ name: '(continued from previous volume)', path: '(continued from previous volume)', size: start, directory: false, cluster: 0, tarOffset: 0, chain: Array.from({ length: last + 1 }, (_, i) => i), modified: '', fsType: 'SUN_TAR', cpioContinuation: true });
+    }
+    while (true) {
+      const h = hdrAt(offset, kind, false);
+      if (!h || (kind === 'newc' && asc(offset, 6) !== m6)) break;
+      if (h.cut) { truncated = true; break; }
+      if (h.name === 'TRAILER!!!') { trailer = true; offset = h.dataStart; endOffset = offset; break; }
+      const isDirectory = (h.mode & 0o170000) === 0o040000;
+      const cleanPath = h.name.replace(/^(\.\/)+/, '').replace(/\/+$/, '');
+      let size = isDirectory ? 0 : h.fileSize, partial = false;
+      if (h.dataStart + size > bytes.length) { size = Math.max(0, bytes.length - h.dataStart); partial = true; truncated = true; }
+      if (cleanPath && cleanPath !== '.') {
+        const parts = cleanPath.split('/'), leaf = parts.pop();
+        ensureDirs(parts);
+        const hdrLba = Math.floor(offset / 512);
+        if (isDirectory) {
+          if (!dirMap.has(cleanPath)) { dirMap.set(cleanPath, true); entries.push({ name: leaf, path: cleanPath, size: 0, directory: true, cluster: hdrLba, tarOffset: offset, chain: [hdrLba], modified: date(h.mtime), fsType: 'SUN_TAR' }); }
+          else { const e = entries.find(x => x.path === cleanPath && x.directory); if (e) { e.cluster = hdrLba; e.tarOffset = offset; e.chain = [hdrLba]; e.modified = date(h.mtime); } }
+        } else {
+          const first = Math.floor(h.dataStart / 512), lastLba = size ? Math.floor((h.dataStart + size - 1) / 512) : first;
+          entries.push({ name: leaf, path: cleanPath, size, directory: false, cluster: first, tarOffset: h.dataStart, chain: size ? Array.from({ length: lastLba - first + 1 }, (_, i) => first + i) : [], modified: date(h.mtime), fsType: 'SUN_TAR', cpioPartial: partial });
+          if (partial) lastPartial = cleanPath + ' (' + fmt(size) + ' of ' + fmt(h.fileSize) + ' bytes on this disk)';
+        }
+      }
+      if (partial) { offset = bytes.length; endOffset = offset; break; }
+      offset = nextOff(h);
+      endOffset = offset;
+    }
+    if (entries.length === 0) return null;
+    const label = { odc: 'cpio (ODC, ASCII)', newc: m6 === '070702' ? 'cpio (newc with CRC)' : 'cpio (newc, ASCII)', 'bin-le': 'cpio (binary, little-endian)', 'bin-be': 'cpio (binary, big-endian)' }[kind];
+    const totalSecs = Math.floor(bytes.length / 512), usedSecs = Math.min(totalSecs, Math.ceil(endOffset / 512));
+    const geo = { 2880: [18, 2], 5760: [36, 2], 2400: [15, 2], 1440: [9, 2], 720: [9, 2], 640: [8, 2], 360: [9, 1], 320: [8, 1] }[totalSecs] || [18, 2];
+    const regions = [];
+    if (start > 0) regions.push({ name: 'Continuation of previous volume', start: 0, sectors: Math.ceil(start / 512), kind: 'data' });
+    regions.push({ name: 'Archive payload', start: Math.floor(start / 512), sectors: Math.max(0, usedSecs - Math.floor(start / 512)), kind: 'data' });
+    if (totalSecs > usedSecs) regions.push({ name: 'Unused / filler', start: usedSecs, sectors: totalSecs - usedSecs, kind: 'data' });
+    const files = entries.filter(e => !e.directory && !e.cpioContinuation);
+    const boot = [
+      ['', 'Archive Format', label + ' Archive'],
+      ['', 'Extracted Files', fmt(files.length)],
+      ['', 'Directories', fmt(entries.filter(e => e.directory).length)],
+      ['', 'Archive Data Length', sizeFmt(endOffset)],
+      ['', 'Total Image Size', sizeFmt(bytes.length)]
+    ];
+    if (start > 0) boot.push(['', 'Multi-volume', 'This disk starts mid-archive: the first ' + fmt(start) + ' bytes are the end of a file begun on the previous volume. The first cpio header is at byte ' + fmt(start) + '.']);
+    if (trailer && start > 0 && files.length === 0) boot.push(['', 'Last volume', 'The cpio archive ends on this disk: the only record after the carried-over data is the TRAILER!!! end marker. Anything after it is unused / stale data.']);
+    if (!trailer) boot.push(['', 'Parser note', truncated ? 'No TRAILER!!! record; the last file is cut off at the end of this disk' + (lastPartial ? ' - ' + lastPartial : '') + ' and continues on the next volume of a multi-disk set.' : 'Archive ended without a TRAILER!!! record.']);
+    return {
+      valid: false, fsType: 'SUN_TAR', cpio: true, archiveBadge: 'CPIO ARCHIVE', archiveKind: label,
+      formatLabel: label + ' Archive' + (start > 0 ? ' (continuation volume)' : ''), name: 'cpio archive',
+      bps: 512, total: totalSecs, spt: geo[0], heads: geo[1], regions, boot, fileEntries: entries
+    };
+  }
+
   function ufsRead32(fs,offset){if(offset<0||offset+4>bytes.length)return 0;return view.getUint32(offset,fs.littleEndian)}
   function ufsRead16(fs,offset){if(offset<0||offset+2>bytes.length)return 0;return view.getUint16(offset,fs.littleEndian)}
   function ufsInodeOffset(fs,inode){if(!Number.isInteger(inode)||inode<1||inode>=fs.ncg*fs.ipg)return -1;const group=Math.floor(inode/fs.ipg),within=inode%fs.ipg;if(group>=fs.ncg)return -1;const groupStart=group*fs.fpg+fs.cgoffset*(group&(~fs.cgmask));const fragment=groupStart+fs.iblkno+Math.floor(within/fs.inopb)*fs.frag;const offset=fs.start+fragment*fs.fsize+(within%fs.inopb)*128;if(offset<fs.start||offset+128>fs.start+fs.sizeBytes||offset+128>bytes.length)return -1;return offset}
@@ -7962,6 +8236,8 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
 
       const sunTar = decodeTarArchive();
       if(sunTar) return sunTar;
+      const cpioArc = decodeCpioArchive();
+      if(cpioArc) return cpioArc;
 
       {const rb=[128,256,512,1024,2048,4096].includes(bps)?bps:((typeof fluxInfo!=='undefined'&&fluxInfo&&fluxInfo.size)||512);bps=rb}
       return {valid:false,signature:sig,bps:bps||512,total:Math.floor(bytes.length/(bps||512)),name:'RAW / UNKNOWN',fileEntries:[],regions:[{name:'Image',start:0,sectors:Math.floor(bytes.length/(bps||512)),kind:'data'}],boot:[['0x000','Jump instruction',hex(bytes[0])+hex(bytes[1])+hex(bytes[2])],['0x1FE','Boot signature',sig?'0xAA55':'Not present'],['—','Image length',fmt(bytes.length)+' bytes']]};
@@ -8031,7 +8307,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
         }
       }
       const name=(lfnName&&/\S/.test(lfnName))?lfnName:shortName(c);
-      const cluster=((((e[20]|e[21]<<8)<<16)|(e[26]|e[27]<<8))>>>0),size=(e[28]|e[29]<<8|e[30]<<16|e[31]<<24)>>>0;
+      const cluster=((((type==='FAT32'?(e[20]|e[21]<<8):0)<<16)|(e[26]|e[27]<<8))>>>0),size=(e[28]|e[29]<<8|e[30]<<16|e[31]<<24)>>>0;
       const clusterBytes=spc*bps,need=size?Math.ceil(size/clusterBytes):0,chain=[];let realloc=0,cut=false;
       if(cluster>=2)for(let k=0;k<need;k++){const cl=cluster+k;if(cl>=disk.clusters+2){cut=true;break}chain.push(cl);if(fatValue(cl)!==0)realloc++}
       let status;
@@ -8039,7 +8315,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
       const item={name,path:path?path+'/'+name:name,size,cluster,directory:false,attr:e[11],modified:fatDateStr(e),chain,deleted:true,recover:{status,need,reallocated:realloc,overlap:false}};
       all.push(item);deletedItems.push(item);
     }
-    function parseEntries(buf,path,depth){if(depth>6||dirCount++>200)return;let names=[],delLfn=[];for(let p=0;p+32<=buf.length;p+=32){const e=buf.slice(p,p+32),first=e[0];if(first===0)break;const attr=e[11];if(first===0xe5){if(attr===0x0f){delLfn.push(e);continue}const pieces=delLfn;delLfn=[];names=[];addDeleted(e,pieces,path);continue}delLfn=[];if(attr===0x0f){let seq=e[0]&0x1f;names[seq-1]=lfnChars(e);continue}let name=names.length?names.filter(Boolean).join(''):shortName(e);names=[];const low=e[26]|e[27]<<8,high=e[20]|e[21]<<8,cluster=((high<<16)|low)>>>0,size=(e[28]|e[29]<<8|e[30]<<16|e[31]<<24)>>>0;const directory=!!(attr&0x10),volume=!!(attr&0x08);if(name==='.'||name==='..'||volume)continue;const item={name,path:path?path+'/'+name:name,size,cluster,directory,attr,modified:fatDateStr(e),chain:cluster>=2?readChainSafe(cluster,type,bps,spf,dataStart):[]};all.push(item);if(directory&&cluster>=2&&depth<6){const contents=[];for(const cl of item.chain){const a=(dataStart+(cl-2)*spc)*bps, sub=bytes.subarray(a,a+spc*bps);for(let idx=0;idx<sub.length;idx++)contents.push(sub[idx])}parseEntries(contents,item.path,depth+1)}}}
+    function parseEntries(buf,path,depth){if(depth>6||dirCount++>200)return;let names=[],delLfn=[];for(let p=0;p+32<=buf.length;p+=32){const e=buf.slice(p,p+32),first=e[0];if(first===0)break;const attr=e[11];if(first===0xe5){if(attr===0x0f){delLfn.push(e);continue}const pieces=delLfn;delLfn=[];names=[];addDeleted(e,pieces,path);continue}delLfn=[];if(attr===0x0f){let seq=e[0]&0x1f;names[seq-1]=lfnChars(e);continue}let name=names.length?names.filter(Boolean).join(''):shortName(e);names=[];const low=e[26]|e[27]<<8,high=type==='FAT32'?(e[20]|e[21]<<8):0,cluster=((high<<16)|low)>>>0,size=(e[28]|e[29]<<8|e[30]<<16|e[31]<<24)>>>0;const directory=!!(attr&0x10),volume=!!(attr&0x08);if(name==='.'||name==='..'||volume)continue;const item={name,path:path?path+'/'+name:name,size,cluster,directory,attr,modified:fatDateStr(e),chain:cluster>=2?readChainSafe(cluster,type,bps,spf,dataStart):[]};all.push(item);if(directory&&cluster>=2&&depth<6){const contents=[];for(const cl of item.chain){const a=(dataStart+(cl-2)*spc)*bps, sub=bytes.subarray(a,a+spc*bps);for(let idx=0;idx<sub.length;idx++)contents.push(sub[idx])}parseEntries(contents,item.path,depth+1)}}}
     parseEntries(rootBytes,'',0);
     const claims=new Map();for(const it of deletedItems)for(const cl of it.chain)claims.set(cl,(claims.get(cl)||0)+1);
     for(const it of deletedItems){if(it.recover.status==='full'&&it.chain.some(cl=>claims.get(cl)>1)){it.recover.status='partial';it.recover.overlap=true}}
@@ -8972,7 +9248,7 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
       isPlayingAudio = true;
       $('audioPlayBtn').textContent = 'Pause Sound';
     }
-  };
+};
 
   /* Executable Disassembler & Header Visualizer */
   function renderExecutablePreview(file, data) {
@@ -9853,7 +10129,7 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
   function bootRegionClass(offset,d){const label=bootRegion(offset,d);if(label==='Entry jump')return 'jump';if(label==='OEM identifier')return 'oem';if(label==='BPB / extended BPB')return 'bpb';if(label==='Boot signature')return 'signature';return 'code'}
   function bootJumpDescription(){if(bytes[0]===0xeb){let displacement=bytes[1];if(displacement&0x80)displacement-=0x100;const target=2+displacement;return 'Short jump EB '+hex(bytes[1])+' → '+(target>=0&&target<512?'0x'+target.toString(16).toUpperCase().padStart(3,'0'):'outside sector')}if(bytes[0]===0xe9){let displacement=bytes[1]|bytes[2]<<8;if(displacement&0x8000)displacement-=0x10000;const target=3+displacement;return 'Near jump E9 '+hex(bytes[2])+hex(bytes[1])+' → '+(target>=0&&target<512?'0x'+target.toString(16).toUpperCase().padStart(3,'0'):'outside sector')}return 'Entry bytes '+hex(bytes[0])+' '+hex(bytes[1])+' '+hex(bytes[2])+' (unrecognized jump form)'}
   function extractBootStrings(){const found=[],limit=Math.min(510,bytes.length);let i=0;while(i<limit){if(bytes[i]<32||bytes[i]>126){i++;continue}const start=i;while(i<limit&&bytes[i]>=32&&bytes[i]<=126)i++;const text=Array.from(bytes.slice(start,i),b=>String.fromCharCode(b)).join('').trim();if(text.length>=4)found.push({start,end:i-1,text,region:bootRegion(start,disk)})}return found}
-  function renderBootInspector(d){const isUfs=d.fsType==='NEXTSTEP_UFS1',isTar=d.fsType==='SUN_TAR',isMac=!!(d.fsType&&d.fsType.startsWith('MAC_')),codeStart=(isUfs||isTar)?512:(d.valid&&d.fatType==='FAT32'?0x5a:0x3e),codeLabel=(isUfs||isTar)?'Raw image-start bytes (not a FAT boot sector)':isMac?'Macintosh startup blocks':d.valid?(d.fatType+' code region'):'Common FAT code region (unverified)',sigA=bytes.length>510?bytes[510]:null,sigB=bytes.length>511?bytes[511]:null,validSignature=sigA===0x55&&sigB===0xaa,signatureText=(sigA===null?'—':hex(sigA))+' '+(sigB===null?'—':hex(sigB));$('bootFormat').textContent=d.valid?d.fatType+' BOOT SECTOR':isTar?'SUN TAR ARCHIVE':isUfs?'UFS1 IMAGE':isMac?'MACINTOSH IMAGE':d.formatLabel?String(d.formatLabel).toUpperCase():'RAW / UNKNOWN';const facts=d.foreign&&d.bootFacts?d.bootFacts:(isUfs||isTar)?[['Image start','Raw first 512 bytes; no FAT boot semantics assumed'],['Filesystem type',d.formatLabel||'Unix Archive / Superblock'],['Bytes at 0x1FE',signatureText]]:isMac?[['Filesystem',d.fsType==='MAC_MFS'?'Macintosh File System (MFS)':'Hierarchical File System (HFS)'],['Volume',d.volLabel||'Unnamed Macintosh volume'],['Floppy geometry',d.mac.label+' · '+d.mac.cylinders+' tracks · '+d.mac.heads+' head(s)']]:[['Entry instruction',bootJumpDescription()],['Code bytes','0x'+codeStart.toString(16).toUpperCase().padStart(3,'0')+'–0x1FD · '+codeLabel],['Signature',validSignature?'Valid 0x55AA signature':'Missing / invalid · '+signatureText]];$('bootFacts').innerHTML=facts.map(x=>'<div class="boot-fact"><span>'+esc(x[0])+'</span><strong>'+esc(x[1])+'</strong></div>').join('');const rowHtml=[];for(let start=0;start<Math.min(512,bytes.length);start+=16){const end=Math.min(start+16,bytes.length),regions=new Set(),hexHtml=[],asciiChars=[];for(let offset=start;offset<end;offset++){const label=bootRegion(offset,d),cls=bootRegionClass(offset,d);regions.add(label);hexHtml.push('<span class="boot-byte '+cls+'" title="0x'+offset.toString(16).toUpperCase().padStart(3,'0')+' · '+esc(label)+'">'+hex(bytes[offset])+'</span>');asciiChars.push(bytes[offset]>=32&&bytes[offset]<=126?String.fromCharCode(bytes[offset]):'.')}rowHtml.push('<tr><td>0x'+start.toString(16).toUpperCase().padStart(3,'0')+'</td><td>'+hexHtml.join(' ')+'</td><td>'+esc(asciiChars.join(''))+'</td><td>'+esc(Array.from(regions).join(' · '))+'</td></tr>')}$('bootRows').innerHTML=rowHtml.join('');const strings=extractBootStrings(),maxStrings=32;$('bootStrings').innerHTML=strings.length?strings.slice(0,maxStrings).map(item=>'<div class="boot-string"><code>0x'+item.start.toString(16).toUpperCase().padStart(3,'0')+'</code><span>'+esc(item.text)+'</span><small>'+esc(item.region)+'</small></div>').join('')+(strings.length>maxStrings?'<div class="boot-empty">Showing '+maxStrings+' of '+strings.length+' printable runs.</div>':''):'<div class="boot-empty">No printable ASCII runs of four or more characters found.</div>';$('bootSignatureDetails').innerHTML=d.foreign?'<strong>'+esc(d.bootLabel||'First sector')+'</strong><br>'+esc(d.bootNote||'This format has no FAT boot signature.')+'<br>Bytes at 0x1FE: '+signatureText+'<br>Not interpreted as a FAT boot signature.':(isUfs||isTar)?'<strong>Raw image bytes</strong><br>Offset: 0x1FE–0x1FF<br>On-disk bytes: '+signatureText+'<br>Not interpreted as a FAT boot signature.':isMac?'<strong>Macintosh startup blocks</strong><br>First 1,024 bytes contain Macintosh boot information; the DOS 0x55AA rule does not apply.':'<strong>'+(validSignature?'Signature valid':'Signature missing or invalid')+'</strong><br>Offset: 0x1FE–0x1FF<br>On-disk bytes: '+signatureText+'<br>Expected bytes: 55 AA<br>Little-endian word: '+(sigA===null||sigB===null?'—':'0x'+hex(sigB)+hex(sigA))+' (0xAA55 expected)'}
+  function renderBootInspector(d){const isUfs=d.fsType==='NEXTSTEP_UFS1',isTar=d.fsType==='SUN_TAR',isMac=!!(d.fsType&&d.fsType.startsWith('MAC_')),codeStart=(isUfs||isTar)?512:(d.valid&&d.fatType==='FAT32'?0x5a:0x3e),codeLabel=(isUfs||isTar)?'Raw image-start bytes (not a FAT boot sector)':isMac?'Macintosh startup blocks':d.valid?(d.fatType+' code region'):'Common FAT code region (unverified)',sigA=bytes.length>510?bytes[510]:null,sigB=bytes.length>511?bytes[511]:null,validSignature=sigA===0x55&&sigB===0xaa,signatureText=(sigA===null?'—':hex(sigA))+' '+(sigB===null?'—':hex(sigB));$('bootFormat').textContent=d.valid?d.fatType+' BOOT SECTOR':isTar?(d.archiveBadge||'SUN TAR ARCHIVE'):isUfs?'UFS1 IMAGE':isMac?'MACINTOSH IMAGE':d.formatLabel?String(d.formatLabel).toUpperCase():'RAW / UNKNOWN';const facts=d.foreign&&d.bootFacts?d.bootFacts:(isUfs||isTar)?[['Image start','Raw first 512 bytes; no FAT boot semantics assumed'],['Filesystem type',d.formatLabel||'Unix Archive / Superblock'],['Bytes at 0x1FE',signatureText]]:isMac?[['Filesystem',d.fsType==='MAC_MFS'?'Macintosh File System (MFS)':'Hierarchical File System (HFS)'],['Volume',d.volLabel||'Unnamed Macintosh volume'],['Floppy geometry',d.mac.label+' · '+d.mac.cylinders+' tracks · '+d.mac.heads+' head(s)']]:[['Entry instruction',bootJumpDescription()],['Code bytes','0x'+codeStart.toString(16).toUpperCase().padStart(3,'0')+'–0x1FD · '+codeLabel],['Signature',validSignature?'Valid 0x55AA signature':'Missing / invalid · '+signatureText]];$('bootFacts').innerHTML=facts.map(x=>'<div class="boot-fact"><span>'+esc(x[0])+'</span><strong>'+esc(x[1])+'</strong></div>').join('');const rowHtml=[];for(let start=0;start<Math.min(512,bytes.length);start+=16){const end=Math.min(start+16,bytes.length),regions=new Set(),hexHtml=[],asciiChars=[];for(let offset=start;offset<end;offset++){const label=bootRegion(offset,d),cls=bootRegionClass(offset,d);regions.add(label);hexHtml.push('<span class="boot-byte '+cls+'" title="0x'+offset.toString(16).toUpperCase().padStart(3,'0')+' · '+esc(label)+'">'+hex(bytes[offset])+'</span>');asciiChars.push(bytes[offset]>=32&&bytes[offset]<=126?String.fromCharCode(bytes[offset]):'.')}rowHtml.push('<tr><td>0x'+start.toString(16).toUpperCase().padStart(3,'0')+'</td><td>'+hexHtml.join(' ')+'</td><td>'+esc(asciiChars.join(''))+'</td><td>'+esc(Array.from(regions).join(' · '))+'</td></tr>')}$('bootRows').innerHTML=rowHtml.join('');const strings=extractBootStrings(),maxStrings=32;$('bootStrings').innerHTML=strings.length?strings.slice(0,maxStrings).map(item=>'<div class="boot-string"><code>0x'+item.start.toString(16).toUpperCase().padStart(3,'0')+'</code><span>'+esc(item.text)+'</span><small>'+esc(item.region)+'</small></div>').join('')+(strings.length>maxStrings?'<div class="boot-empty">Showing '+maxStrings+' of '+strings.length+' printable runs.</div>':''):'<div class="boot-empty">No printable ASCII runs of four or more characters found.</div>';$('bootSignatureDetails').innerHTML=d.foreign?'<strong>'+esc(d.bootLabel||'First sector')+'</strong><br>'+esc(d.bootNote||'This format has no FAT boot signature.')+'<br>Bytes at 0x1FE: '+signatureText+'<br>Not interpreted as a FAT boot signature.':(isUfs||isTar)?'<strong>Raw image bytes</strong><br>Offset: 0x1FE–0x1FF<br>On-disk bytes: '+signatureText+'<br>Not interpreted as a FAT boot signature.':isMac?'<strong>Macintosh startup blocks</strong><br>First 1,024 bytes contain Macintosh boot information; the DOS 0x55AA rule does not apply.':'<strong>'+(validSignature?'Signature valid':'Signature missing or invalid')+'</strong><br>Offset: 0x1FE–0x1FF<br>On-disk bytes: '+signatureText+'<br>Expected bytes: 55 AA<br>Little-endian word: '+(sigA===null||sigB===null?'—':'0x'+hex(sigB)+hex(sigA))+' (0xAA55 expected)'}
     
   function render(name){
     const d=disk,isMac=!!(d.fsType&&d.fsType.startsWith('MAC_'));
@@ -9908,7 +10184,7 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
       if (fatMeterEl) fatMeterEl.innerHTML = '';
       if (fatLegendEl) {
         fatLegendEl.innerHTML = d.fsType === 'NEXTSTEP_UFS1' ? '<span>UFS1 uses inode-based allocation; the FAT allocation meter does not apply.</span>' :
-          d.fsType === 'SUN_TAR' ? '<span>SunOS TAR archives use contiguous sequential file blocks; the FAT meter does not apply.</span>' :
+          d.fsType === 'SUN_TAR' ? '<span>'+(d.cpio?'cpio':'SunOS TAR')+' archives use contiguous sequential file data; the FAT meter does not apply.</span>' :
           (d.fsType && d.fsType.startsWith('MAC_')) ? '<span>Macintosh MFS/HFS uses its own allocation structures; the FAT meter does not apply.</span>' :
           (d.foreign?'<span>No allocation map is available for this image ('+esc(d.formatLabel||'unsupported')+').</span>':'<span>Allocation details require a valid FAT boot parameter block or supported filesystem.</span>');
       }
@@ -9954,7 +10230,7 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
     showSector(0);
   }
 
-  function imageGeometry(d){if(d&&d.foreign&&d.geo)return d.geo;if(d&&d.fsType&&d.fsType.startsWith('MAC_')&&d.mac){const tracks=[];let start=0;for(let c=0;c<d.mac.cylinders;c++)for(let h=0;h<d.mac.heads;h++){const sectors=d.mac.sectors[c];tracks.push({cylinder:c,head:h,start,sectors});start+=sectors}return {cylinders:d.mac.cylinders,heads:d.mac.heads,spt:Math.max(...d.mac.sectors),trackMap:tracks,variable:new Set(d.mac.sectors).size>1}}if(d&&d.fsType==='NEXTSTEP_UFS1'&&d.ufs){const fs=d.ufs,scale=fs.fsize/d.bps;if(!Number.isInteger(scale)||scale<1||scale>16||!Number.isInteger(fs.nsect)||fs.nsect<1||!Number.isInteger(fs.spc)||fs.spc<fs.nsect||fs.spc%fs.nsect!==0)return null;const heads=fs.spc/fs.nsect,spt=fs.nsect*scale;if(!Number.isInteger(heads)||heads<1||heads>8||!Number.isInteger(spt)||spt<1)return null;return {cylinders:Math.max(1,Math.ceil(d.total/(heads*spt))),heads,spt,ufsSpt:fs.nsect,ufsSpc:fs.spc,ufsNcyl:fs.ncyl,ufsSectorBytes:fs.fsize,rawPerUfsSector:scale}}if(d&&d.fsType==='SUN_TAR'){return {cylinders:80,heads:2,spt:18};}if(!d||!d.valid||!d.spt||!d.heads)return containerGeometry(d);return {cylinders:Math.max(1,Math.ceil(d.total/(d.spt*d.heads))),heads:d.heads,spt:d.spt}}
+  function imageGeometry(d){if(d&&d.foreign&&d.geo)return d.geo;if(d&&d.fsType&&d.fsType.startsWith('MAC_')&&d.mac){const tracks=[];let start=0;for(let c=0;c<d.mac.cylinders;c++)for(let h=0;h<d.mac.heads;h++){const sectors=d.mac.sectors[c];tracks.push({cylinder:c,head:h,start,sectors});start+=sectors}return {cylinders:d.mac.cylinders,heads:d.mac.heads,spt:Math.max(...d.mac.sectors),trackMap:tracks,variable:new Set(d.mac.sectors).size>1}}if(d&&d.fsType==='NEXTSTEP_UFS1'&&d.ufs){const fs=d.ufs,scale=fs.fsize/d.bps;if(!Number.isInteger(scale)||scale<1||scale>16||!Number.isInteger(fs.nsect)||fs.nsect<1||!Number.isInteger(fs.spc)||fs.spc<fs.nsect||fs.spc%fs.nsect!==0)return null;const heads=fs.spc/fs.nsect,spt=fs.nsect*scale;if(!Number.isInteger(heads)||heads<1||heads>8||!Number.isInteger(spt)||spt<1)return null;return {cylinders:Math.max(1,Math.ceil(d.total/(heads*spt))),heads,spt,ufsSpt:fs.nsect,ufsSpc:fs.spc,ufsNcyl:fs.ncyl,ufsSectorBytes:fs.fsize,rawPerUfsSector:scale}}if(d&&d.fsType==='SUN_TAR'){if(d.cpio&&d.spt>0&&d.heads>0)return {cylinders:Math.max(1,Math.ceil(d.total/(d.spt*d.heads))),heads:d.heads,spt:d.spt};return {cylinders:80,heads:2,spt:18};}if(!d||!d.valid||!d.spt||!d.heads)return containerGeometry(d);return {cylinders:Math.max(1,Math.ceil(d.total/(d.spt*d.heads))),heads:d.heads,spt:d.spt}}
   /* Image with no recognised filesystem that came from a flux / IMD / KryoFlux decode: the container still knows its track layout. */
   function containerGeometry(d){
     const f=fluxInfo&&fluxInfo.geo;
@@ -9982,8 +10258,8 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
     document.querySelector('.trackcontrols').style.display='flex';
     document.querySelector('.tracktop .label').innerHTML='TRACK MAP · CYLINDER <b id="geomCylinder">0</b>';
     const isUfs=d.fsType==='NEXTSTEP_UFS1',isTar=d.fsType==='SUN_TAR',isMac=!!(d.fsType&&d.fsType.startsWith('MAC_'));
-    $('geometryBadge').textContent=(d.foreign||g.contGeo)?String(g.badge||g.label||'DISK').toUpperCase():isMac?(d.fsType==='MAC_MFS'?'MACINTOSH MFS':'MACINTOSH HFS'):isTar?'SUN TAR ARCHIVE':isUfs?'UFS1 SUPERBLOCK':'BPB GEOMETRY';
-    const items=(d.foreign||g.contGeo)?[['Format',g.label],['Tracks / cylinders',fmt(g.cylinders)],['Heads / sides',fmt(g.heads)],['Sectors per track',g.variable?'variable (zoned)':fmt(g.spt)],['Sector size',fmt(d.bps)+' B'],...(g.facts||[]).filter(x=>!/^(sector size|sectors per track|tracks|cylinders|heads)$/i.test(x[0]))]:isMac?[["Floppy format",d.mac.label],["Tracks / cylinders",fmt(g.cylinders)],["Heads / sides",fmt(g.heads)],["Sectors per track",g.variable?'12 / 11 / 10 / 9 / 8 (GCR)':'18 (MFM)'],["Raw sector size",'512 B'],["Volume",d.volLabel||'Unnamed']]:isTar?[["Format", "SunOS / POSIX TAR"],["Total Sectors", fmt(d.total)],["Sector Size", "512 B"]]:isUfs?[["Image cylinders",fmt(g.cylinders)],["Heads / sides",fmt(g.heads)],["Raw sectors / track",fmt(g.spt)],["Raw sector size",fmt(d.bps)+' B'],["UFS nsect / spc",fmt(g.ufsSpt)+' / '+fmt(g.ufsSpc)],["UFS filesystem cylinders",fmt(g.ufsNcyl)]]:[["Cylinders",fmt(g.cylinders)],["Heads / sides",fmt(g.heads)],["Sectors / track",fmt(g.spt)],["Bytes / sector",fmt(d.bps)]];
+    $('geometryBadge').textContent=(d.foreign||g.contGeo)?String(g.badge||g.label||'DISK').toUpperCase():isMac?(d.fsType==='MAC_MFS'?'MACINTOSH MFS':'MACINTOSH HFS'):isTar?(d.archiveBadge||'SUN TAR ARCHIVE'):isUfs?'UFS1 SUPERBLOCK':'BPB GEOMETRY';
+    const items=(d.foreign||g.contGeo)?[['Format',g.label],['Tracks / cylinders',fmt(g.cylinders)],['Heads / sides',fmt(g.heads)],['Sectors per track',g.variable?'variable (zoned)':fmt(g.spt)],['Sector size',fmt(d.bps)+' B'],...(g.facts||[]).filter(x=>!/^(sector size|sectors per track|tracks|cylinders|heads)$/i.test(x[0]))]:isMac?[["Floppy format",d.mac.label],["Tracks / cylinders",fmt(g.cylinders)],["Heads / sides",fmt(g.heads)],["Sectors per track",g.variable?'12 / 11 / 10 / 9 / 8 (GCR)':'18 (MFM)'],["Raw sector size",'512 B'],["Volume",d.volLabel||'Unnamed']]:isTar?[["Format", d.archiveKind||"SunOS / POSIX TAR"],["Total Sectors", fmt(d.total)],["Sector Size", "512 B"]]:isUfs?[["Image cylinders",fmt(g.cylinders)],["Heads / sides",fmt(g.heads)],["Raw sectors / track",fmt(g.spt)],["Raw sector size",fmt(d.bps)+' B'],["UFS nsect / spc",fmt(g.ufsSpt)+' / '+fmt(g.ufsSpc)],["UFS filesystem cylinders",fmt(g.ufsNcyl)]]:[["Cylinders",fmt(g.cylinders)],["Heads / sides",fmt(g.heads)],["Sectors / track",fmt(g.spt)],["Bytes / sector",fmt(d.bps)]];
     facts.innerHTML=items.map(x=>'<div class="geomfact"><div class="value">'+esc(x[1])+'</div><span class="label">'+esc(x[0])+'</span></div>').join('');
     
     let cylinderGridHtml = '<div class="cylinder-grid" id="cylinderGrid">';
