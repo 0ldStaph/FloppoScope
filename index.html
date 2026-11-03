@@ -746,7 +746,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
       </div>
 
     </div>
-    <div class="footer" data-glean-id="footer">FloppoScope parses raw sector images in your browser. It does not modify the image. FAT (including Atari ST and MSX-DOS disks), SunOS Bar/Tar archives, NeXT UFS1, SCO UNIX System V (S5), classic Macintosh MFS/HFS, Apple Lisa PREBOOT boot-file volumes, Commodore CBM DOS, Atari DOS 2, AmigaDOS, Apple DOS 3.3/ProDOS, TR-DOS, Acorn DFS, DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80, Sharp MZF/MZT tape files and VTech Laser/VZ200 DOS are inspected read-only. MSA, ATR, XFD and 2IMG wrappers are unwrapped automatically. SCP, KryoFlux, HFE, WOZ (5.25-inch), NIB, G64 and IMD images are decoded to sectors when a supported sector format is found; IPF, DMS, TD0 and FDI are recognised but not decoded. Amstrad CPC / Extended CPC DSK containers are unwrapped to a flat sector image first (as used for Sharp MZ disks). VZ200 .dsk / .dvz disk-drive images (98,560 to 99,185 bytes, early and corrected layouts) are rebuilt into a flat 40 × 16 × 128-byte image by their sector sync marks, and text-mode damage (CR LF expansion, or every 0x0D byte deleted) is repaired where the checksums allow; sectors whose lost 0x0D bytes cannot be placed are flagged. Macintosh 400K/800K GCR track zones and 1.44MB HD MFM geometry are shown when a supported volume is detected.</div>
+    <div class="footer" data-glean-id="footer">FloppoScope parses raw sector images in your browser. It does not modify the image. FAT (including Atari ST and MSX-DOS disks), SunOS Bar/Tar archives, NeXT UFS1, SCO UNIX System V (S5), classic Macintosh MFS/HFS, Apple Lisa PREBOOT boot-file volumes, Commodore CBM DOS, Atari DOS 2, AmigaDOS, Apple DOS 3.3/ProDOS, TR-DOS, Acorn DFS, DEC Files-11 ODS-1 (RSX-11), Sharp MZ Disk BASIC, Sharp MZ-800 Personal CP/M-80, Sharp MZF/MZT tape files and VTech Laser/VZ200 DOS are inspected read-only. MSA, ATR, XFD and 2IMG wrappers are unwrapped automatically. SCP, KryoFlux, HFE, WOZ (5.25-inch), NIB, G64, IMD and Teledisk TD0 images are decoded to sectors when a supported sector format is found; IPF, DMS and FDI are recognised but not decoded. Amstrad CPC / Extended CPC DSK containers are unwrapped to a flat sector image first (as used for Sharp MZ disks). VZ200 .dsk / .dvz disk-drive images (98,560 to 99,185 bytes, early and corrected layouts) are rebuilt into a flat 40 × 16 × 128-byte image by their sector sync marks, and text-mode damage (CR LF expansion, or every 0x0D byte deleted) is repaired where the checksums allow; sectors whose lost 0x0D bytes cannot be placed are flagged. Macintosh 400K/800K GCR track zones and 1.44MB HD MFM geometry are shown when a supported volume is detected.</div>
   </main>
 </div>
 <div class="rep-overlay hidden" id="repOverlay" role="dialog" aria-modal="true" aria-label="Analysis report">
@@ -2636,7 +2636,7 @@ function sniffUnsupported(bytes,name){
     [()=>s(0,8)==='HXCPICFE'||s(0,8)==='HXCHFEV3','HxC HFE image','HFE could not be decoded as a supported sector format.'],
     [()=>s(0,3)==='SCP','SuperCard Pro flux image','SCP could not be decoded as a supported sector format.'],
     [()=>s(0,4)==='IMD '||s(0,3)==='IMD','ImageDisk (IMD)','IMD needs track re-assembly; convert to a raw IMG.'],
-    [()=>(s(0,2)==='TD'||s(0,2)==='td')&&ext==='td0','Teledisk (TD0)','TD0 is compressed; convert to a raw IMG.'],
+    [()=>(s(0,2)==='TD'||s(0,2)==='td')&&ext==='td0','Teledisk (TD0)','This TD0 could not be decoded (damaged or unsupported variant); convert it to a raw IMG.'],
     [()=>{const h=s(0,Math.min(1024,bytes.length));return bytes[0]===0xc3&&/GenRad Service Products/.test(h)&&/\$ROOT/.test(h)},'GenRad 2620 Field Maintenance Processor system disk','Boot sector (JP C100h) from GenRad Service Products Division, 1984; it loads $ROOT and $MAIN through a proprietary directory that is not decoded. Data fills the first 80 KiB; the rest is E5-formatted.'],
     [()=>s(0,4)==='FDI\0'||ext==='fdi'&&s(0,3)==='FDI','FDI disk image','FDI stores per-track data; convert to a raw sector image.']
   ];
@@ -3116,7 +3116,7 @@ function decodeSharpCpm400(bytes,hint){
     const segs=[];for(const b of blocks)for(const s of blkSegs(b))segs.push(s);
     let rd=segReader(lb,segs,size),textTrim=false;
     if(textExt.test(first.ext)&&size>0){
-      const lastRec=Math.max(0,size-128);
+const lastRec=Math.max(0,size-128);
       try{
         const tail=segReader(lb,segs,size)();
         for(let i=lastRec;i<size;i++)if(tail[i]===0x1a){size=i;textTrim=true;break}
@@ -4466,6 +4466,29 @@ function imdAnoms(src){
   for(const e of src.entries){if(!e.ok)a.push({cat:'crc-error',track:'C'+e.cyl+' H'+e.head,msg:'sector '+e.r+': recorded with a data error'});}
   return a.slice(0,200);
 }
+/* Anomalies for a sector-dump container (IMD / TD0): findings recorded in the file, plus what assembleIBM did with sectors that do not fit the regular layout.
+   Sectors left out of the image (extra sectors, typically copy protection) are reported as such instead of as plain checksum errors. */
+/* Disk duplicators (Trace Products TraceBack) append a track holding a text log of the duplication run ("$TRACEBACK (tm) Ver 2.11", "$OPER = ...", "$DISK NUMBER = ...").
+   It is metadata about the production run, not copy protection and not part of the disk's data. */
+function isTraceBack(e){const d=e.data;return !!d&&d.length>=11&&String.fromCharCode.apply(null,Array.from(d.subarray(0,10)))==='$TRACEBACK'}
+function traceBackRows(res){
+  const rows=[];
+  for(const e of (res.dropped||[]).filter(isTraceBack)){
+    const txt=String.fromCharCode.apply(null,Array.from(e.data)).split('\0').filter(x=>x&&x!=='$$'),kv={};
+    for(const l of txt){const m=/^\$([A-Z ]+?)\s*=\s*(.*)$/.exec(l);if(m)kv[m[1]]=m[2].trim()}
+    const pick=[['DESCRIP','description'],['DUP TIME','duplicated'],['DISK NUMBER','disk'],['OPER','operator'],['USTRING','label']].filter(([k])=>kv[k]).map(([k,n])=>n+' '+kv[k]);
+    rows.push(['—','Duplicator log','C'+e.cyl+' H'+e.head+' holds a '+txt[0].replace(/^\$/,'')+' record written by the disk duplicator'+(pick.length?' ('+pick.join(', ')+')':'')+'. It is production metadata, not copy protection; it lies beyond the disk layout and is left out of the image.']);
+  }
+  return rows;
+}
+function dumpAnoms(src,res){
+  const gone=new Set((res.dropped||[]).map(e=>'C'+e.cyl+' H'+e.head+'|'+e.r));
+  const anoms=(src.anoms||imdAnoms(src)).filter(a=>{const m=/^sector (\d+):/.exec(a.msg);return !(a.cat==='crc-error'&&m&&gone.has(a.track+'|'+m[1]))});
+  for(const x of (res.repacked||[]))anoms.push({cat:'size',track:'C'+x.cyl+' H'+x.head,msg:'this track holds '+x.n+' sectors of '+x.sz+' B (IDs '+x.ids+') while the rest of the disk uses '+res.size+' B sectors; its data is kept unchanged at the start of the track in the image instead of being replaced by BAD SECTOR markers'});
+  if(res.padded)for(const [e,q] of res.padded)anoms.push({cat:'size',track:'C'+e.cyl+' H'+e.head,msg:'sector ID '+e.r+' holds only '+e.data.length+' B ('+(e.ok?'checksum valid':'checksum error')+') while the disk uses '+res.size+' B sectors; its '+e.data.length+' recorded bytes are kept in the image slot and the rest is filled with 0x'+q.fill.toString(16).toUpperCase().padStart(2,'0')+' instead of a BAD SECTOR marker'});
+  for(const e of (res.dropped||[]).filter(e=>!isTraceBack(e)).slice(0,20))anoms.push({cat:e.ok?'extra-sectors':'stray',track:'C'+e.cyl+' H'+e.head,msg:'sector ID '+e.r+' ('+e.data.length+' B, '+(e.ok?'checksum valid':'checksum error')+') lies outside the disk layout and was left out of the image'});
+  return anoms;
+}
 function parseIMD(b){
   if(b.length<32||String.fromCharCode.apply(null,b.subarray(0,4))!=='IMD ')return null;
   let p=0;while(p<b.length&&b[p]!==0x1a)p++;
@@ -4492,11 +4515,121 @@ function parseIMD(b){
   return {imd:true,entries,label:'ImageDisk IMD',detail:tracks+' track records'+(comment?' · '+comment:'')};
 }
 
+/* ---------- Teledisk TD0 (signature "TD" = plain, "td" = advanced compression: LZSS + adaptive Huffman, Okumura LZHUF) ---------- */
+const TD0_CRC=(function(){const t=new Uint16Array(256);for(let i=0;i<256;i++){let c=i<<8;for(let k=0;k<8;k++)c=(c&0x8000)?((c<<1)^0xA097)&0xffff:(c<<1)&0xffff;t[i]=c}return t})();
+function td0Crc(b,s,e){let c=0;for(let i=s;i<e;i++)c=((c<<8)&0xffff)^TD0_CRC[((c>>8)^b[i])&255];return c}
+function td0Unpack(src,limit){
+  const N=4096,F=60,TH=2,NCH=256-TH+F,T=NCH*2-1,R=T-1,MAXF=0x8000;
+  const freq=new Uint16Array(T+1),prnt=new Uint16Array(T+NCH),son=new Uint16Array(T);
+  const dcode=new Uint8Array(256),dlen=new Uint8Array(256);
+  {let c=0,i=0;for(const [L,cnt] of [[3,1],[4,3],[5,8],[6,12],[7,24],[8,16]])for(let q=0;q<cnt;q++,c++){const n=1<<(8-L);for(let z=0;z<n;z++){dcode[i]=c;dlen[i]=L;i++}}}
+  for(let i=0;i<NCH;i++){freq[i]=1;son[i]=i+T;prnt[i+T]=i}
+  {let i=0,j=NCH;while(j<=R){freq[j]=freq[i]+freq[i+1];son[j]=i;prnt[i]=prnt[i+1]=j;i+=2;j++}}
+  freq[T]=0xffff;prnt[R]=0;
+  function reconst(){
+    let j=0;for(let i=0;i<T;i++)if(son[i]>=T){freq[j]=(freq[i]+1)>>1;son[j]=son[i];j++}
+    for(let i=0,jj=NCH;jj<T;i+=2,jj++){
+      const f=freq[jj]=freq[i]+freq[i+1];let k=jj-1;while(f<freq[k])k--;k++;
+      freq.copyWithin(k+1,k,jj);freq[k]=f;son.copyWithin(k+1,k,jj);son[k]=i;
+    }
+    for(let i=0;i<T;i++){const k=son[i];if(k>=T)prnt[k]=i;else{prnt[k]=i;prnt[k+1]=i}}
+  }
+  function update(c0){
+    if(freq[R]===MAXF)reconst();
+    let c=prnt[c0+T];
+    do{
+      const k=++freq[c];let l=c+1;
+      if(k>freq[l]){
+        while(k>freq[++l]);l--;
+        freq[c]=freq[l];freq[l]=k;
+        const i=son[c];prnt[i]=l;if(i<T)prnt[i+1]=l;
+        const j=son[l];son[l]=i;prnt[j]=c;if(j<T)prnt[j+1]=c;son[c]=j;c=l;
+      }
+      c=prnt[c];
+    }while(c!==0);
+  }
+  let pos=0;const total=src.length*8;
+  const bit=()=>{if(pos>=total){pos++;return 0}const v=(src[pos>>3]>>(7-(pos&7)))&1;pos++;return v};
+  let out=new Uint8Array(Math.min(limit,Math.max(65536,src.length*3))),n=0;
+  const put=v=>{if(n>=out.length){if(out.length>=limit)throw Error('TD0 data exceeds the '+Math.round(limit/1048576)+' MiB limit');const nb=new Uint8Array(Math.min(limit,out.length*2));nb.set(out);out=nb}out[n++]=v};
+  const tb=new Uint8Array(N).fill(0x20);let r=N-F;
+  while(pos<total){
+    let c=son[R];while(c<T)c=son[c+bit()];c-=T;update(c);
+    if(c<256){put(c);tb[r]=c;r=(r+1)&(N-1)}
+    else{
+      let i=0;for(let q=0;q<8;q++)i=(i<<1)|bit();
+      let j=dlen[i]-2;const hi=dcode[i]<<6;
+      while(j-->0)i=(i<<1)|bit();
+      const p=hi|(i&0x3f),st=(r-p-1)&(N-1),len=c-255+TH;
+      for(let k=0;k<len;k++){const ch=tb[(st+k)&(N-1)];put(ch);tb[r]=ch;r=(r+1)&(N-1)}
+    }
+  }
+  return out.subarray(0,n);
+}
+function td0HeaderOk(b){return b.length>=12&&(b[0]===0x54||b[0]===0x74)&&(b[1]===0x44||b[1]===0x64)&&td0Crc(b,0,10)===(b[10]|b[11]<<8)}
+function parseTD0(b){
+  if(b.length<12||!((b[0]===0x54||b[0]===0x74)&&(b[1]===0x44||b[1]===0x64)))return null;
+  const adv=b[0]===0x74,ver=b[4],rate=b[5],step=b[7],sides=b[9],notes=[];
+  if(td0Crc(b,0,10)!==(b[10]|b[11]<<8))notes.push('header checksum mismatch');
+  const d=adv?td0Unpack(b.subarray(12),256*1048576):b.subarray(12);
+  let p=0,comment='';
+  if(step&0x80){
+    if(d.length<10)throw Error('TD0 comment block is truncated.');
+    const len=d[2]|d[3]<<8;
+    comment=String.fromCharCode.apply(null,Array.from(d.subarray(10,10+len)).map(v=>v===0?10:v)).replace(/[\r\n]+/g,' ').replace(/[^\x20-\x7e]+/g,' ').replace(/\s+/g,' ').trim();
+    p=10+len;
+  }
+  const entries=[],anoms=[];let tracks=0,trunc=false;
+  while(p<d.length){
+    const ns=d[p];if(ns===0xff)break;
+    if(p+4>d.length){trunc=true;break}
+    const cyl=d[p+1],hd=d[p+2],side=hd&1;p+=4;tracks++;
+    const trk='C'+cyl+' H'+side;
+    for(let s=0;s<ns;s++){
+      if(p+6>d.length){trunc=true;break}
+      const sc=d[p],sh=d[p+1],sid=d[p+2],sz=d[p+3],fl=d[p+4],scrc=d[p+5];p+=6;
+      if(fl&0x30)continue;                                  /* no data block: sector skipped or ID only */
+      if(p+3>d.length){trunc=true;break}
+      const len=d[p]|d[p+1]<<8,end=p+2+len,meth=d[p+2];
+      if(sz>6)throw Error('TD0 sector with unsupported size code '+sz+' ('+trk+').');
+      if(end>d.length){trunc=true;break}
+      const size=128<<sz,data=new Uint8Array(size);let q=p+3;
+      if(meth===0){data.set(d.subarray(q,Math.min(end,q+size)))}
+      else if(meth===1){
+        const cnt=d[q]|d[q+1]<<8,a=d[q+2],c2=d[q+3];
+        for(let k=0;k<cnt&&k*2+1<size;k++){data[k*2]=a;data[k*2+1]=c2}
+      }else if(meth===2){
+        let k=0;
+        while(k<size&&q<end){
+          const t=d[q++];
+          if(t===0){let m=d[q++];while(m--&&k<size&&q<end)data[k++]=d[q++]}
+          else{
+            const plen=1<<t,rep=d[q++];const pat=d.subarray(q,q+plen);q+=plen;
+            for(let z=0;z<rep&&k<size;z++)for(let y=0;y<plen&&k<size;y++)data[k++]=pat[y];
+          }
+        }
+      }else throw Error('TD0 sector uses unknown encoding '+meth+' ('+trk+' S'+sid+').');
+      p=end;
+      let ok=!(fl&2);
+      if((td0Crc(data,0,size)&255)!==scrc){anoms.push({cat:'crc-error',track:trk,msg:'sector '+sid+': Teledisk checksum does not match the unpacked data'});ok=false}
+      else if(fl&2)anoms.push({cat:'crc-error',track:trk,msg:'sector '+sid+': recorded with a data error'});
+      if(fl&4)anoms.push({cat:'deleted',track:trk,msg:'sector '+sid+': deleted-data address mark'});
+      entries.push({cyl,head:side,c:sc,r:sid,n:sz,data,ok});
+    }
+    if(trunc)break;
+  }
+  if(trunc)notes.push('file is truncated');
+  const vs=(ver>>4)+'.'+(ver&15),rateTxt=['250','300','500'][rate&3]+' kbps'+(rate&0x80?' FM':'');
+  return {imd:true,tag:'TD0',entries,anoms:anoms.slice(0,200),container:'Teledisk TD0 → sector image',label:'Teledisk TD0',
+    detail:'v'+vs+(adv?' · advanced compression':'')+' · '+tracks+' track records · '+rateTxt+' · '+(sides===1?'1 side':'2 sides')+(comment?' · '+comment:'')+(notes.length?' · '+notes.join(', '):'')};
+}
+
 /* ---------- public API ---------- */
 function detect(b,name){
   if(b.length>=4&&b[0]===0x53&&b[1]===0x43&&b[2]===0x50)return 'SCP';
   if(b.length>=8){const s=String.fromCharCode.apply(null,b.subarray(0,8));if(s==='HXCPICFE'||s==='HXCHFEV3')return 'HFE';if(s==='GCR-1541')return 'G64'}
   if(b.length>=4){const s=String.fromCharCode.apply(null,b.subarray(0,4));if(s==='WOZ1'||s==='WOZ2')return 'WOZ';if(s==='IMD ')return 'IMD'}
+  if(td0HeaderOk(b)||(ext(name)==='td0'&&b.length>=12&&(b[0]===0x54||b[0]===0x74)&&(b[1]===0x44||b[1]===0x64)))return 'TD0';
   if(ext(name)==='nib'&&(b.length===232960||b.length===266240))return 'NIB';
   if(isKF(b,name))return 'KF';
   return '';
@@ -4582,13 +4715,14 @@ function convert(ab,name,extra){
     else if(kind==='NIB')src=parseNIB(b,name);
     else if(kind==='G64')src=parseG64(b);
     else if(kind==='IMD')src=parseIMD(b);
+    else if(kind==='TD0')src=parseTD0(b);
     else if(kind==='KF'){const list=(extra&&extra.length?extra:[{name,ab}]);src=parseKFSet(list)}
   }catch(err){return {error:err.message,kind}}
   if(!src)return {error:'The file header was recognised but no tracks could be read.',kind};
   if(src.imd){
-    if(!src.entries.length)return {error:'IMD image contains no readable sector data.',kind};
-    const res=assembleIBM(src.entries.map(e=>({cyl:e.cyl,head:e.head,c:e.c,r:e.r,n:e.n,data:e.data,ok:e.ok})),'IMD');
-    return {ab:res.img.buffer,geo:res.geo,fmt:'ibm',container:'IMD sector dump',note:'',name:'disk.img',badLbas:res.badLbas,size:res.size,report:summarize({label:src.label,detail:src.detail},{kind:'ibm',cell:0},res,'all',imdAnoms(src))};
+    if(!src.entries.length)return {error:(src.tag||'IMD')+' image contains no readable sector data.',kind};
+    const res=assembleIBM(src.entries.map(e=>({cyl:e.cyl,head:e.head,c:e.c,r:e.r,n:e.n,data:e.data,ok:e.ok})),src.tag||'IMD');
+    return {ab:res.img.buffer,geo:res.geo,fmt:'ibm',container:src.container||'IMD sector dump',note:'',name:'disk.img',badLbas:res.badLbas,size:res.size,report:summarize({label:src.label,detail:src.detail},{kind:'ibm',cell:0},res,'all',dumpAnoms(src,res)).concat(traceBackRows(res))};
   }
   if(!src.tracks.length)return {error:'No tracks with data were found in this '+src.label+' file.',kind};
   let best=probe(src);
@@ -6223,7 +6357,7 @@ return {sniffImage,decodeImage,IMAGE_LABEL,isSvg,isPdf,pdfInfo,isRtf,rtfToText,s
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.1.11'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.1.12'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
