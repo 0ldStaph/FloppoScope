@@ -6,6 +6,8 @@ Everything runs locally in your browser. Nothing is uploaded, and your images ar
 
 **Try it:** https://0ldstaph.github.io/FloppoScope/
 
+![Built-in demo image](assets/builtin_demo_disk.png)
+
 Or download `index.html` and open it in any modern browser. No server, install or build step is needed.
 
 ## Features
