@@ -495,7 +495,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
     <section class="filecard hidden" id="fileCard" aria-label="Loaded disk image" data-glean-id="loaded-file">
       <div class="fc-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 3.8h11.8L20 7v13.2H4V3.8h1Z"/><path d="M8 4v6h8V4M8 20v-6h8v6M10 7h4"/></svg></div>
       <div class="fc-main">
-        <div class="eyebrow">Loaded disk image</div>
+<div class="eyebrow">Loaded disk image</div>
         <h2 class="fc-name" id="fcName"></h2>
         <div class="fc-path" id="fcPath"></div>
         <div class="fc-sub" id="fcSub"></div>
@@ -1244,7 +1244,7 @@ function vzUnwrap(b){
 }
 
 /* VZ DOS disk images. Logical sector = 24-byte header + 128 raw bytes (126 data + 2 link) + 16-bit LE sum of those 128 bytes.
-   Sectorsare written in the physical order 0,11,6,1,12,7,2,13,8,3,14,9,4,15,10,5. flat = cyl*16*128 B in track/sector order.
+   Sectors are written in the physical order 0,11,6,1,12,7,2,13,8,3,14,9,4,15,10,5. flat = cyl*16*128 B in track/sector order.
    - Corrected format (99,185 B): 2,480-byte tracks. One leading 0x80, then per sector 5x80 00 FE E7 18 C3 T S T+S 6x80 00 C3 18 E7 FE + 128 + sum(2), then zero pad; the last track ends after its final checksum.
      Reproduces the pristine XB2_SRC_1/2 images byte for byte. Gap lengths in real images vary with write history (a rewritten sector uses 6/5 instead of 5/6), which sector data cannot recover, so this is the clean freshly-formatted layout.
    - Early/legacy format (98,560 B, as written by vz2vzd.c): 2,464-byte tracks, 6x80 ... 5x80, no pad, no leading byte. */
@@ -3036,7 +3036,7 @@ function decodeVzDos(bytes,hint){
     fileEntries:entries,idLabel:'First sector (LBA)',kindLabel:'Type / addresses',lbaLabel:l=>'track '+(l>>4)+' sector '+(l&15),vzFindings:fi});
 }
 
-/* ---------- FAT platform hint (Atari ST / MSX-DOS) ----------*/
+/* ---------- FAT platform hint (Atari ST / MSX-DOS) ---------- */
 function fatPlatform(bytes,name,info){
   const ext=extOf(name);
   let sum=0;for(let i=0;i<512&&i+1<bytes.length;i+=2)sum=(sum+((bytes[i]<<8)|bytes[i+1]))&0xffff;
@@ -6144,16 +6144,21 @@ async function tiffDecode(d){
     const k=y*w+x;
     if(photoEff===0||photoEff===1){
       let v=sample(y,x,0);v=Math.round(v*255/maxv);if(photo===0)v=255-v;
+      let ga=255;
+      if(spp>=2&&extra.length&&extra[0]>0){ga=Math.round(sample(y,x,1)*255/maxv);if(extra[0]===1&&ga>0&&ga<255)v=Math.min(255,Math.round(v*255/ga))}
       gray(o,k,v);
-      if(spp>=2&&extra.length&&extra[0]>0)o.rgba[k*4+3]=Math.round(sample(y,x,1)*255/maxv);
+      o.rgba[k*4+3]=ga;
     }else if(photoEff===3){
       const idx=sample(y,x,0),n=1<<bps;
       if(!cmap||bps>8)throw Error('palette TIFF without a usable colour map');
       put(o,k,cmap[idx]>>8,cmap[n+idx]>>8,cmap[2*n+idx]>>8);
     }else if(photoEff===2){
-      put(o,k,sample(y,x,0),sample(y,x,1),sample(y,x,2),spp>=4&&extra.length&&extra[0]>0?sample(y,x,3):255);
+      /* samples narrower than 8 bits (e.g. 4-bit RGBA from NeXTSTEP) must be scaled to 0-255; extra sample 1 = associated (premultiplied) alpha */
+      let cr=Math.round(sample(y,x,0)*255/maxv),cg=Math.round(sample(y,x,1)*255/maxv),cb=Math.round(sample(y,x,2)*255/maxv),ca=255;
+      if(spp>=4&&extra.length&&extra[0]>0){ca=Math.round(sample(y,x,3)*255/maxv);if(extra[0]===1&&ca>0&&ca<255){cr=Math.min(255,Math.round(cr*255/ca));cg=Math.min(255,Math.round(cg*255/ca));cb=Math.min(255,Math.round(cb*255/ca))}}
+      put(o,k,cr,cg,cb,ca);
     }else if(photoEff===5){
-      const c=sample(y,x,0),m=sample(y,x,1),yy=sample(y,x,2),kk=spp>=4?sample(y,x,3):0;
+      const sc8=v=>Math.round(v*255/maxv),c=sc8(sample(y,x,0)),m=sc8(sample(y,x,1)),yy=sc8(sample(y,x,2)),kk=spp>=4?sc8(sample(y,x,3)):0;
       put(o,k,(255-c)*(255-kk)/255|0,(255-m)*(255-kk)/255|0,(255-yy)*(255-kk)/255|0);
     }else throw Error('TIFF photometric interpretation '+photo+(photo===6?' (YCbCr)':photo===8?' (CIE Lab)':'')+' is not supported');
   }
@@ -7608,7 +7613,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.2.2'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.2.3'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -8480,7 +8485,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
         outs.push({fmt:'img',rel:'img/'+base+'.'+ext,data:img,note:fluxInfo?'decoded from '+(/^(scp|hfe|imd|woz|nib|g64)$/.test(srcExt)?srcExt.toUpperCase():'flux')+' ('+(fluxInfo.summary||'sector recovery')+')':(retroInfo&&retroInfo.container?'unwrapped from '+retroInfo.container:'raw sector image')});
       }
       const cpcSrc=retroInfo&&retroInfo.hint&&retroInfo.hint.cpcTracks?retroInfo.hint:null;
-      if(cpcSrc&&cpcSrc.cpcInfo)rec.geometry=cpcSrc.cpcInfo.cyl+' cyl × '+cpcSrc.cpcInfo.sides+' head · '+cpcSrc.cpcInfo.summary;
+if(cpcSrc&&cpcSrc.cpcInfo)rec.geometry=cpcSrc.cpcInfo.cyl+' cyl × '+cpcSrc.cpcInfo.sides+' head · '+cpcSrc.cpcInfo.summary;
       for(const f of ['imd','hfe']){
         if(!want[f])continue;
         if(srcExt===f&&src1){outs.push({fmt:f,rel:f+'/'+base+'.'+f,data:new Uint8Array(rb.ab),note:'copied unchanged (source is already '+f.toUpperCase()+')'});continue}
@@ -10813,7 +10818,7 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
     if (!myDisk || !autoMountEnabled) return;
     const tried = new WeakSet(), queue = [];
     let entryBudget = EAGER_ENTRY_BUDGET, byteBudget = EAGER_TOTAL_BYTES, changed = false, lastPaint = Date.now();
-    const enqueue = list =>{ for (const f of list) if (!f.directory && !f.deleted && !f.archive && f.size > 0 && f.size <= EAGER_ARCHIVE_BYTES && ARCHIVE_NAME_RE.test(f.name) && !tried.has(f)) queue.push(f); };
+    const enqueue = list => { for (const f of list) if (!f.directory && !f.deleted && !f.archive && f.size > 0 && f.size <= EAGER_ARCHIVE_BYTES && ARCHIVE_NAME_RE.test(f.name) && !tried.has(f)) queue.push(f); };
     const stale = () => token !== autoMountToken || disk !== myDisk;
     enqueue(browseList());
     await wait(0);
