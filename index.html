@@ -1244,7 +1244,7 @@ function vzUnwrap(b){
 }
 
 /* VZ DOS disk images. Logical sector = 24-byte header + 128 raw bytes (126 data + 2 link) + 16-bit LE sum of those 128 bytes.
-   Sectors are written in the physical order 0,11,6,1,12,7,2,13,8,3,14,9,4,15,10,5. flat = cyl*16*128 B in track/sector order.
+   Sectorsare written in the physical order 0,11,6,1,12,7,2,13,8,3,14,9,4,15,10,5. flat = cyl*16*128 B in track/sector order.
    - Corrected format (99,185 B): 2,480-byte tracks. One leading 0x80, then per sector 5x80 00 FE E7 18 C3 T S T+S 6x80 00 C3 18 E7 FE + 128 + sum(2), then zero pad; the last track ends after its final checksum.
      Reproduces the pristine XB2_SRC_1/2 images byte for byte. Gap lengths in real images vary with write history (a rewritten sector uses 6/5 instead of 5/6), which sector data cannot recover, so this is the clean freshly-formatted layout.
    - Early/legacy format (98,560 B, as written by vz2vzd.c): 2,464-byte tracks, 6x80 ... 5x80, no pad, no leading byte. */
@@ -1401,7 +1401,7 @@ function unwrap(ab,name){
 
   /* DiskDupe .DDI, early variant (probably the predecessor program's format) -- "Image file of a diskette by THE DUPLICATOR": a text banner plus a small parameter / checksum header (1536 bytes on the samples seen), then the plain sector data.
      The data start is the first 512-byte boundary that holds a plausible FAT boot sector. Tracks the program did not store (e.g. the last cylinder) are filled
-     back up tothe size the boot sector describes with 0xF6, the format filler. */
+     back up to the size the boot sector describes with 0xF6, the format filler. */
   if(b.length>=2048&&String.fromCharCode(...b.subarray(0,27))==='Image file of a diskette by'){
     const plaus=h=>{
       if(h+512>b.length)return null;
@@ -3036,7 +3036,7 @@ function decodeVzDos(bytes,hint){
     fileEntries:entries,idLabel:'First sector (LBA)',kindLabel:'Type / addresses',lbaLabel:l=>'track '+(l>>4)+' sector '+(l&15),vzFindings:fi});
 }
 
-/* ---------- FAT platform hint (Atari ST / MSX-DOS) ---------- */
+/* ---------- FAT platform hint (Atari ST / MSX-DOS) ----------*/
 function fatPlatform(bytes,name,info){
   const ext=extOf(name);
   let sum=0;for(let i=0;i<512&&i+1<bytes.length;i+=2)sum=(sum+((bytes[i]<<8)|bytes[i+1]))&0xffff;
@@ -3061,7 +3061,7 @@ function decodeSysV(bytes){
   for(const b of [1024,512,2048]){
     if(len<4*b)continue;
     const mg=u32(b+b-8),ty=u32(b+b-4);
-if((mg===0x2b5544||mg===0xfd187e20)&&ty>=1&&ty<=3&&(256<<ty)===b){bs=b;magic=mg;break}
+    if((mg===0x2b5544||mg===0xfd187e20)&&ty>=1&&ty<=3&&(256<<ty)===b){bs=b;magic=mg;break}
   }
   if(!bs)return null;
   const sb=bs,n=bs===512?50:100,spb=bs/512;
@@ -7608,7 +7608,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.2.1'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.2.2'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -9311,6 +9311,8 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
     let isSharpMz=false;
     if (bpbLessFat && stdBpbBad && (bytes[0] === 0x80 || bytes[0] === 0x7f)) { try { const sm = RetroDisk.detect(bytes, currentName, {}); isSharpMz = !!(sm && sm.fsType === 'SHARP_MZ'); } catch (_) {} }
     if (!isSharpMz && ((bps === 0 && spc === 0 && reserved === 0) || (stdBpbBad && stdFloppy)) && bpbLessFat) {
+      /* A NeXTSTEP floppy has a 0xFF-filled disk label in sector 1 that looks like a FAT. Before inventing a FAT12 BPB, check for a fully validated UFS1 filesystem. */
+      {const nu=decodeNextUfs();if(nu)return nu}
       synthBpb = true;
       bps = 512; reserved = 1; fats = 2;
       total16 = actualSectors < 65536 ? actualSectors : 0;
@@ -10811,7 +10813,7 @@ function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,en
     if (!myDisk || !autoMountEnabled) return;
     const tried = new WeakSet(), queue = [];
     let entryBudget = EAGER_ENTRY_BUDGET, byteBudget = EAGER_TOTAL_BYTES, changed = false, lastPaint = Date.now();
-    const enqueue = list => { for (const f of list) if (!f.directory && !f.deleted && !f.archive && f.size > 0 && f.size <= EAGER_ARCHIVE_BYTES && ARCHIVE_NAME_RE.test(f.name) && !tried.has(f)) queue.push(f); };
+    const enqueue = list =>{ for (const f of list) if (!f.directory && !f.deleted && !f.archive && f.size > 0 && f.size <= EAGER_ARCHIVE_BYTES && ARCHIVE_NAME_RE.test(f.name) && !tried.has(f)) queue.push(f); };
     const stale = () => token !== autoMountToken || disk !== myDisk;
     enqueue(browseList());
     await wait(0);
