@@ -440,6 +440,13 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
 
 .unm-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;cursor:pointer;user-select:none}
 .unm-veil{fill:var(--artifact-background);fill-opacity:.93;stroke:none;pointer-events:none}
+.file-veil{fill:#0c1117;fill-opacity:.7;stroke:none;pointer-events:none}
+.file-info-banner{box-sizing:border-box;height:52px;margin:6px 0 8px;padding:6px 12px;border:1px solid var(--artifact-border-light);border-radius:6px;background:var(--artifact-well);color:var(--artifact-text-primary);font-size:12.5px;line-height:1.5;overflow:hidden}
+.file-info-banner .fi-line{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-info-banner .fi-name{font-weight:700}
+.file-info-banner .fi-meta,.file-info-banner .fi-none{color:var(--artifact-text-secondary)}
+.file-info-banner.fi-spacer{visibility:hidden}
+#diskSurfaces.file-dim .disk-sector.file-highlight{stroke:var(--artifact-disk-grid);stroke-width:calc(.75px / var(--zk,1));filter:none}
 #unmMode{font:inherit;font-size:12px;margin-left:6px;padding:2px 4px;border:1px solid var(--artifact-border-dark);border-radius:4px;background:var(--artifact-background-light);color:inherit}
 .unm-outline{fill:none;pointer-events:none;vector-effect:non-scaling-stroke;stroke-width:1.9px;stroke-linejoin:round}
 .unm-outline.unm-del{stroke:#6a1bff}.unm-outline.unm-oth{stroke:#111}
@@ -7983,7 +7990,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.2.5'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.2.6'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -8609,7 +8616,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
   $('repClose').onclick=closeReport;
   $('repOverlay').addEventListener('click',e=>{if(e.target===$('repOverlay'))closeReport()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('repOverlay').classList.contains('hidden'))closeReport()});
-$('repHtml').onclick=()=>{if(reportCache)downloadBlob(new Blob([reportHtml(reportCache)],{type:'text/html'}),reportBase()+'.html')};
+  $('repHtml').onclick=()=>{if(reportCache)downloadBlob(new Blob([reportHtml(reportCache)],{type:'text/html'}),reportBase()+'.html')};
   $('repCsv').onclick=()=>{if(reportCache)downloadBlob(new Blob([reportCsv(reportCache)],{type:'text/csv'}),reportBase()+'.csv')};
   $('repJson').onclick=()=>{if(reportCache)downloadBlob(new Blob([JSON.stringify(reportCache,null,2)],{type:'application/json'}),reportBase()+'.json')};
   $('repPrint').onclick=()=>{try{const w=$('repFrame').contentWindow;w.focus();w.print()}catch(e){setStatus('Printing is not available here — use Download HTML and print that file.',true)}};
@@ -9508,7 +9515,7 @@ $('repHtml').onclick=()=>{if(reportCache)downloadBlob(new Blob([reportHtml(repor
       const lba = Number(target.dataset.lba);
       const titleText = target.getAttribute('data-title');
       const hexHtml = getSectorPreviewHTML(lba, disk);
-      customTooltip.innerHTML = '<strong style="font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;font-size:12.5px;display:block;margin-bottom:12px;white-space:normal;max-width:480px;line-height:1.4;color:var(--artifact-text-primary);font-weight:600;border-bottom:1px solid var(--artifact-border-light);padding-bottom:10px">' + esc(titleText) + '</strong>' + hexHtml;
+      customTooltip.innerHTML = '<strong style="font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;font-size:12.5px;display:block;margin-bottom:12px;white-space:normal;max-width:480px;line-height:1.4;color:var(--artifact-text-primary);font-weight:600;border-bottom:1px solid var(--artifact-border-light);padding-bottom:10px">' + esc(titleText) + '</strong>' + sectorOwnerHTML(lba) + hexHtml;
       customTooltip.classList.remove('hidden');
     }else if (target && target.classList.contains('rec-sec')) {
       customTooltip.innerHTML = '<div style="font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;font-size:12.5px;white-space:normal;max-width:420px;line-height:1.4;color:var(--artifact-text-primary);font-weight:600">' + esc(target.getAttribute('data-title')) + '</div>';
@@ -9542,6 +9549,117 @@ $('repHtml').onclick=()=>{if(reportCache)downloadBlob(new Blob([reportHtml(repor
     }
   });
 
+  /* Which file(s) own a sector: the same sector lists the "click a file" highlight uses, inverted once per loaded image (lba -> owners). */
+  let ownerCache = null;
+  function sectorOwnerIndex() {
+    const d = disk;
+    if (!d || !bytes) return null;
+    if (ownerCache && ownerCache.d === d && ownerCache.b === bytes) return ownerCache.m;
+    const m = new Map();
+    const isMac = !!(d.fsType && d.fsType.startsWith('MAC_'));
+    const add = (file, list, fork) => {
+      const seen = new Set(), L = [];
+      for (const l of list) if (!seen.has(l)) { seen.add(l); L.push(l); }
+      L.forEach((l, i) => { if (!m.has(l)) m.set(l, []); m.get(l).push({ f: file, i, n: L.length, fork }); });
+    };
+    for (const file of (d.fileEntries || [])) {
+      if (!file || file.deleted || file.virtual) continue;
+      try {
+        if (isMac) {
+          for (const fk of ['data', 'resource']) {
+            const list = [];
+            for (const sg of macForkSegmentList(file.macForks && file.macForks[fk])) {
+              const a = Math.floor(sg.offset / d.bps), b = Math.floor((sg.offset + sg.length - 1) / d.bps);
+              for (let l = a; l <= b && l < d.total; l++) if (l >= 0) list.push(l);
+            }
+            if (list.length) add(file, list, fk);
+          }
+        } else if (d.fsType === 'NEXTSTEP_UFS1') {
+          const segs = file.ufsSegments || ufsFileSegments(d.ufs, file.inode, file.size), list = [];
+          for (const sg of segs) {
+            if (sg.zero) continue;
+            const a = Math.floor(sg.offset / d.bps), b = Math.floor((sg.offset + sg.length - 1) / d.bps);
+            for (let l = a; l <= b && l < d.total; l++) if (l >= 0) list.push(l);
+          }
+          add(file, list);
+        } else if (d.fsType === 'SUN_TAR' || d.foreign) {
+          add(file, (file.chain || []).filter(l => Number.isInteger(l) && l >= 0 && l < d.total));
+        } else if (d.valid) {
+          const list = [];
+          for (const c of (file.chain || [])) {
+            if (c < 2) continue;
+            const first = clusterSector(c);
+            for (let o = 0; o < d.spc; o++) if (first + o < d.total && first + o < Math.floor(bytes.length / d.bps)) list.push(first + o);
+          }
+          add(file, list);
+        }
+      } catch (_) {}
+    }
+    ownerCache = { d, b: bytes, m };
+    return m;
+  }
+  function sectorOwnerHTML(lba) {
+    try {
+      const m = sectorOwnerIndex();
+      const own = m && m.get(lba);
+      const box = h => '<div style="font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;font-size:12px;white-space:normal;max-width:480px;line-height:1.45;margin-bottom:10px;color:var(--artifact-text-primary)">' + h + '</div>';
+      if (!own || !own.length) {
+        const nFiles = (disk.fileEntries || []).filter(f => f && !f.directory && !f.deleted && !f.virtual).length;
+        return box(nFiles ? '<span style="opacity:.75">File: none — not allocated to any listed file (system area, directory, free space or a deleted file)</span>' : '<span style="opacity:.75">File: none — no file list could be decoded for this image</span>');
+      }
+      const nf = v => Number(v).toLocaleString('en-US');
+      const rows = own.slice(0, 3).map(o => {
+        const f = o.f, isMac = !!(disk.fsType && disk.fsType.startsWith('MAC_'));
+        const bits = [];
+        bits.push((f.directory ? 'Folder ' : '') + '<b>' + esc(f.path || f.name) + '</b>');
+        bits.push((o.fork ? o.fork + ' fork ' : '') + 'sector ' + nf(o.i + 1) + ' of ' + nf(o.n));
+        if (!f.directory) {
+          if (isMac) {
+            const sz = [];
+            if (f.size !== undefined && f.size !== null) sz.push(nf(f.size) + ' B data');
+            if (f.resourceSize) sz.push(nf(f.resourceSize) + ' B resource');
+            if (sz.length) bits.push(sz.join(' + '));
+          } else if (f.size !== undefined && f.size !== null) bits.push(nf(f.size) + ' bytes');
+        }
+        if (f.modified) bits.push('modified ' + esc(String(f.modified)));
+        if (f.created && f.created !== f.modified) bits.push('created ' + esc(String(f.created)));
+        if (f.macType || f.macCreator) bits.push('type ' + esc(String(f.macType || '')) + ' / creator ' + esc(String(f.macCreator || '')));
+        if (f.kind && String(f.kind).length <= 40 && !f.directory) bits.push(esc(String(f.kind)));
+        return bits.join(' · ');
+      });
+      const more = own.length > 3 ? '<div>… and ' + (own.length - 3) + ' more file(s) share this sector</div>' : '';
+      const lead = own.length > 1 ? '<div style="font-weight:600">Shared by ' + own.length + ' files (cross-linked)</div>' : '';
+      return '<div style="font-family:Inter,-apple-system,BlinkMacSystemFont,\'Segoe UI\',sans-serif;font-size:12px;white-space:normal;max-width:480px;line-height:1.45;margin-bottom:10px;color:var(--artifact-text-primary)">' + lead + rows.map(r => '<div>' + r + '</div>').join('') + more + '</div>';
+    } catch (_) { return ''; }
+  }
+  /* Click a sector: select (or, if already selected, deselect) the file that owns it, exactly like clicking that file in the file browser. */
+  function toggleFileFromSector(lba) {
+    try {
+      const m = sectorOwnerIndex();
+      const own = (m && m.get(lba) || []).filter(o => o && o.f && !o.f.directory && !o.f.virtual && !o.f.deleted);
+      if (!own.length) {
+        /* sector belongs to no file: drop the previous file selection and select just this sector */
+        if (selectedFile || selectedFileSectors.size) { selectFile(null); showSector(lba); return true; }
+        return false;
+      }
+      const same = (a, b) => !!a && !!b && (a === b || (a.path !== undefined && a.path === b.path && !!a.directory === !!b.directory));
+      const cur = own.find(o => same(o.f, selectedFile));
+      if (cur && selectedFileSectors.has(lba)) {
+        selectFile(null);
+        showSector(lba);
+        return true;
+      }
+      const f0 = own[0].f, list = browseList();
+      selectFile(list.find(x => x === f0) || list.find(x => x.path === f0.path && !x.directory) || f0);
+      /* selectFile jumps to the file's first sector/cluster; bring the inspector back to the sector that was clicked */
+      if (selectedFile && disk.valid && !disk.foreign && lba >= disk.dataStart) {
+        const cluster = 2 + Math.floor((lba - disk.dataStart) / disk.spc);
+        if ((selectedFile.chain || []).includes(cluster)) selectCluster(cluster);
+      }
+      showSector(lba);
+      return true;
+    } catch (_) { return false; }
+  }
   function getSectorPreviewHTML(n, d) {
     if (!bytes || !d || !d.bps) return '';
     const start = n * d.bps;
@@ -9582,7 +9700,7 @@ $('repHtml').onclick=()=>{if(reportCache)downloadBlob(new Blob([reportHtml(repor
       let s = '';
       for (let i = start; i < start + len && offset + i < bytes.length; i++) {
         if (bytes[offset + i] === 0) break;
-        s += String.fromCharCode(bytes[offset+ i]);
+        s += String.fromCharCode(bytes[offset + i]);
       }
       return s;
     }
@@ -9842,13 +9960,15 @@ $('repHtml').onclick=()=>{if(reportCache)downloadBlob(new Blob([reportHtml(repor
   function macDecodeText(source,offset,length){let out='';for(let i=0;i<length&&offset+i<source.length;i++){const b=source[offset+i];out+=b<128?String.fromCharCode(b):MAC_ROMAN_HIGH[b-128]}return out.replace(/\u0000+$/g,'').trim()}
   function macTextAt(offset,length){return macDecodeText(bytes,offset,length)}
   function macU16(offset){return offset>=0&&offset+2<=bytes.length?view.getUint16(offset,false):0}
+  /* Mac timestamps are seconds since 1904-01-01 (local time, no zone stored); 0 means not set */
+  function macDateStr(sec){if(!sec)return '';const dt=new Date(Date.UTC(1904,0,1)+sec*1000);if(isNaN(dt))return '';const z=n=>String(n).padStart(2,'0');return dt.getUTCFullYear()+'-'+z(dt.getUTCMonth()+1)+'-'+z(dt.getUTCDate())+' '+z(dt.getUTCHours())+':'+z(dt.getUTCMinutes())}
   function macU32(offset){return offset>=0&&offset+4<=bytes.length?view.getUint32(offset,false):0}
   function macMfsMapValue(fs,block){if(block<2||block>=fs.allocBlocks+2)return 0;const index=block-2,pair=fs.mdb+64+Math.floor(index/2)*3;if(pair+2>=fs.mdb+1024||pair+2>=bytes.length)return 0;const a=bytes[pair],b=bytes[pair+1],c=bytes[pair+2];return index%2?((b&15)<<8)|c:(a<<4)|(b>>4)}
   function macMfsBlocks(fs,first,size){if(!first||!size)return [];const blocks=[],seen=new Set(),needed=Math.ceil(size/fs.allocBlockSize);let block=first;for(let guard=0;guard<fs.allocBlocks&&blocks.length<needed;guard++){if(block<2||block>=fs.allocBlocks+2||seen.has(block))throw Error('MFS allocation chain is invalid or cyclic.');seen.add(block);blocks.push(block);const next=macMfsMapValue(fs,block);if(next===1)break;if(next<2||next>=fs.allocBlocks+2)throw Error('MFS allocation map contains an invalid next-block reference.');block=next}if(blocks.length<needed)throw Error('MFS allocation chain is shorter than the fork size.');return blocks}
   function macMfsFork(fs,first,size){return {kind:'mfs',size,blocks:macMfsBlocks(fs,first,size),fs}}
   function macForkSegmentList(fork){if(!fork||!fork.size)return [];if(fork.kind==='mfs')return fork.blocks.map(block=>({offset:fork.fs.allocStart*512+(block-2)*fork.fs.allocBlockSize,length:fork.fs.allocBlockSize}));return (fork.extents||[]).filter(e=>e.count>0).map(e=>({offset:fork.fs.allocBase+e.start*fork.fs.allocBlockSize,length:e.count*fork.fs.allocBlockSize}))}
   function macReadFork(fork,limit){const wanted=Math.min(fork.size,limit===undefined?fork.size:Math.max(0,limit)),out=new Uint8Array(wanted);let written=0;for(const segment of macForkSegmentList(fork)){if(written>=wanted)break;const take=Math.min(segment.length,wanted-written);if(segment.offset<0||segment.offset+take>bytes.length)throw Error('Macintosh fork extent points outside the image.');out.set(bytes.subarray(segment.offset,segment.offset+take),written);written+=take}if(written<wanted)throw Error('Macintosh fork extents ended before the recorded size.');return out}
-  function parseMfsDirectory(fs){const entries=[];for(let block=fs.dirStart;block<fs.dirStart+fs.dirLength;block++){const base=block*512;if(base<0||base+512>bytes.length)break;for(let p=0;p+51<=512;){const flags=bytes[base+p];if(!(flags&0x80))break;const nameLength=bytes[base+p+50];if(nameLength>255||p+51+nameLength>512)break;const name=macSeg(macTextAt(base+p+51,nameLength)||('Untitled '+(entries.length+1))),dataSize=macU32(base+p+24),resourceSize=macU32(base+p+34),dataStart=macU16(base+p+22),resourceStart=macU16(base+p+32);let dataFork,resourceFork;try{dataFork=macMfsFork(fs,dataStart,dataSize)}catch(_){dataFork={kind:'mfs',size:dataSize,blocks:[],fs}}try{resourceFork=macMfsFork(fs,resourceStart,resourceSize)}catch(_){resourceFork={kind:'mfs',size:resourceSize,blocks:[],fs}}const item={name,path:name,size:dataSize,resourceSize,directory:false,fileId:macU32(base+p+18),cluster:dataStart,chain:dataFork.blocks,macForks:{data:dataFork,resource:resourceFork},macType:macTextAt(base+p+2,4),macCreator:macTextAt(base+p+6,4),created:macU32(base+p+42),modified:macU32(base+p+46)};entries.push(item);p+=Math.ceil((51+nameLength)/2)*2}}return entries}
+  function parseMfsDirectory(fs){const entries=[];for(let block=fs.dirStart;block<fs.dirStart+fs.dirLength;block++){const base=block*512;if(base<0||base+512>bytes.length)break;for(let p=0;p+51<=512;){const flags=bytes[base+p];if(!(flags&0x80))break;const nameLength=bytes[base+p+50];if(nameLength>255||p+51+nameLength>512)break;const name=macSeg(macTextAt(base+p+51,nameLength)||('Untitled '+(entries.length+1))),dataSize=macU32(base+p+24),resourceSize=macU32(base+p+34),dataStart=macU16(base+p+22),resourceStart=macU16(base+p+32);let dataFork,resourceFork;try{dataFork=macMfsFork(fs,dataStart,dataSize)}catch(_){dataFork={kind:'mfs',size:dataSize,blocks:[],fs}}try{resourceFork=macMfsFork(fs,resourceStart,resourceSize)}catch(_){resourceFork={kind:'mfs',size:resourceSize,blocks:[],fs}}const item={name,path:name,size:dataSize,resourceSize,directory:false,fileId:macU32(base+p+18),cluster:dataStart,chain:dataFork.blocks,macForks:{data:dataFork,resource:resourceFork},macType:macTextAt(base+p+2,4),macCreator:macTextAt(base+p+6,4),created:macDateStr(macU32(base+p+42)),modified:macDateStr(macU32(base+p+46))};entries.push(item);p+=Math.ceil((51+nameLength)/2)*2}}return entries}
   function hfsExtentRecord(offset,source){const extents=[],data=source||bytes;for(let i=0;i<3;i++){const start=(data[offset+i*4]<<8)|data[offset+i*4+1],count=(data[offset+i*4+2]<<8)|data[offset+i*4+3];if(count)extents.push({start,count})}return extents}
   function hfsReadExtentBytes(fs,extents,size){const fork={kind:'hfs',size,extents,fs};return macReadFork(fork)}
   function hfsLeafRecords(data,nodeSize,firstLeaf){const records=[],seen=new Set();let node=firstLeaf;for(let guard=0;node&&guard<100000;guard++){if(seen.has(node))throw Error('HFS catalog leaf chain is cyclic.');seen.add(node);const base=node*nodeSize;if(base<0||base+nodeSize>data.length)throw Error('HFS B-tree leaf points outside the catalog file.');const kind=data[base+8],count=(data[base+10]<<8)|data[base+11];if(kind!==0xff)throw Error('HFS B-tree leaf node has an unexpected type.');const table=base+nodeSize-2*(count+1);if(table<base+14)throw Error('HFS B-tree record table is invalid.');for(let i=0;i<count;i++){const start=base+(data[base+nodeSize-2*(i+1)]<<8|data[base+nodeSize-2*(i+1)+1]),end=base+(data[base+nodeSize-2*(i+2)]<<8|data[base+nodeSize-2*(i+2)+1]);if(start<base+14||end<start||end>base+nodeSize)continue;records.push({data,start,end})}node=(data[base]<<24|data[base+1]<<16|data[base+2]<<8|data[base+3])>>>0}return records}
@@ -9856,7 +9976,7 @@ $('repHtml').onclick=()=>{if(reportCache)downloadBlob(new Blob([reportHtml(repor
   function hfsParseOverflow(fs){if(!fs.extentsSize||!fs.extentsExtents.some(e=>e.count))return new Map();try{const tree=hfsReadBtree(fs,fs.extentsExtents,fs.extentsSize),records=hfsLeafRecords(tree.data,tree.nodeSize,tree.firstLeaf),map=new Map();for(const item of records){const {data,start,end}=item;if(start+8>end)continue;const keyLength=data[start],forkType=data[start+1],fileId=(data[start+2]*0x1000000+data[start+3]*0x10000+data[start+4]*256+data[start+5])>>>0,logicalStart=(data[start+6]<<8)|data[start+7],recordStart=start+Math.ceil((1+keyLength)/2)*2;if(recordStart+12>end)continue;map.set(fileId+':'+forkType+':'+logicalStart,hfsExtentRecord(recordStart,data))}return map}catch(_){return new Map()}}
   function hfsAddOverflow(extents,fileId,forkType,overflow){let total=extents.reduce((n,e)=>n+e.count,0);for(let guard=0;guard<1024;guard++){const extra=overflow.get(fileId+':'+forkType+':'+total);if(!extra||!extra.length)break;extents.push(...extra);const next=extents.reduce((n,e)=>n+e.count,0);if(next<=total)break;total=next}return extents}
   function macSeg(n){return String(n).replace(/\//g,'\u2215')}
-  function parseHfsCatalog(fs){const overflow=hfsParseOverflow(fs),catExtents=hfsAddOverflow(fs.catalogExtents.map(e=>({start:e.start,count:e.count})),4,0,overflow) /* the MDB holds only the first 3 catalog extents; a fragmented catalog continues in the extents-overflow file under CNID 4 */,tree=(fs.catalogExtents=catExtents,hfsReadBtree(fs,catExtents,fs.catalogSize)),records=hfsLeafRecords(tree.data,tree.nodeSize,tree.firstLeaf),folders=new Map([[2,{name:'',parent:1}]]),items=[];for(const item of records){const {data,start,end}=item;if(start+8>end)continue;const keyLength=data[start],parent=(data[start+2]*0x1000000+data[start+3]*0x10000+data[start+4]*256+data[start+5])>>>0,nameLength=data[start+6];if(nameLength>31||start+7+nameLength>end)continue;const name=macSeg(macDecodeText(data,start+7,nameLength)),recordStart=start+Math.ceil((1+keyLength)/2)*2;if(recordStart+2>end)continue;const type=(data[recordStart]<<8)|data[recordStart+1];if(type===0x0100&&recordStart+10<=end){const folderId=(data[recordStart+6]*0x1000000+data[recordStart+7]*0x10000+data[recordStart+8]*256+data[recordStart+9])>>>0;if(folderId===2)continue;folders.set(folderId,{name,parent});items.push({name,path:name,directory:true,fileId:folderId,size:0,resourceSize:0,cluster:0,chain:[],macFolderId:folderId,macParentId:parent})}else if(type===0x0200&&recordStart+98<=end){const fileId=(data[recordStart+20]*0x1000000+data[recordStart+21]*0x10000+data[recordStart+22]*256+data[recordStart+23])>>>0,dataSize=(data[recordStart+26]*0x1000000+data[recordStart+27]*0x10000+data[recordStart+28]*256+data[recordStart+29])>>>0,resourceSize=(data[recordStart+36]*0x1000000+data[recordStart+37]*0x10000+data[recordStart+38]*256+data[recordStart+39])>>>0,dataExtents=hfsAddOverflow(hfsExtentRecord(recordStart+74,data),fileId,0,overflow),resourceExtents=hfsAddOverflow(hfsExtentRecord(recordStart+86,data),fileId,0xff,overflow);const macPath=(parentId,leaf)=>{const parts=[leaf];let id=parentId,guard=0;while(id>2&&guard++<64){const f=folders.get(id);if(!f)break;if(f.name)parts.unshift(f.name);id=f.parent}return parts.join('/')};const dataFork={kind:'hfs',size:dataSize,extents:dataExtents,fs},resourceFork={kind:'hfs',size:resourceSize,extents:resourceExtents,fs};items.push({name,path:macPath(parent,name),macParentId:parent,size:dataSize,resourceSize,directory:false,fileId,cluster:dataExtents[0]?.start||0,chain:[],macForks:{data:dataFork,resource:resourceFork},macType:macDecodeText(data,recordStart+4,4),macCreator:macDecodeText(data,recordStart+8,4)})}}for(const it of items){const parts=[it.name];let id=it.macParentId,guard=0;while(id>2&&guard++<64){const fo=folders.get(id);if(!fo)break;if(fo.name)parts.unshift(fo.name);id=fo.parent}it.path=parts.join('/')}return items}
+  function parseHfsCatalog(fs){const overflow=hfsParseOverflow(fs),catExtents=hfsAddOverflow(fs.catalogExtents.map(e=>({start:e.start,count:e.count})),4,0,overflow) /* the MDB holds only the first 3 catalog extents; a fragmented catalog continues in the extents-overflow file under CNID 4 */,tree=(fs.catalogExtents=catExtents,hfsReadBtree(fs,catExtents,fs.catalogSize)),records=hfsLeafRecords(tree.data,tree.nodeSize,tree.firstLeaf),folders=new Map([[2,{name:'',parent:1}]]),items=[];for(const item of records){const {data,start,end}=item;if(start+8>end)continue;const keyLength=data[start],parent=(data[start+2]*0x1000000+data[start+3]*0x10000+data[start+4]*256+data[start+5])>>>0,nameLength=data[start+6];if(nameLength>31||start+7+nameLength>end)continue;const name=macSeg(macDecodeText(data,start+7,nameLength)),recordStart=start+Math.ceil((1+keyLength)/2)*2;if(recordStart+2>end)continue;const type=(data[recordStart]<<8)|data[recordStart+1];if(type===0x0100&&recordStart+10<=end){const folderId=(data[recordStart+6]*0x1000000+data[recordStart+7]*0x10000+data[recordStart+8]*256+data[recordStart+9])>>>0;if(folderId===2)continue;folders.set(folderId,{name,parent});items.push({name,path:name,directory:true,fileId:folderId,size:0,resourceSize:0,cluster:0,chain:[],macFolderId:folderId,macParentId:parent,created:macDateStr(((data[recordStart+10]*0x1000000+data[recordStart+11]*0x10000+data[recordStart+12]*256+data[recordStart+13])>>>0)),modified:macDateStr(((data[recordStart+14]*0x1000000+data[recordStart+15]*0x10000+data[recordStart+16]*256+data[recordStart+17])>>>0))})}else if(type===0x0200&&recordStart+98<=end){const fileId=(data[recordStart+20]*0x1000000+data[recordStart+21]*0x10000+data[recordStart+22]*256+data[recordStart+23])>>>0,dataSize=(data[recordStart+26]*0x1000000+data[recordStart+27]*0x10000+data[recordStart+28]*256+data[recordStart+29])>>>0,resourceSize=(data[recordStart+36]*0x1000000+data[recordStart+37]*0x10000+data[recordStart+38]*256+data[recordStart+39])>>>0,dataExtents=hfsAddOverflow(hfsExtentRecord(recordStart+74,data),fileId,0,overflow),resourceExtents=hfsAddOverflow(hfsExtentRecord(recordStart+86,data),fileId,0xff,overflow);const macPath=(parentId,leaf)=>{const parts=[leaf];let id=parentId,guard=0;while(id>2&&guard++<64){const f=folders.get(id);if(!f)break;if(f.name)parts.unshift(f.name);id=f.parent}return parts.join('/')};const dataFork={kind:'hfs',size:dataSize,extents:dataExtents,fs},resourceFork={kind:'hfs',size:resourceSize,extents:resourceExtents,fs};items.push({name,path:macPath(parent,name),macParentId:parent,size:dataSize,resourceSize,directory:false,fileId,cluster:dataExtents[0]?.start||0,chain:[],macForks:{data:dataFork,resource:resourceFork},macType:macDecodeText(data,recordStart+4,4),macCreator:macDecodeText(data,recordStart+8,4),created:macDateStr(((data[recordStart+44]*0x1000000+data[recordStart+45]*0x10000+data[recordStart+46]*256+data[recordStart+47])>>>0)),modified:macDateStr(((data[recordStart+48]*0x1000000+data[recordStart+49]*0x10000+data[recordStart+50]*256+data[recordStart+51])>>>0))})}}for(const it of items){const parts=[it.name];let id=it.macParentId,guard=0;while(id>2&&guard++<64){const fo=folders.get(id);if(!fo)break;if(fo.name)parts.unshift(fo.name);id=fo.parent}it.path=parts.join('/')}return items}
   /* Volume labels come straight from on-disk bytes: drop blank / default / non-printable (garbage) labels */
   function cleanVolLabel(v){
     v=String(v==null?'':v).replace(/[\x00\x20]+$/,'').replace(/^\x20+/,'');
@@ -10392,7 +10512,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     else if(L.synth)$('mapcaption').textContent='Each ring is one track of the CPC DSK, sectors in the order the container lists them (interleave and per-track sector counts and sizes are real; cylinder 0 side 1 holds 16 short sectors). A DSK file has no timing, so positions and gaps are modelled from standard MFM byte counts, not measured. Select a sector to inspect its bytes.';
     else if(L.aligned)$('mapcaption').textContent='Aligned view: each ring is one track, sectors in logical order from the top, equally spaced. Positions, interleave and gap lengths are not to scale; hover for the physical angle. Select a sector to inspect its bytes.';
     else $('mapcaption').textContent='Each ring is one track as recorded: sectors are drawn at their real position after the index mark (top, clockwise). Dark areas are gaps. Select a sector to inspect its bytes.'+(tracks.some(t=>t.indexed===false)?' This source has no index mark, so each track starts at an arbitrary point and angles are only relative.':'');
-    host.onclick=e=>{const hit=e.target.closest('.rec-sec[data-lba]');if(!hit)return;const lba=Number(hit.dataset.lba);showSector(lba);if(selectedFile&&disk.valid&&lba>=disk.dataStart){const cluster=2+Math.floor((lba-disk.dataStart)/disk.spc);if((selectedFile.chain||[]).includes(cluster))selectCluster(cluster)}};
+    host.onclick=e=>{const hit=e.target.closest('.rec-sec[data-lba]');if(!hit)return;const lba=Number(hit.dataset.lba);if(toggleFileFromSector(lba))return;showSector(lba);if(selectedFile&&disk.valid&&lba>=disk.dataStart){const cluster=2+Math.floor((lba-disk.dataStart)/disk.spc);if((selectedFile.chain||[]).includes(cluster))selectCluster(cluster)}};
   }
 
   /* ---------- unmapped data on the disk layout ---------- */
@@ -10405,6 +10525,68 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     unmCache={d:disk,b:bytes,v};return v;
   }
   function unmLabel(s){return s.del?'leftover from deleted file '+s.file:'not owned by any file'}
+  /* While a file is selected, dim every other sector (one veil path per disk side) so the file's sectors stand out on dense disks. */
+  function fileInfoHTML(f){
+    try{
+      const nf=v=>Number(v).toLocaleString('en-US'),isMac=!!(disk&&disk.fsType&&disk.fsType.startsWith('MAC_'));
+      const meta=[];
+      if(!f.directory){
+        if(isMac){const sz=[];if(f.size!==undefined&&f.size!==null)sz.push(nf(f.size)+' B data');if(f.resourceSize)sz.push(nf(f.resourceSize)+' B resource');if(sz.length)meta.push(sz.join(' + '))}
+        else if(f.size!==undefined&&f.size!==null)meta.push(nf(f.size)+' bytes');
+      }
+      meta.push(nf(selectedFileSectors.size)+' sector'+(selectedFileSectors.size===1?'':'s'));
+      if(f.modified)meta.push('modified '+esc(String(f.modified)));
+      if(f.created&&f.created!==f.modified)meta.push('created '+esc(String(f.created)));
+      if(f.macType||f.macCreator)meta.push('type '+esc(String(f.macType||''))+' / creator '+esc(String(f.macCreator||'')));
+      if(f.kind&&String(f.kind).length<=40&&!f.directory)meta.push(esc(String(f.kind)));
+      return '<div class="fi-line fi-name">'+esc(f.path||f.name||'')+'</div><div class="fi-line fi-meta">'+meta.join(' · ')+'</div>';
+    }catch(_){return ''}
+  }
+  /* Fixed-height "selected file" box under each disk side's title (side 0 shows the info; other sides get an invisible spacer so the disks stay aligned). */
+  function syncFileInfoBanner(){
+    try{
+      const host=$('diskSurfaces');if(!host)return;
+      const has=!!(selectedFile&&selectedFileSectors&&selectedFileSectors.size);
+      host.querySelectorAll('.diskside').forEach((sd,i)=>{
+        let fb=sd.querySelector(':scope > .file-info-banner');
+        if(!fb){
+          fb=document.createElement('div');fb.className='file-info-banner';
+          if(i===0){fb.id='fileInfoBanner';fb.dataset.gleanId='selected-file-info';fb.setAttribute('role','status')}
+          else{fb.classList.add('fi-spacer');fb.setAttribute('aria-hidden','true');fb.innerHTML='<div class="fi-line">&nbsp;</div><div class="fi-line">&nbsp;</div>'}
+          const t=sd.querySelector('.side-title');if(t)t.after(fb);else sd.prepend(fb);
+        }
+        if(i!==0)return;
+        if(has){fb.innerHTML=fileInfoHTML(selectedFile);fb.title=fb.textContent}
+        else{fb.innerHTML='<div class="fi-line fi-none">No file selected</div><div class="fi-line fi-none">Click a sector or a file to see its details here</div>';fb.removeAttribute('title')}
+      });
+    }catch(_){}
+  }
+  let fileVeilQueued=false;
+  function applyFileVeil(){
+    if(fileVeilQueued)return;fileVeilQueued=true;
+    const run=()=>{fileVeilQueued=false;applyFileVeilNow()};
+    if(typeof requestAnimationFrame==='function')requestAnimationFrame(run);else setTimeout(run,0);
+  }
+  function applyFileVeilNow(){
+    try{
+      const host=$('diskSurfaces');if(!host)return;
+      host.querySelectorAll('.file-veil').forEach(x=>x.remove());
+      host.classList.toggle('file-dim',!!(selectedFileSectors&&selectedFileSectors.size));
+      syncFileInfoBanner();
+      if(!selectedFileSectors||!selectedFileSectors.size)return;
+      const per=new Map();
+      host.querySelectorAll('.rec-sec, .disk-sector').forEach(el=>{
+        if(el.classList.contains('file-highlight')||el.classList.contains('selected'))return;
+        const d=el.getAttribute('d');if(!d)return;
+        const svg=el.ownerSVGElement||el.closest('svg');if(!svg)return;
+        per.set(svg,(per.get(svg)||'')+d+' ');
+      });
+      per.forEach((d,svg)=>{
+        const v=document.createElementNS('http://www.w3.org/2000/svg','path');
+        v.setAttribute('d',d);v.setAttribute('class','file-veil');svg.appendChild(v);
+      });
+    }catch(_){}
+  }
   function applyUnmappedOverlay(){
     try{
       const host=$('diskSurfaces');if(!host)return;
@@ -10828,7 +11010,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
   }catch(_){}
   function renderDiskLayout(){
     renderDiskLayoutBase();setupHubs();setupZoom();
-    refreshUnmappedUI();applyUnmappedOverlay();updateUnmBanner(selectedSector);
+    refreshUnmappedUI();applyUnmappedOverlay();syncFileInfoBanner();applyFileVeil();updateUnmBanner(selectedSector);
   }
   try{
     $('recAlign').onchange=e=>{recAlign=e.target.checked?'aligned':'rec';renderDiskLayout()};
@@ -10849,7 +11031,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     const cylinders=Math.max(1,Math.ceil(d.total/(d.spt*d.heads))),drawCylinders=Math.min(cylinders,160),shownSectors=Math.min(d.spt,128),outer=108,inner=24,band=(outer-inner)/drawCylinders,densityLevels=buildSectorDensity(d),badClusters=buildBadClusterSet(d),usedBadSet=badClusters.size?usedBadClusters(d):new Set();
     for(let h=0;h<2;h++){let paths='';if(h<d.heads){for(let c=0;c<drawCylinders;c++){const ro=outer-c*band,ri=outer-(c+1)*band;for(let s=0;s<shownSectors;s++){const lba=(c*d.heads+h)*d.spt+s;if(lba>=d.total)continue;const region=d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors),kind=region?region.kind:'data',density=densityLevels.get(lba)||{isF6:false,isBadContent:false,percent:0,nonzero:0,byteCount:d.bps};const isFiller=density.isF6,cluster=lba>=d.dataStart?2+Math.floor((lba-d.dataStart)/d.spc):-1,isBad=(badClusters.has(cluster)&&usedBadSet.has(cluster))||density.isBadContent,softBad=!isBad&&badClusters.has(cluster),a0=-Math.PI/2+s*2*Math.PI/d.spt,a1=-Math.PI/2+(s+1)*2*Math.PI/d.spt,tooltipF6=isFiller?' · Filler (0xF6)':'',tooltipBad=isBad?' · Bad sector (red)':softBad?' · Bad cluster marked in the FAT, reads OK (tinted red)':'';paths+='<path class="disk-sector '+kind+(lba===selectedSector?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':'')+'" data-lba="'+lba+'" data-glean-id="disk-sector-'+lba+'" aria-label="Side '+h+', cylinder '+c+', sector '+(s+1)+', LBA '+lba+', '+density.percent+' percent non-zero bytes'+(isBad?', bad sector shown in red':softBad?', bad cluster in the FAT shown tinted red':'')+'" data-title="Side '+h+' · cylinder '+c+' · sector '+(s+1)+' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:'')+tooltipBad+tooltipF6+'" style="fill:transparent !important;" d="'+sectorArc(ri,ro,a0,a1)+'"></path>'}}}
       const guides=h<d.heads?'':'<text class="side-empty" x="120" y="120">NO HEAD</text>';host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="disk-side-'+h+'"><div class="side-title"><span>Disk side '+h+'</span><span>HEAD '+h+(h<d.heads?' · '+cylinders+' TRACKS':' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<d.heads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+' showing '+(h<d.heads?cylinders+' concentric tracks and '+d.spt+' sectors per track':'no decoded head')+'">'+paths+guides+'<circle class="hub" cx="120" cy="120" r="22"/><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">CYL / SECTOR</text></svg></div></div>');if(h<d.heads)drawCanvasWedges(h,d,drawCylinders,shownSectors,outer,inner,densityLevels,badClusters,null)}
-    $('mapstart').textContent=cylinders+' cylinders · '+d.heads+' head'+(d.heads===1?'':'s');$('mapend').textContent='Select a sector wedge to inspect its LBA'+(cylinders>drawCylinders?' · first '+drawCylinders+' tracks shown':'')+(d.spt>shownSectors?' · first '+shownSectors+' sectors shown':'');host.onclick=e=>{const hit=e.target.closest('.disk-sector[data-lba]');if(!hit)return;const lba=Number(hit.dataset.lba);showSector(lba);if(selectedFile&&disk.valid&&lba>=disk.dataStart){const cluster=2+Math.floor((lba-disk.dataStart)/disk.spc);if((selectedFile.chain||[]).includes(cluster))selectCluster(cluster)}};
+    $('mapstart').textContent=cylinders+' cylinders · '+d.heads+' head'+(d.heads===1?'':'s');$('mapend').textContent='Select a sector wedge to inspect its LBA'+(cylinders>drawCylinders?' · first '+drawCylinders+' tracks shown':'')+(d.spt>shownSectors?' · first '+shownSectors+' sectors shown':'');host.onclick=e=>{const hit=e.target.closest('.disk-sector[data-lba]');if(!hit)return;const lba=Number(hit.dataset.lba);if(toggleFileFromSector(lba))return;showSector(lba);if(selectedFile&&disk.valid&&lba>=disk.dataStart){const cluster=2+Math.floor((lba-disk.dataStart)/disk.spc);if((selectedFile.chain||[]).includes(cluster))selectCluster(cluster)}};
   }
 function clusterRawStats(cluster){const start=clusterSector(cluster)*disk.bps,end=Math.min(bytes.length,start+disk.spc*disk.bps);let nonzero=0;for(let i=start;i<end;i++)if(bytes[i]!==0)nonzero++;const total=Math.max(0,end-start),ratio=total?nonzero/total:0;return {nonzero,total,percent:Math.round(ratio*100)}}
   function describeFatLink(cluster,nextExpected,chainSet){const value=fatValue(cluster),type=disk.fatType,eoc=type==='FAT12'?0xff8:type==='FAT16'?0xfff8:0x0ffffff8,bad=type==='FAT12'?0xff7:type==='FAT16'?0xfff7:0x0ffffff7,resStart=type==='FAT12'?0xff0:type==='FAT16'?0xfff0:0x0ffffff0,resEnd=eoc-2;if(value>=eoc)return nextExpected===null?'End of chain':'End marker; expected cluster '+fmt(nextExpected);if(value===bad)return 'Bad-cluster marker';if(value>=resStart&&value<=resEnd)return 'Reserved marker';if(value===0)return 'Free FAT entry';if(value<2)return 'Invalid link';if(nextExpected!==null&&value===nextExpected)return 'Next → '+fmt(value);if(chainSet.has(value))return 'Cycle → '+fmt(value);if(value>=disk.clusters+2)return 'Out of range → '+fmt(value);return nextExpected===null?'Continues → '+fmt(value):'Link mismatch → '+fmt(value)}
@@ -11771,7 +11953,7 @@ if(disk&&disk.foreign){cols.push({key:'kind',label:disk.kindLabel||'Type'});if(d
     const live=files.map((f,i)=>[f,i]).filter(([f])=>!f.directory&&(!f.deleted||fsShowDeleted)).map(([,i])=>i);
     const all=live.length, liveSel=live.filter(i=>selectedExportFiles.has(i)).length;
     if($('selectAllFiles')) {
-$('selectAllFiles').disabled=all===0&&!files.some(f=>f.directory&&!f.deleted);
+      $('selectAllFiles').disabled=all===0&&!files.some(f=>f.directory&&!f.deleted);
       $('selectAllFiles').checked=all>0&&liveSel===all;
       $('selectAllFiles').indeterminate=count>0&&!(all>0&&liveSel===all);
     }
@@ -11834,12 +12016,14 @@ $('selectAllFiles').disabled=all===0&&!files.some(f=>f.directory&&!f.deleted);
       currentFolderPath = file.path;
       if (file.archive) { $('fileSelection').textContent = 'Opened ' + file.name + ' · ' + file.archiveType + ' archive'; updateFilePreview(file); }
       renderDirectoryView();
+      applyFileVeil();
       return;
     }
     if (file && file.virtual) { /* an entry inside an opened archive: no sectors of its own */
       const isMacV = !!(disk && disk.fsType && disk.fsType.startsWith('MAC_'));
       if (disk && (disk.fsType === 'NEXTSTEP_UFS1' || disk.fsType === 'SUN_TAR' || isMacV || trackMapped(disk))) renderDiskLayout();
       else document.querySelectorAll('.disk-sector[data-lba]').forEach(path => { path.classList.remove('file-highlight', 'cluster-current'); });
+      applyFileVeil();
       $('fileSelection').textContent = 'Selected ' + file.name + ' · inside an archive, so it has no sectors of its own';
       renderClusterChain(null);
       updateFilePreview(file);
@@ -11849,7 +12033,7 @@ $('selectAllFiles').disabled=all===0&&!files.some(f=>f.directory&&!f.deleted);
     }
 
     const isMac=!!(file&&disk&&disk.fsType&&disk.fsType.startsWith('MAC_'));
-    if(file&&isMac){for(const forkName of ['data','resource'])for(const segment of macForkSegmentList(file.macForks&&file.macForks[forkName])){const first=Math.floor(segment.offset/disk.bps),last=Math.floor((segment.offset+segment.length-1)/disk.bps);for(let lba=first;lba<=last&&lba<disk.total;lba++)if(lba>=0)selectedFileSectors.add(lba)}}else if(file&&disk&&disk.fsType==='NEXTSTEP_UFS1'){try{file.ufsSegments=file.ufsSegments||ufsFileSegments(disk.ufs,file.inode,file.size);for(const segment of file.ufsSegments){if(segment.zero)continue;const first=Math.floor(segment.offset/disk.bps),last=Math.floor((segment.offset+segment.length-1)/disk.bps);for(let lba=first;lba<=last&&lba<disk.total;lba++)if(lba>=0)selectedFileSectors.add(lba)}}catch(_){file.ufsSegments=[]}}else if(file&&disk&&disk.fsType==='SUN_TAR'){for(const lba of (file.chain||[]))if(lba>=0&&lba<disk.total)selectedFileSectors.add(lba);}else if(file&&disk&&disk.foreign){for(const lba of (file.chain||[]))if(Number.isInteger(lba)&&lba>=0&&lba<disk.total)selectedFileSectors.add(lba)}else if(file&&disk&&disk.valid){for(const cluster of (file.chain||[])){if(cluster<2)continue;const first=clusterSector(cluster);for(let offset=0;offset<disk.spc;offset++){const lba=first+offset;if(lba<disk.total&&lba<Math.floor(bytes.length/disk.bps))selectedFileSectors.add(lba)}}}if(disk&&(disk.fsType==='NEXTSTEP_UFS1'||disk.fsType==='SUN_TAR'||isMac||trackMapped(disk)))renderDiskLayout();else document.querySelectorAll('.disk-sector[data-lba]').forEach(path=>{path.classList.toggle('file-highlight',selectedFileSectors.has(Number(path.dataset.lba)));path.classList.remove('cluster-current')});$('fileSelection').textContent=file?(isMac?'Selected '+file.name+' · file ID '+fmt(file.fileId||0)+' · '+fmt(selectedFileSectors.size)+' sectors':disk&&disk.fsType==='NEXTSTEP_UFS1'?'Selected '+file.name+' · inode '+fmt(file.inode)+' · '+(file.ufsSegments||[]).length+' extents · '+selectedFileSectors.size+' sectors':'Selected '+file.name+' · '+(file.chain||[]).length+' sectors/clusters · '+selectedFileSectors.size+' sectors'):'Click a file name to highlight its allocated sectors.';renderClusterChain(file);updateFilePreview(file);$('downloadResource').hidden=!(isMac&&file.resourceSize>0);$('downloadResource').disabled=!(isMac&&file.resourceSize>0);$('downloadFile').textContent=isMac?'Download data fork':'Download file';if(file&&isMac&&selectedFileSectors.size)showSector(selectedFileSectors.values().next().value);else if(file&&disk&&(disk.fsType==='NEXTSTEP_UFS1'||disk.fsType==='SUN_TAR'||disk.foreign)&&selectedFileSectors.size)showSector(selectedFileSectors.values().next().value);else if(file&&file.chain&&file.chain.length)selectCluster(file.chain[0])
+    if(file&&isMac){for(const forkName of ['data','resource'])for(const segment of macForkSegmentList(file.macForks&&file.macForks[forkName])){const first=Math.floor(segment.offset/disk.bps),last=Math.floor((segment.offset+segment.length-1)/disk.bps);for(let lba=first;lba<=last&&lba<disk.total;lba++)if(lba>=0)selectedFileSectors.add(lba)}}else if(file&&disk&&disk.fsType==='NEXTSTEP_UFS1'){try{file.ufsSegments=file.ufsSegments||ufsFileSegments(disk.ufs,file.inode,file.size);for(const segment of file.ufsSegments){if(segment.zero)continue;const first=Math.floor(segment.offset/disk.bps),last=Math.floor((segment.offset+segment.length-1)/disk.bps);for(let lba=first;lba<=last&&lba<disk.total;lba++)if(lba>=0)selectedFileSectors.add(lba)}}catch(_){file.ufsSegments=[]}}else if(file&&disk&&disk.fsType==='SUN_TAR'){for(const lba of (file.chain||[]))if(lba>=0&&lba<disk.total)selectedFileSectors.add(lba);}else if(file&&disk&&disk.foreign){for(const lba of (file.chain||[]))if(Number.isInteger(lba)&&lba>=0&&lba<disk.total)selectedFileSectors.add(lba)}else if(file&&disk&&disk.valid){for(const cluster of (file.chain||[])){if(cluster<2)continue;const first=clusterSector(cluster);for(let offset=0;offset<disk.spc;offset++){const lba=first+offset;if(lba<disk.total&&lba<Math.floor(bytes.length/disk.bps))selectedFileSectors.add(lba)}}}document.querySelectorAll('.disk-sector[data-lba]').forEach(path=>{path.classList.toggle('file-highlight',selectedFileSectors.has(Number(path.dataset.lba)));path.classList.remove('cluster-current')});$('fileSelection').textContent=file?(isMac?'Selected '+file.name+' · file ID '+fmt(file.fileId||0)+' · '+fmt(selectedFileSectors.size)+' sectors':disk&&disk.fsType==='NEXTSTEP_UFS1'?'Selected '+file.name+' · inode '+fmt(file.inode)+' · '+(file.ufsSegments||[]).length+' extents · '+selectedFileSectors.size+' sectors':'Selected '+file.name+' · '+(file.chain||[]).length+' sectors/clusters · '+selectedFileSectors.size+' sectors'):'Click a file name to highlight its allocated sectors.';renderClusterChain(file);updateFilePreview(file);$('downloadResource').hidden=!(isMac&&file.resourceSize>0);$('downloadResource').disabled=!(isMac&&file.resourceSize>0);$('downloadFile').textContent=isMac?'Download data fork':'Download file';if(file&&isMac&&selectedFileSectors.size)showSector(selectedFileSectors.values().next().value);else if(file&&disk&&(disk.fsType==='NEXTSTEP_UFS1'||disk.fsType==='SUN_TAR'||disk.foreign)&&selectedFileSectors.size)showSector(selectedFileSectors.values().next().value);else if(file&&file.chain&&file.chain.length)selectCluster(file.chain[0]);applyFileVeil()
   }
 
   function bootRegion(offset,d){if(d.foreign)return offset<d.bps?(d.bootLabel||'Boot area'):'Following sectors';if(d.fsType==='NEXTSTEP_UFS1'||d.fsType==='SUN_TAR')return 'Raw image-start bytes';if(d.fsType&&d.fsType.startsWith('MAC_'))return 'Macintosh startup blocks';const codeStart=d.valid&&d.fatType==='FAT32'?0x5a:0x3e;if(offset<3)return 'Entry jump';if(offset<11)return 'OEM identifier';if(offset<codeStart)return 'BPB / extended BPB';if(offset<510)return d.valid?'Boot code':'Common FAT boot-code area (unverified)';return 'Boot signature'}
@@ -12084,7 +12268,8 @@ $('selectAllFiles').disabled=all===0&&!files.some(f=>f.directory&&!f.deleted);
     const active=disk.fsType==='NEXTSTEP_UFS1'?Array.from(document.querySelectorAll('.ufs-map-cell')).find(x=>n>=Number(x.dataset.lba)&&n<=Number(x.dataset.lbaEnd)):document.querySelector('.disk-sector[data-lba="'+n+'"]');
     if(active)active.classList.add('selected');
     updateGeometrySelection(n);
-    updateUnmBanner(n)
+    updateUnmBanner(n);
+    applyFileVeil()
   }
   $('goSector').onclick=()=>showSector($('sectorInput').value);$('sectorInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();showSector(e.target.value)}});
   
