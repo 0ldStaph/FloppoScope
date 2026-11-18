@@ -3188,7 +3188,7 @@ function decodeSysV(bytes){
       if(level===0){data.push(b);return}
       if(b===0){let span=Math.pow(per,level);while(span-- >0&&data.length<nb)data.push(0);return}
       if(!ok(b)){bad=true;return}
-      meta.push(b);
+meta.push(b);
       for(let i=0;i<per&&data.length<nb&&!bad;i++)walk(u32(b*bs+i*4),level-1);
     };
     for(let k=0;k<10&&data.length<nb;k++){const b=ino.addr[k];if(b!==0&&!ok(b)){bad=true;break}data.push(b)}
@@ -8016,7 +8016,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.2.7'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.2.8'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -10147,7 +10147,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
     const bpbLessFat = bytes.length > 515 && (bytes[512] === 0xF0 || bytes[512] >= 0xF8) && bytes[513] === 0xFF && bytes[514] === 0xFF;
     let synthBpb = false;
     /* Some early DOS disks (e.g. Zenith Z-100 MS-DOS) keep their BPB somewhere else, so the standard offsets hold garbage. When the FAT at sector 1 is intact and the image is exactly a standard floppy size, use that size's parameters. */
-    const stdBpbBad = !([128,256,512,1024,2048,4096].includes(bps) && spc > 0 && (spc & (spc - 1)) === 0 && reserved > 0 && fats > 0 && fats <= 2);
+    const stdBpbBad = !([128,256,512,1024,2048,4096].includes(bps) && spc > 0 && (spc & (spc - 1)) ===0 && reserved > 0 && fats > 0 && fats <= 2);
     const stdFloppy = [5760,2880,2400,1440,720,640,360,320].includes(actualSectors);
     /* A Sharp MZ Disk BASIC disk is stored inverted, so its many 0xFF bytes look like an intact FAT at sector 1; recognise it first so no FAT12 BPB is invented for it */
     let isSharpMz=false;
@@ -11185,7 +11185,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
       fn.done=()=>t.remove();return fn;
     }catch(_){return null}
   }
-  function badModeGet(){let m='pulse';try{const v=localStorage.getItem('floppoBadMode');if(v==='pulse'||v==='shake'||v==='off')m=v;else if(localStorage.getItem('floppoBadPulse')==='0')m='off'}catch(_){}return m}
+  function badModeGet(){let m='shake';try{const v=localStorage.getItem('floppoBadMode');if(v==='pulse'||v==='shake'||v==='off')m=v;else if(localStorage.getItem('floppoBadPulse')==='0')m='off'}catch(_){}return m}
   function badModeApply(m){const host=$('diskSurfaces');if(!host)return;host.classList.toggle('bm-pulse',m==='pulse');host.classList.toggle('bm-shake',m==='shake');host.classList.toggle('bm-off',m==='off')}
   function buildBadPulse(){
     try{
