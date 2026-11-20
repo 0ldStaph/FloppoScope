@@ -471,8 +471,9 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
 .bad-shake{position:absolute;left:0;top:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible}
 .bad-shake path{fill:#ff9a9a;stroke:rgba(90,0,10,.75);stroke-width:calc(.6px / var(--zk,1))}
 .bad-shake path.j{transform-box:view-box;animation:jigP .2s ease-in-out infinite alternate}
+.bad-shake g.j{transform-box:view-box;animation:jigP .2s ease-in-out infinite alternate}
 @keyframes jigP{from{transform:rotate(calc(var(--jr,1deg) * -1)) translate(calc(var(--jx,0px) * -1),calc(var(--jy,0px) * -1))}to{transform:rotate(var(--jr,1deg)) translate(var(--jx,0px),var(--jy,0px))}}
-@media (prefers-reduced-motion:reduce){.bad-shake path.j{animation:none}}
+@media (prefers-reduced-motion:reduce){.bad-shake path.j,.bad-shake g.j{animation:none}}
 @media (prefers-reduced-motion:reduce){.bad-pulse.flash{animation:none;opacity:1}}
 .file-glow{position:absolute;left:0;top:0;width:100%;height:100%;z-index:3;pointer-events:none;overflow:visible;opacity:0;will-change:opacity;--fg:#3ee6ff}
 .file-glow path{fill:color-mix(in srgb,var(--fg) 40%,transparent);stroke:var(--fg);stroke-width:calc(1px / var(--zk,1))}
@@ -599,7 +600,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
       <!-- Tab 1: Disk Explorer -->
       <div id="disk-explorer-tab" class="tab-pane active">
         <section class="section" data-glean-id="disk-map-section">
-          <div class="sectionhead"><div><h2>Disk layout</h2><p id="mapcaption">Each square is one logical sector. Select a sector to inspect its bytes.</p></div><div class="map-head-r"><label class="unm-toggle hidden" id="unmToggleWrap" title="Sectors that hold data but are not owned by any live file or folder"><span id="unmToggleLabel">Unmapped data</span><select id="unmMode" aria-label="Unmapped data display"><option value="off">Off</option><option value="del">Show only deleted-file remnants</option><option value="oth">Show only unmapped (not deleted)</option><option value="both">Show both, colored separately</option></select></label><label class="unm-toggle hidden" id="recAlignWrap" title="Off: sectors at their real positions, with interleave and skew. On: sectors in logical order in equal slots, like a plain sector image; every track is stretched to a full circle (gap sizes are not to scale)"><input type="checkbox" id="recAlign" aria-label="Aligned layout"><span>Aligned layout</span></label><label class="unm-toggle hidden" id="badPulseWrap" title="How bad sectors are highlighted: a slow pulse, a small iPad-style jiggle, or nothing. Both effects run on separate overlay layers, so they cost very little CPU."><span>Bad sectors</span><select id="badMode" aria-label="Bad sector animation"><option value="pulse">Pulse</option><option value="shake">Shake</option><option value="off">Off</option></select></label><span class="zoomctl" id="zoomCtl" role="group" aria-label="Disk layout zoom and sides"><select id="sideView" aria-label="Sides shown" title="Show both sides or a single, larger side"><option value="both">Both sides</option><option value="0">Side 0 only</option><option value="1">Side 1 only</option></select><button type="button" class="btn zbtn" id="zoomOut" title="Zoom out (-)" aria-label="Zoom out">−</button><input type="range" id="zoomRange" min="0" max="100" value="0" aria-label="Zoom level" title="Zoom (Ctrl or ⌘ + mouse wheel over a disk, or trackpad pinch; drag a box to zoom in (Shift+drag when zoomed); drag to pan; double-click to zoom in/out)"><button type="button" class="btn zbtn" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in">+</button><span id="zoomPct" class="zpct">100%</span><button type="button" class="btn zbtn" id="zoomFit" title="Fit whole disk (0)">Fit</button><button type="button" class="btn zbtn" id="zoomBox" aria-pressed="false" title="Box zoom: drag a rectangle on the disk to zoom into it. Always available with Shift+drag, and with a plain drag when the whole disk is shown. Click to keep it on while zoomed in (Esc cancels a box)">&#9634; Box</button><label class="zlink" title="Zoom and pan both sides together"><input type="checkbox" id="zoomLink" checked> Link</label></span><span id="maptype" class="badge">RAW IMAGE</span></div></div>
+          <div class="sectionhead"><div><h2>Disk layout</h2><p id="mapcaption">Each square is one logical sector. Select a sector to inspect its bytes.</p></div><div class="map-head-r"><label class="unm-toggle hidden" id="unmToggleWrap" title="Dim everything except one category: bad sectors, unreadable sectors, or data not owned by any live file or folder (unmapped and deleted-file remnants)"><span id="unmToggleLabel">Show sectors</span><select id="unmMode" aria-label="Show sectors"><option value="off">All (no dimming)</option><option value="del">Deleted-file remnants</option><option value="oth">Unmapped (not deleted)</option><option value="both">Deleted + unmapped, colored separately</option><option value="err">All errors</option><option value="unr">Unreadable only</option><option value="erroth">Errors + unmapped</option></select></label><label class="unm-toggle hidden" id="recAlignWrap" title="Off: sectors at their real positions, with interleave and skew. On: sectors in logical order in equal slots, like a plain sector image; every track is stretched to a full circle (gap sizes are not to scale)"><input type="checkbox" id="recAlign" aria-label="Aligned layout"><span>Aligned layout</span></label><label class="unm-toggle hidden" id="badPulseWrap" title="How bad sectors are highlighted: a slow pulse, a small iPad-style jiggle, or nothing. Unreadable sectors stay crossed (hatched red) in every mode. Both effects run on separate overlay layers, so they cost very little CPU."><span>Bad sectors</span><select id="badMode" aria-label="Bad sector animation"><option value="pulse">Pulse</option><option value="shake">Shake</option><option value="off">Static</option></select></label><span class="zoomctl" id="zoomCtl" role="group" aria-label="Disk layout zoom and sides"><select id="sideView" aria-label="Sides shown" title="Show both sides or a single, larger side"><option value="both">Both sides</option><option value="0">Side 0 only</option><option value="1">Side 1 only</option></select><button type="button" class="btn zbtn" id="zoomOut" title="Zoom out (-)" aria-label="Zoom out">−</button><input type="range" id="zoomRange" min="0" max="100" value="0" aria-label="Zoom level" title="Zoom (Ctrl or ⌘ + mouse wheel over a disk, or trackpad pinch; drag a box to zoom in (Shift+drag when zoomed); drag to pan; double-click to zoom in/out)"><button type="button" class="btn zbtn" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in">+</button><span id="zoomPct" class="zpct">100%</span><button type="button" class="btn zbtn" id="zoomFit" title="Fit whole disk (0)">Fit</button><button type="button" class="btn zbtn" id="zoomBox" aria-pressed="false" title="Box zoom: drag a rectangle on the disk to zoom into it. Always available with Shift+drag, and with a plain drag when the whole disk is shown. Click to keep it on while zoomed in (Esc cancels a box)">&#9634; Box</button><label class="zlink" title="Zoom and pan both sides together"><input type="checkbox" id="zoomLink" checked> Link</label></span><span id="maptype" class="badge">RAW IMAGE</span></div></div>
 		 <div class="diskmap">
             <div class="maplegend">
               <span class="legend"><i class="swatch" style="background:var(--artifact-empty); border:1px solid var(--artifact-border-dark);"></i>Empty</span>
@@ -609,7 +610,7 @@ th.sortable .sort-ind{display:inline-block;min-width:10px;margin-left:4px;font-s
               <span class="legend" title="4+ printable ASCII characters"><i class="swatch" style="background:#ff00ff; border:1px solid var(--artifact-border-dark);"></i>Text String</span>
               <span class="legend"><i class="swatch filler"></i>Filler (0xF6)</span>
               <span class="legend"><i class="swatch file"></i>Selected file</span>
-              <span class="legend"><i class="swatch bad"></i>Bad sector / bad cluster in use</span><span class="legend" title="Marked bad in the FAT, but the sectors read back fine and no file uses them"><i class="swatch bad-soft"></i>FAT bad cluster (reads OK)</span>
+              <span class="legend" title="The sector was read but its checksum failed (or the FAT marks the cluster bad and a file uses it). Solid red."><i class="swatch bad"></i>Checksum error / bad cluster in use</span><span class="legend" title="No usable data could be read for this sector (in any revolution, or the image holds the -=[BAD SECTOR]=- marker). Drawn crossed with red diagonal lines, so it stays distinguishable from a checksum error even with the Bad sectors animation set to Off."><i class="swatch" style="background:repeating-linear-gradient(135deg,#dc4c4c 0 2px,#4a0d14 2px 5px);border:1px solid var(--artifact-negative)"></i>Unreadable / missing (hatched red)</span><span class="legend" title="Marked bad in the FAT, but the sectors read back fine and no file uses them"><i class="swatch bad-soft"></i>FAT bad cluster (reads OK)</span>
             </div>
             <div class="maplegend hidden" id="maplegendUnm">
               <span class="legend" id="unmLegOthWrap" title="Non-blank sectors in free space or elsewhere that are not owned by any live file and are not leftovers of a deleted file"><i class="swatch unm-sw"></i>Unmapped (not deleted) <b id="unmLegOth"></b></span>
@@ -3188,7 +3189,7 @@ function decodeSysV(bytes){
       if(level===0){data.push(b);return}
       if(b===0){let span=Math.pow(per,level);while(span-- >0&&data.length<nb)data.push(0);return}
       if(!ok(b)){bad=true;return}
-meta.push(b);
+      meta.push(b);
       for(let i=0;i<per&&data.length<nb&&!bad;i++)walk(u32(b*bs+i*4),level-1);
     };
     for(let k=0;k<10&&data.length<nb;k++){const b=ino.addr[k];if(b!==0&&!ok(b)){bad=true;break}data.push(b)}
@@ -4728,10 +4729,28 @@ function decodeAll(src,best){
       const tl=trackLayout(t,all);tl.indexed=t.src==='flux'?!!t.indexed:!t.nib;layout.push(tl);
       for(const q of tl.sectors)if(q.short)anoms.push({cat:'short-sector',track:'C'+t.cyl+' H'+t.head,msg:'sector '+q.r+': the ID announces '+q.size+' bytes but only about '+q.keptBytes+' are recorded before gap filler follows (data field is cut short)'});
     }catch(_){}}
-    for(const arr of all)for(const s of arr){
-      if(s.unsupported13)continue;
-      const k=keyOf(kind,t,s),old=map.get(k);
-      if(!old||(!old.s.ok&&s.ok))map.set(k,{s,t});
+    /* One copy per sector for the image: a verified read wins (the first one, if several). If none verified, prefer the data that repeats identically in most reads
+       (a stable checksum error is what is really on the disk; a one-off is more likely noise), and the earliest read breaks a tie. */
+    {
+      const cands=new Map();
+      for(const arr of all)for(const s of arr){
+        if(s.unsupported13)continue;
+        const k=keyOf(kind,t,s);let c=cands.get(k);if(!c){c=[];cands.set(k,c)}c.push(s);
+      }
+      const sig=x=>{const d=x.data;if(!d)return '';let h=d.length+':';for(let i=0;i<d.length;i+=Math.max(1,d.length>>6))h+=d[i].toString(36);return h};
+      for(const [k,c] of cands){
+        let pick=c.find(x=>x.ok);
+        if(!pick){
+          pick=c[0];
+          if(c.length>2){
+            const cnt=new Map();for(const x of c){const g=sig(x);cnt.set(g,(cnt.get(g)||0)+1)}
+            let best=cnt.get(sig(pick))||0;
+            for(const x of c){const n=cnt.get(sig(x))||0;if(n>best){best=n;pick=x}}
+          }
+        }
+        const old=map.get(k);
+        if(!old||(!old.s.ok&&pick.ok))map.set(k,{s:pick,t}); /* a copy found on another track (header naming this sector) never replaces an earlier one unless it verifies */
+      }
     }
   }
   if(kind==='c64'){ // different disk IDs on some tracks are a classic protection trick
@@ -4844,10 +4863,13 @@ function trackLayoutGen(kind,t,all){
       for(const e2 of arr.layout){
         const wrapped=e2.at>=arr.revCells;
         if(arr===a0&&!wrapped)continue;
-        if(!e2.hasData||!(e2.sec&&e2.sec.ok)||e2.at>=arr.revCells*2)continue;
-        const cur=have.get(e2.k);
-        if(cur&&(cur.hasData&&cur.dOk))continue;
-        const sc=cells/arr.revCells,sh=wrapped?arr.revCells:0,e3=Object.assign({},e2,{dOk:true});
+        if(!e2.hasData||e2.at>=arr.revCells*2)continue;
+        /* Best-of-all-revolutions: a verified read beats a read with a checksum error, which beats a header with no data field at all. Only a clearly decoded header may bring in a sector that is not yet known. */
+        const ok2=!!(e2.sec&&e2.sec.ok);
+        if(!ok2&&!e2.idOk)continue;
+        const cur=have.get(e2.k),rank=x=>!x||!x.hasData?0:(x.dOk?2:1);
+        if(rank(cur)>=(ok2?2:1))continue;
+        const sc=cells/arr.revCells,sh=wrapped?arr.revCells:0,e3=Object.assign({},e2,{dOk:ok2});
         for(const kk of ['at','idEnd','dAt','dEnd','gs'])if(e3[kk]!==undefined)e3[kk]=(e3[kk]-sh)*sc;
         e3.borrowed=true;
         if(cur){const i=ents.indexOf(cur);if(i>=0)ents.splice(i,1)}
@@ -4862,6 +4884,17 @@ function trackLayoutGen(kind,t,all){
     const good=x=>x.hasData&&x.dOk,keep=new Map();
     for(const e of ents){const p=keep.get(e.k);if(p&&Math.abs(e.at-p.at)>cells*0.8){if(good(e)||!good(p))keep.set(e.k,e)}else if(!p)keep.set(e.k,e)}
     ents=ents.filter(e=>{const kk=keep.get(e.k);return kk===e||!ents.some(o=>o!==e&&o.k===e.k&&Math.abs(o.at-e.at)>cells*0.8)});
+  }
+  /* C64: a header whose checksum failed and that has no data field is usually a mis-decoded copy of a neighbouring sector's header (bit slip in one revolution), often with an impossible track/sector number.
+     It sits on top of a sector that did decode, so drawing it paints good sectors red and inflates the sector count. Drop it when a decoded sector covers the same spot. */
+  if(kind==='c64'){
+    const spt=C64_SPT(t.cyl+1),tol=cells*0.004;
+    ents=ents.filter(e=>{
+      if(e.idOk||e.hasData)return true;
+      const bogus=e.tn!==t.cyl+1||!(e.sn>=0&&e.sn<spt);
+      const covered=ents.some(o=>o!==e&&o.hasData&&e.at>=o.at-tol&&e.at<o.dEnd);
+      return !(covered||(bogus&&ents.some(o=>o!==e&&o.hasData)));
+    });
   }
   for(const e of ents){
     let weak=false;
@@ -5628,7 +5661,18 @@ function convert(ab,name,extra){
       for(const x of (res.repacked||[]))anoms.push({cat:'size',track:'C'+x.cyl+' H'+x.head,msg:'this track holds '+x.n+' sectors of '+x.sz+' B (IDs '+x.ids+') while the rest of the disk uses '+res.size+' B sectors; its data is kept unchanged at the start of the track in the image instead of being replaced by BAD SECTOR markers'});
       if(res.padded)for(const [e,q] of res.padded)anoms.push({cat:'size',track:'C'+e.cyl+' H'+e.head,msg:'sector ID '+e.r+' holds only '+e.data.length+' B ('+(e.ok?'checksum valid':'checksum error')+') while the disk uses '+res.size+' B sectors; its '+e.data.length+' recorded bytes are kept in the image slot and the rest is filled with 0x'+q.fill.toString(16).toUpperCase().padStart(2,'0')+' instead of a BAD SECTOR marker'});
       for(const e of res.dropped.slice(0,20))anoms.push({cat:e.ok?'extra-sectors':'stray',track:'C'+e.cyl+' H'+e.head,msg:'sector ID '+e.r+' ('+e.data.length+' B, '+(e.ok?'checksum valid':'checksum error')+') lies outside the disk layout and was left out of the image'});
-    }else{res=assembleFixed(best.kind,map);if(dec.layout&&dec.layout.length&&res.lbaOf){for(const tl of dec.layout)for(const q of tl.sectors)q.lba=res.lbaOf(q.tn,q.sn);layout={tracks:dec.layout,size:res.size}}}
+    }else{res=assembleFixed(best.kind,map);if(dec.layout&&dec.layout.length&&res.lbaOf){for(const tl of dec.layout)for(const q of tl.sectors)q.lba=res.lbaOf(q.tn,q.sn);
+      /* Tell the map what the finished image actually holds, so it agrees with the analysis: a slot is 'missing' when it was filled with the BAD SECTOR marker (nothing was recovered),
+         and an entry whose address field names another track is a stray copy that does not fill the slot it physically sits in. */
+      if(best.kind==='c64'){
+        const MK=[45,61,91,66,65,68,32,83],miss=new Set(),badSet=new Set(res.badLbas||[]);
+        for(const l of (res.badLbas||[])){const o=l*res.size;let m=o+8<=res.img.length;for(let i=0;m&&i<8;i++)if(res.img[o+i]!==MK[i])m=false;if(m)miss.add(l)}
+        for(const tl of dec.layout)for(const q of tl.sectors){
+          if(q.tn!==tl.cyl+1&&q.sn>=0){const slot=res.lbaOf(tl.cyl+1,q.sn);q.stray=true;q.slotMissing=slot>=0&&miss.has(slot);q.lba=-1}
+          else{q.missing=q.lba>=0&&miss.has(q.lba);q.imgOk=q.lba>=0&&!badSet.has(q.lba)}
+        }
+      }
+      layout={tracks:dec.layout,size:res.size}}}
   }catch(err){return {error:src.label+' decoded but the sector image could not be built: '+err.message,kind}}
   try{sharpBootTrack(anoms,map,best)}catch(_){}
   try{sharpDiskBasic17(anoms,map,res,best)}catch(_){}
@@ -8016,7 +8060,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
 <script>
 (function(){
   'use strict';
-  const APP_VERSION='0.2.8'; // single source of truth: shown in the header and in exported reports
+  const APP_VERSION='0.2.9'; // single source of truth: shown in the header and in exported reports
   const $=id=>document.getElementById(id), E=$('fileInput'), status=$('status');
   {const v=document.getElementById('appVersion');if(v)v.textContent='v'+APP_VERSION}
   let fluxInfo=null, currentName='', retroInfo={container:'',hint:{},note:''}, bytes=null, view=null, disk=null, selectedSector=0, selectedFileSectors=new Set(), selectedClusterSectors=new Set(), selectedFile=null, selectedCluster=null, selectedExportFiles=new Set(), previewObjectUrl=null;
@@ -10147,7 +10191,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
     const bpbLessFat = bytes.length > 515 && (bytes[512] === 0xF0 || bytes[512] >= 0xF8) && bytes[513] === 0xFF && bytes[514] === 0xFF;
     let synthBpb = false;
     /* Some early DOS disks (e.g. Zenith Z-100 MS-DOS) keep their BPB somewhere else, so the standard offsets hold garbage. When the FAT at sector 1 is intact and the image is exactly a standard floppy size, use that size's parameters. */
-    const stdBpbBad = !([128,256,512,1024,2048,4096].includes(bps) && spc > 0 && (spc & (spc - 1)) ===0 && reserved > 0 && fats > 0 && fats <= 2);
+    const stdBpbBad = !([128,256,512,1024,2048,4096].includes(bps) && spc > 0 && (spc & (spc - 1)) === 0 && reserved > 0 && fats > 0 && fats <= 2);
     const stdFloppy = [5760,2880,2400,1440,720,640,360,320].includes(actualSectors);
     /* A Sharp MZ Disk BASIC disk is stored inverted, so its many 0xFF bytes look like an intact FAT at sector 1; recognise it first so no FAT12 BPB is invented for it */
     let isSharpMz=false;
@@ -10294,6 +10338,16 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
   function readChainSafe(first,type,bps,spf,dataStart){const base=disk?disk.reserved*bps:0;const chain=[],seen=new Set();let c=first;for(let i=0;i<100000&&c>=2&&c<1000000&&!seen.has(c);i++){chain.push(c);seen.add(c);let v=0;if(type==='FAT12'){const p=base+Math.floor(c*1.5),x=bytes[p]|bytes[p+1]<<8;v=c&1?x>>4:x&0xfff;if(v>=0xff8)break}else if(type==='FAT16'){const p=base+c*2;v=bytes[p]|bytes[p+1]<<8;if(v>=0xfff8)break}else{const p=base+c*4;v=(bytes[p]|bytes[p+1]<<8|bytes[p+2]<<16|bytes[p+3]<<24)>>>0&0x0fffffff;if(v>=0x0ffffff8)break}if(v<2)break;c=v}return chain}
   function sectorArc(inner,outer,start,end){const cx=120,cy=120,point=(r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)],p1=point(outer,start),p2=point(outer,end),p3=point(inner,end),p4=point(inner,start),large=(end-start)>Math.PI?1:0;return 'M '+p1[0].toFixed(3)+' '+p1[1].toFixed(3)+' A '+outer.toFixed(3)+' '+outer.toFixed(3)+' 0 '+large+' 1 '+p2[0].toFixed(3)+' '+p2[1].toFixed(3)+' L '+p3[0].toFixed(3)+' '+p3[1].toFixed(3)+' A '+inner.toFixed(3)+' '+inner.toFixed(3)+' 0 '+large+' 0 '+p4[0].toFixed(3)+' '+p4[1].toFixed(3)+' Z'}
   
+  /* crossed (hatched) wedge on a canvas centred at 0,0: dark red with red diagonal lines, same look as unreadable sectors in recorded layouts */
+  function hatchWedge(ctx,ro,ri,a0,a1,col){
+    ctx.save();ctx.beginPath();ctx.arc(0,0,ro,a0,a1);ctx.arc(0,0,ri,a1,a0,true);ctx.closePath();ctx.fillStyle='#4a0d14';ctx.fill();ctx.clip();
+    const am=(a0+a1)/2,rm=(ro+ri)/2,th=ro-ri,len=(a1-a0)*rm/2+th*2,step=Math.max(th*.7,.3);
+    ctx.translate(rm*Math.cos(am),rm*Math.sin(am));ctx.rotate(am);ctx.strokeStyle=String(col).trim()||'#dc4c4c';ctx.lineWidth=th*.28;ctx.beginPath();
+    for(let k=-len;k<=len;k+=step){ctx.moveTo(-th,k-th);ctx.lineTo(th,k+th)}
+    ctx.stroke();ctx.restore();
+  }
+  /* an unreadable sector: hatched in recorded layouts (no data read) or a whole sector of the repeated -=[BAD SECTOR]=- marker in an image */
+  function isUnrEl(el){return (el.getAttribute('data-glean-id')||'').indexOf('rec-nodata-')===0||el.getAttribute('data-unr')==='1'}
   function buildSectorDensity(d){
     const levels=new Map();
     if(!d||!d.bps||!bytes||!bytes.length)return levels;
@@ -10301,15 +10355,16 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
     const sig=[45,61,91,66,65,68,32,83,69,67,84,79,82,93,61,45],errL=d.errLbas||(disk&&disk.errLbas&&disk.bps===d.bps?disk.errLbas:null);
     for(let lba=0;lba<limit;lba++){
       const start=lba*d.bps,end=Math.min(start+d.bps,bytes.length),byteCount=end-start;
-      let nonzero=0,f6count=0,isBadContent=byteCount>=16;const fluxBad=!!(fluxInfo&&fluxInfo.bad.has(lba)&&d.bps===fluxInfo.size)||!!(errL&&errL.has(lba));
+      let nonzero=0,f6count=0,isBadContent=byteCount>=16,isMarker=byteCount>=16;const fluxBad=!!(fluxInfo&&fluxInfo.bad.has(lba)&&d.bps===fluxInfo.size)||!!(errL&&errL.has(lba));
       for(let i=start;i<end;i++){
         if(bytes[i]!==0)nonzero++;
         if(bytes[i]===0xF6)f6count++;
         if(isBadContent&&i-start<16&&bytes[i]!==sig[i-start])isBadContent=false;
+        if(isMarker&&bytes[i]!==sig[(i-start)&15])isMarker=false;
       }
       const isF6=(byteCount>0&&f6count===byteCount);
       const ratio=byteCount?nonzero/byteCount:0,level=ratio===0?0:ratio<=.25?1:ratio<=.5?2:ratio<=.75?3:4;
-      levels.set(lba,{level,nonzero,byteCount,percent:Math.round(ratio*100),isF6,isBadContent:isBadContent||fluxBad});
+      levels.set(lba,{level,nonzero,byteCount,percent:Math.round(ratio*100),isF6,isBadContent:isBadContent||fluxBad,isMarker});
     }
     return levels;
   }
@@ -10400,6 +10455,7 @@ GhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoaGhoa
               ctx.arc(0, 0, ro, a0, a1 + 0.005);
               ctx.arc(0, 0, ri, a1 + 0.005, a0, true);
               ctx.fill();
+              if (density.isMarker) hatchWedge(ctx, ro, ri, a0, a1, cBad);
 
               if (isBad || density.isF6 || density.nonzero === 0) { ov(); continue; }
 
@@ -10543,8 +10599,8 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
   }
   function recStatus(q){
     if(q.lost)return ['rec-lost','sector not found: no address field could be decoded in any revolution'];
-    if(!q.idOk)return ['rec-idbad','address field checksum error'];
-    if(!q.hasData)return ['rec-nodata','no data field found after this ID'];
+    if(!q.idOk&&!(q.hasData&&q.dOk&&!q.stray))return ['rec-idbad','address field checksum error'];
+    if(!q.hasData)return ['rec-nodata',q.missing===false?(q.imgOk?'no data field found after this ID in this revolution; the sector was read correctly in another':'no data field found after this ID in this revolution; the image keeps a copy with a data checksum error'):'no data field found after this ID'];
     if(q.short)return ['rec-short','data cut short: only about '+q.keptBytes+' of '+q.size+' bytes are recorded, then gap filler'+(q.dOk?'':' (checksum does not verify)')];
     if(!q.dOk)return q.weak?['rec-weak','weak / unstable data: checksum error and the bytes change between revolutions']:['rec-bad','data checksum error (identical on every revolution: likely deliberate)'];
     if(q.deleted)return ['rec-del','deleted-data address mark'];
@@ -10555,14 +10611,21 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     const end=Math.min(q.off+q.len,bytes.length),n=Math.max(0,end-q.off);
     let nz=0,f6=0;for(let i=q.off;i<end;i++){if(bytes[i]!==0)nz++;if(bytes[i]===0xF6)f6++}
     const sig=[45,61,91,66,65,68,32,83,69,67,84,79,82,93,61,45];let isSig=n>=16;for(let i=0;isSig&&i<16;i++)if(bytes[q.off+i]!==sig[i])isSig=false;
-    return {nonzero:nz,byteCount:n,percent:n?Math.round(nz/n*100):0,isF6:n>0&&f6===n,isBadContent:isSig||!q.dOk};
+    let isMk=isSig;for(let i=16;isMk&&i<n;i++)if(bytes[q.off+i]!==sig[i&15])isMk=false;
+    return {nonzero:nz,byteCount:n,percent:n?Math.round(nz/n*100):0,isF6:n>0&&f6===n,isBadContent:isSig||!q.dOk,isMarker:isMk};
   }
   function noDataSpan(t,q){
-    /* a sector whose address field was found but whose data field was not: its slot runs from the end of the ID to the start of the next ID (capped at one nominal slot) */
+    /* a sector whose address field was found but whose data field was not: its slot runs from the end of its ID for one nominal sector pitch (the median spacing of the IDs on this track),
+       stopping early only if the next ID starts sooner. Every unreadable sector on a track therefore gets the same length, whatever its neighbours look like. */
     const ord=t._ord||(t._ord=t.sectors.filter(x=>!x.noId).sort((x,y)=>x.a-y.a)),i=ord.indexOf(q),n=ord.length;
-    let e=n>1?ord[(i+1)%n].a:q.b+1/Math.max(1,n);if(e<=q.b)e+=1;
-    const cap=q.b+1.15/Math.max(1,n);
-    return [q.b,Math.min(e-0.0008,cap)];
+    if(t._pitch===undefined){
+      const g=[];for(let k=0;k<n;k++){let d=ord[(k+1)%n].a-ord[k].a;if(d<=0)d+=1;if(d>0.004)g.push(d)}
+      g.sort((x,y)=>x-y);t._pitch=g.length?g[g.length>>1]:1/Math.max(1,n);
+    }
+    const pitch=t._pitch,nominal=q.a+pitch-0.0008;
+    let e=nominal;
+    if(n>1){let nx=ord[(i+1)%n].a;if(nx<=q.b)nx+=1;if(nx-0.0008<e)e=nx-0.0008}
+    return [q.b,Math.max(q.b,e)];
   }
   function drawRecordedCanvas(h,tracks,drawCyl,outer,inner,densityLevels,size){
     const canvas=(LOD.on&&LOD.canvas)||document.getElementById('diskCanvas-'+h);if(!canvas)return;
@@ -10573,6 +10636,17 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     const cEmpty=style.getPropertyValue('--artifact-empty')||'#dfe3ea';
     const cGap=style.getPropertyValue('--artifact-disk-background')||'#0c1117';
     const cSync='#151b24',cId='#5f6f86',TAU=Math.PI*2,A0=-Math.PI/2,band=(outer-inner)*2/drawCyl;
+    const arcPath=(ro,ri,a0,a1)=>{ctx.beginPath();ctx.arc(0,0,ro,a0,a1);ctx.arc(0,0,ri,a1,a0,true);ctx.closePath()};
+    /* Unreadable spans (no data field found): red diagonal stripes on dark red. The stripes are laid out in the span's own frame
+       (radial x tangential) and sized from the track width, so every unreadable sector looks the same wherever it is on the ring and at any zoom. */
+    const hatch=(ro,ri,a0,a1)=>{
+      ctx.save();arcPath(ro,ri,a0,a1);ctx.fillStyle='#4a0d14';ctx.fill();ctx.clip();
+      const am=(a0+a1)/2,rm=(ro+ri)/2,th=ro-ri,len=(a1-a0)*rm/2+th*2,step=th*0.7;
+      ctx.translate(rm*Math.cos(am),rm*Math.sin(am));ctx.rotate(am);
+      ctx.strokeStyle=String(cBad).trim()||'#dc4c4c';ctx.lineWidth=th*0.28;ctx.beginPath();
+      for(let k=-len;k<=len;k+=step){ctx.moveTo(-th,k-th);ctx.lineTo(th,k+th)}
+      ctx.stroke();ctx.restore();
+    };
     const arc=(ro,ri,a0,a1,col)=>{ctx.fillStyle=col;ctx.beginPath();ctx.arc(0,0,ro,a0,a1);ctx.arc(0,0,ri,a1,a0,true);ctx.closePath();ctx.fill()};
     const byCyl=new Map();for(const t of tracks)if(t.head===h)byCyl.set(t.cyl,t);
     /* clusters the FAT marks as bad are drawn red, as in the plain (non-flux) layout */
@@ -10588,8 +10662,9 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
         if(LOD.on&&!lodVisible(ro,ri,A0+Math.min(q.a,q.c0===undefined?q.a:q.c0)*TAU,A0+Math.max(q.b===undefined?q.a:q.b,q.d===undefined?0:q.d,q.a)*TAU+0.01))continue;
         if(q.gs!==undefined&&q.gs<q.a)arc(rO,rI,A0+q.gs*TAU,A0+q.a*TAU,cSync);
         if(q.hs&&q.c0>q.b)arc(rO,rI,A0+q.b*TAU,A0+q.c0*TAU,cSync);
-        if(!q.noId)arc(rO,rI,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU,(q.idOk&&q.hasData)?cId:cBad);
-        if(!q.hasData){if(!q.noId){const sp=noDataSpan(t,q);if(sp[1]>sp[0])arc(rO,rI,A0+sp[0]*TAU,A0+sp[1]*TAU,cBad)}continue}
+        if(!q.noId)arc(rO,rI,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU,((q.idOk||(q.hasData&&q.dOk&&!q.stray))&&q.hasData)?cId:cBad);
+        if(!q.hasData){if(!q.noId){const sp=noDataSpan(t,q);if(sp[1]>sp[0]){if(q.missing===false)arc(rO,rI,A0+sp[0]*TAU,A0+sp[1]*TAU,q.imgOk?cEmpty:cBad);else hatch(rO,rI,A0+sp[0]*TAU,A0+sp[1]*TAU)}}continue}
+        if(q.stray&&q.slotMissing){hatch(rO,rI,A0+q.c0*TAU,A0+Math.max(q.d,q.c0+0.0005)*TAU);continue}
         const lba=q.lba>=0&&q.lba*size<bytes.length?q.lba:-1,a0=A0+q.c0*TAU,a1=A0+Math.max(q.d,q.c0+0.0005)*TAU;
         const density=lba>=0?recSectorStats(q,lba,size,densityLevels):{};
         const startByte=lba>=0?(q.off!==undefined?q.off:lba*size):0,secLen=q.len||size;
@@ -10598,6 +10673,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
         const isBad=!!density.isBadContent||fatUsed.has(fCl),softBad=!isBad&&fatBad.has(fCl);
         const ov=()=>{if(softBad){ctx.globalAlpha=0.5;arc(rO,rI,a0,a1+0.005,cBad);ctx.globalAlpha=1}};
         arc(rO,rI,a0,a1+0.005,isBad?cBad:(density.isF6?cFiller:cEmpty));
+        if(density.isMarker)hatchWedge(ctx,rO,rI,a0,a1,cBad);
         if(isBad||density.isF6||density.nonzero===0){ov();continue}
         if(LOD.on&&lodSector(ctx,startByte,secLen,a0,a1,rO,rI)){ov();continue}
         const sectorData=bytes.subarray(startByte,Math.min(startByte+secLen,bytes.length));
@@ -10635,18 +10711,19 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
           for(const q of t.sectors){
             const st=recStatus(q),loc='Side '+h+' · cylinder '+t.cyl+' · '+(q.name||('sector '+q.r+' (C'+q.c+' H'+q.h+' N'+q.n+', '+q.size+' B)'));
             const pv=q._p||q,wrap=x=>(((x%1)+1)%1)*360,ang=(x,y)=>' · '+wrap(x).toFixed(1)+'°–'+wrap(y).toFixed(1)+'° after index'+(L.aligned?' (physical position; drawn in logical order)':'');
-            if(!nom&&!q.lost)g+='<path class="rec-sec" data-glean-id="rec-id-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-id="1" data-ok="'+(q.idOk?1:0)+'" data-title="'+esc(loc+' · address field'+(q.idOk?' OK':' checksum ERROR')+ang(pv.a,pv.b))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU)+'"></path>';
+            if(!nom&&!q.lost)g+='<path class="rec-sec" data-glean-id="rec-id-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-id="1" data-ok="'+((q.idOk||(q.hasData&&q.dOk&&!q.stray))?1:0)+'" data-title="'+esc(loc+' · address field'+((q.idOk||(q.hasData&&q.dOk&&!q.stray))?(q.idOk?' OK':' unreadable in this revolution (data verified)'):' checksum ERROR')+ang(pv.a,pv.b))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.a*TAU,A0+Math.max(q.b,q.a+0.0005)*TAU)+'"></path>';
             if(!nom&&q.gs!==undefined&&q.gs<q.a-0.0002)g+='<path class="rec-sec" data-gap="1" data-glean-id="rec-gap-'+t.cyl+'-'+h+'-'+q.sn+'" data-title="'+esc(loc+' · sync gap leading into this sector\'s address field · '+q.gn+' × FF self-sync bytes'+ang(pv.gs,pv.a))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.gs*TAU,A0+q.a*TAU)+'"></path>';
             if(!nom&&q.hs&&q.hasData&&q.c0>q.b+0.0002)g+='<path class="rec-sec" data-gap="1" data-glean-id="rec-hgap-'+t.cyl+'-'+h+'-'+q.sn+'" data-title="'+esc(loc+' · sync gap between address and data field · '+q.hn+' × FF self-sync bytes'+ang(pv.b,pv.c0))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.b*TAU,A0+q.c0*TAU)+'"></path>';
-            if(!nom&&!q.hasData&&!q.noId){const sp=noDataSpan(t,q);if(sp[1]>sp[0])g+='<path class="rec-sec" data-glean-id="rec-nodata-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-ok="0" data-title="'+esc(loc+' · '+st[1]+' · unreadable (red)'+ang(sp[0],sp[1]))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+sp[0]*TAU,A0+sp[1]*TAU)+'"></path>'}
+            if(!nom&&!q.hasData&&!q.noId&&!q.imgOk){const sp=noDataSpan(t,q);if(sp[1]>sp[0])g+='<path class="rec-sec" data-glean-id="rec-nodata-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" data-ok="0" data-title="'+esc(loc+' · '+st[1]+' · unreadable (hatched red)'+ang(sp[0],sp[1]))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+sp[0]*TAU,A0+sp[1]*TAU)+'"></path>'}
+            if(!nom&&q.hasData&&q.stray&&q.slotMissing)g+='<path class="rec-sec" data-glean-id="rec-nodata-'+t.cyl+'-'+h+'-s'+q.sn+'" data-ok="0" data-title="'+esc(loc+' · address field names track '+q.tn+', so this sector does not fill track '+(t.cyl+1)+' sector '+q.sn+' · unreadable (hatched red)'+ang(pv.c0,pv.d))+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.c0*TAU,A0+Math.max(q.d,q.c0+0.0005)*TAU)+'"></path>';
             if(q.hasData){
               const lbaI=q.lba>=0&&q.lba*size<bytes.length?q.lba:-1,lba=lbaI>=0?toD(lbaI):-1;
               const region=lba>=0&&d.regions?d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors):null,kind=region?region.kind:'data';
               const density=lbaI>=0?recSectorStats(q,lbaI,size,densityLevels):null;
               const cluster=lba>=0&&d.valid&&lba>=d.dataStart?2+Math.floor((lba-d.dataStart)/d.spc):-1;
               const isBad=lba>=0&&((badClusters.has(cluster)&&usedBadSet.has(cluster))||density.isBadContent),softBad=lba>=0&&!isBad&&badClusters.has(cluster),isFiller=!!(density&&density.isF6);
-              const title=loc+(lba>=0?' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:''):' · not part of the decoded image')+(st[2]?'':' · '+st[1])+(isBad?' · Bad sector (red)':softBad?' · Bad cluster marked in the FAT, reads OK (tinted red)':'')+(isFiller?' · Filler (0xF6)':'')+(nom?'':ang(pv.c0,pv.d));
-              g+='<path class="rec-sec'+(lba>=0?' disk-sector '+(ufs?'ufs-map-cell ':'')+kind+(lba===selectedSector?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':''):'')+'"'+(lba>=0?' data-lba="'+lba+'"':'')+(ufs&&lba>=0?' data-lba-end="'+lba+'"':'')+' data-glean-id="rec-data-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" aria-label="'+esc(loc+(lba>=0?', LBA '+lba+', '+density.percent+' percent non-zero bytes'+(isBad?', bad sector shown in red':softBad?', bad cluster in the FAT shown tinted red':''):''))+'" data-ok="'+(st[2]&&!isBad?1:0)+'" data-title="'+esc(title)+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.c0*TAU,A0+Math.max(q.d,q.c0+0.0005)*TAU)+'"></path>';
+              const title=loc+(lba>=0?' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:''):' · not part of the decoded image')+(st[2]?'':' · '+st[1])+(lba>=0&&density&&density.isMarker?' · Unreadable (marker, hatched red)':isBad?' · Bad sector (red)':softBad?' · Bad cluster marked in the FAT, reads OK (tinted red)':'')+(isFiller?' · Filler (0xF6)':'')+(nom?'':ang(pv.c0,pv.d));
+              g+='<path class="rec-sec'+(lba>=0?' disk-sector '+(ufs?'ufs-map-cell ':'')+kind+(lba===selectedSector?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':''):'')+'"'+(lba>=0?' data-lba="'+lba+'"':'')+(lba>=0&&density&&density.isMarker?' data-unr="1"':'')+(ufs&&lba>=0?' data-lba-end="'+lba+'"':'')+' data-glean-id="rec-data-'+t.cyl+'-'+h+'-'+(q.r!==undefined?q.r:q.sn!==undefined?q.sn:q.lba)+'" aria-label="'+esc(loc+(lba>=0?', LBA '+lba+', '+density.percent+' percent non-zero bytes'+(isBad?', bad sector shown in red':softBad?', bad cluster in the FAT shown tinted red':''):''))+'" data-ok="'+(st[2]&&!isBad?1:0)+'" data-title="'+esc(title)+'" style="fill:transparent !important;" d="'+sectorArc(rb,ra,A0+q.c0*TAU,A0+Math.max(q.d,q.c0+0.0005)*TAU)+'"></path>';
             }
           }
         }
@@ -10667,7 +10744,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
 
   /* ---------- unmapped data on the disk layout ---------- */
   let unmCache=null,unmMode='off';
-  function unmPick(s){return unmMode==='both'||(unmMode==='del'?!!s.del:unmMode==='oth'?!s.del:false)}
+  function unmPick(s){return unmMode==='both'||unmMode==='erroth'||(unmMode==='del'?!!s.del:unmMode==='oth'?!s.del:false)}
   function unmappedInfo(){
     if(!disk||!bytes)return null;
     if(unmCache&&unmCache.d===disk&&unmCache.b===bytes)return unmCache.v;
@@ -10742,21 +10819,24 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
       const host=$('diskSurfaces');if(!host)return;
       host.querySelectorAll('.unm-outline,.unm-veil').forEach(x=>x.remove());
       host.querySelectorAll('[data-title0]').forEach(x=>{x.setAttribute('data-title',x.getAttribute('data-title0'));x.removeAttribute('data-title0')});
-      const info=unmappedInfo();if(!info||unmMode==='off')return;
+      const info=unmappedInfo();if(unmMode==='off')return;
+      const wantErr=unmMode==='err'||unmMode==='unr'||unmMode==='erroth',wantUnm=!!info&&(unmMode==='del'||unmMode==='oth'||unmMode==='both'||unmMode==='erroth');if(!wantErr&&!wantUnm)return;
+      const isErr=el=>{if(isUnrEl(el))return true;if(unmMode==='unr')return false;return el.matches(BAD_PULSE_SEL)};
       const seen=new Set();
       host.querySelectorAll('.rec-sec, .disk-sector').forEach(el=>{
         if(seen.has(el))return;seen.add(el);
         const a=el.getAttribute('data-lba');
-        if(a!==null){const u=info.sectors.get(Number(a));if(u&&unmPick(u))return}
+        if(wantUnm&&a!==null){const u=info.sectors.get(Number(a));if(u&&unmPick(u))return}
+        if(wantErr&&isErr(el))return;
         const d=el.getAttribute('d');if(!d)return;
         const svg=el.ownerSVGElement||el.closest('svg');if(!svg)return;
         const v=document.createElementNS('http://www.w3.org/2000/svg','path');
         v.setAttribute('d',d);v.setAttribute('class','unm-veil');svg.appendChild(v);
       });
-      host.querySelectorAll('.disk-sector[data-lba]').forEach(el=>{
+      if(wantUnm)host.querySelectorAll('.disk-sector[data-lba]').forEach(el=>{
         const s=info.sectors.get(Number(el.getAttribute('data-lba')));if(!s||!unmPick(s))return;
         const svg=el.ownerSVGElement||el.closest('svg');if(!svg)return;
-        if(unmMode==='both'){
+        if(unmMode==='both'||unmMode==='erroth'){
           const o=document.createElementNS('http://www.w3.org/2000/svg','path');
           o.setAttribute('d',el.getAttribute('d'));o.setAttribute('class','unm-outline '+(s.del?'unm-del':'unm-oth'));
           svg.appendChild(o);
@@ -10779,21 +10859,21 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
   function refreshUnmappedUI(){
     try{
       const info=unmappedInfo(),has=!!(info&&info.sectors.size);
-      if(!has)unmMode='off';
+      if(!has&&unmMode!=='err'&&unmMode!=='unr')unmMode='off';
       /* always visible once a disk is loaded; disabled/empty when there is nothing to show */
       $('unmToggleWrap').classList.remove('hidden');
       $('unmPanel').classList.remove('hidden');
-      $('unmMode').disabled=!has;
+      $('unmMode').disabled=false;{const o=$('unmMode').options;for(let k=1;k<=3&&k<o.length;k++)o[k].disabled=!has;if(o[6])o[6].disabled=!has}
       ['unmPrev','unmNext','unmExport'].forEach(id=>{const b=$(id);if(b)b.disabled=!has});
-      $('maplegendUnm').classList.toggle('hidden',!(has&&unmMode!=='off'));
+      $('maplegendUnm').classList.toggle('hidden',unmMode==='off'||(!has&&unmMode!=='err'&&unmMode!=='unr'));
       $('unmFadeNote').classList.toggle('hidden',unmMode==='off');
-      $('unmLegOthWrap').classList.toggle('hidden',unmMode==='del');
-      $('unmLegDelWrap').classList.toggle('hidden',unmMode==='oth');
+      $('unmLegOthWrap').classList.toggle('hidden',unmMode==='del'||unmMode==='err'||unmMode==='unr');
+      $('unmLegDelWrap').classList.toggle('hidden',unmMode==='oth'||unmMode==='err'||unmMode==='unr');
       if(!has){
-        $('unmMode').value='off';
+        $('unmMode').value=unmMode;
         const why=info?'none found':'not available for this image (needs a FAT sector image)';
-        $('unmToggleLabel').textContent='Unmapped / deleted data ('+(info?'0':'n/a')+')';
-        {const o=$('unmMode').options;o[1].textContent='Only deleted-file remnants (0)';o[2].textContent='Only unmapped, not deleted (0)';o[3].textContent='Both, colored separately (0)'}
+        $('unmToggleLabel').textContent='Show sectors';
+        {const o=$('unmMode').options;o[1].textContent='Deleted-file remnants (0)';o[2].textContent='Unmapped (not deleted) (0)';o[3].textContent='Deleted + unmapped, colored separately (0)'}
         $('unmSummary').textContent='Unmapped + deleted data \u00b7 '+why;
         $('unmRows').innerHTML='';
         $('unmNote').textContent=info?'No non-blank sectors outside live files and folders; blank, single-byte filler and bad sectors are not counted.':'Unmapped-data scan applies to FAT sector images only.';
@@ -10801,8 +10881,8 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
       }
       const bps=info.bps,tot=info.sectors.size;
       $('unmMode').value=unmMode;
-      $('unmToggleLabel').textContent='Unmapped / deleted data ('+fmt(tot)+')';
-      {const o=$('unmMode').options;o[1].textContent='Only deleted-file remnants ('+fmt(info.delSectors)+')';o[2].textContent='Only unmapped, not deleted ('+fmt(info.otherSectors)+')';o[3].textContent='Both, colored separately ('+fmt(tot)+')'}
+      $('unmToggleLabel').textContent='Show sectors';
+      {const o=$('unmMode').options;o[1].textContent='Deleted-file remnants ('+fmt(info.delSectors)+')';o[2].textContent='Unmapped (not deleted) ('+fmt(info.otherSectors)+')';o[3].textContent='Deleted + unmapped, colored separately ('+fmt(tot)+')'}
       $('unmLegOth').textContent='· '+fmt(info.otherSectors)+' sector'+(info.otherSectors===1?'':'s')+' · '+sizeFmt(info.otherSectors*bps);
       $('unmLegDel').textContent='· '+fmt(info.delSectors)+' sector'+(info.delSectors===1?'':'s')+' · '+sizeFmt(info.delSectors*bps);
       $('unmSummary').textContent='Unmapped + deleted data · '+fmt(tot)+' sector'+(tot===1?'':'s')+' · '+sizeFmt(tot*bps)+(info.delSectors?' ('+sizeFmt(info.delSectors*bps)+' from deleted files)':'')+' · '+fmt(info.runs.length)+' run'+(info.runs.length===1?'':'s');
@@ -11159,9 +11239,26 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     window.addEventListener('resize',()=>zApply());
   }catch(_){}
   /* Bad-sector pulse: one separate overlay <svg> per disk side holding copies of the bad-sector outlines. Only the overlay's opacity is animated (compositor-only), so the cost does not grow with the number of bad sectors. */
-  const BAD_PULSE_SEL='.disk-sector[aria-label*="bad sector shown in red"],.rec-sec[data-ok="0"]:not([data-id="1"]):not([data-gap="1"])';
+  /* Exactly the sectors painted red on the map: data sectors flagged bad (aria-label), unreadable "no data" spans and bad address fields. Weak, short and deleted-mark sectors are not painted red, so they are not animated either. */
+  const BAD_PULSE_SEL='.disk-sector[aria-label*="bad sector shown in red"],.rec-sec[data-glean-id^="rec-nodata-"],.rec-sec[data-glean-id^="rec-id-"][data-ok="0"]';
   const BAD_SHAKE_PER_MAX=1500;
   /* Returns fn(d) -> {cx,cy,w,L,tx,ty}: the true centre of a ring-segment sector (middle radius, middle angle around the disk centre 120,120), its thickness w (radial), its arc length L, and the unit tangent. Measured in a hidden but rendered <svg> by sampling the outline, so it also works when a disk side is not displayed and it is exact for curved sectors (a bounding-box centre is not). */
+  let _hzN=0;
+  /* crossed (hatched) unreadable-sector marker for the pulse/shake overlays: dark-red fill + red diagonal stripes, clipped to the sector and drawn in the sector's own frame so it matches the base map with animation off */
+  function badHatchGroup(NS,d,m){
+    const g=document.createElementNS(NS,'g'),id='hz'+(++_hzN),cp=document.createElementNS(NS,'clipPath'),cpp=document.createElementNS(NS,'path');
+    g.setAttribute('class','hz');cp.setAttribute('id',id);cpp.setAttribute('d',d);cp.appendChild(cpp);g.appendChild(cp);
+    const inner=document.createElementNS(NS,'g');inner.setAttribute('clip-path','url(#'+id+')');
+    const bg=document.createElementNS(NS,'path');bg.setAttribute('d',d);bg.setAttribute('style','fill:#4a0d14;stroke:none');inner.appendChild(bg);
+    const th=m.w,len=m.L/2+th*2,step=Math.max(th*.7,.3),am=Math.atan2(-m.tx,m.ty)*180/Math.PI;
+    const ln=document.createElementNS(NS,'path');let dd='';
+    for(let k=-len;k<=len;k+=step)dd+='M'+(-th).toFixed(2)+' '+(k-th).toFixed(2)+'L'+th.toFixed(2)+' '+(k+th).toFixed(2);
+    ln.setAttribute('d',dd);ln.setAttribute('transform','translate('+m.cx.toFixed(2)+' '+m.cy.toFixed(2)+') rotate('+am.toFixed(2)+')');
+    ln.setAttribute('style','fill:none;stroke:#ff6b6b;stroke-width:'+(th*.28).toFixed(3)+'px;stroke-linecap:butt');inner.appendChild(ln);
+    g.appendChild(inner);
+    const ol=document.createElementNS(NS,'path');ol.setAttribute('d',d);ol.setAttribute('style','fill:none;stroke:rgba(90,0,10,.75);stroke-width:.6px');g.appendChild(ol);
+    return g;
+  }
   function badShakeMeasurer(){
     try{
       const NS='http://www.w3.org/2000/svg',t=document.createElementNS(NS,'svg');
@@ -11187,6 +11284,15 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
   }
   function badModeGet(){let m='shake';try{const v=localStorage.getItem('floppoBadMode');if(v==='pulse'||v==='shake'||v==='off')m=v;else if(localStorage.getItem('floppoBadPulse')==='0')m='off'}catch(_){}return m}
   function badModeApply(m){const host=$('diskSurfaces');if(!host)return;host.classList.toggle('bm-pulse',m==='pulse');host.classList.toggle('bm-shake',m==='shake');host.classList.toggle('bm-off',m==='off')}
+  /* Pulse/Shake follow the "Show only" list: a bad sector is animated only if it is not dimmed */
+  function badShown(el){
+    try{
+      const m=unmMode;if(m==='off'||m==='err'||m==='erroth')return true;
+      if(m==='unr')return isUnrEl(el);
+      const info=unmappedInfo(),a=el.getAttribute('data-lba');if(!info||a===null)return false;
+      const u=info.sectors.get(Number(a));return !!(u&&unmPick(u));
+    }catch(_){return true}
+  }
   function buildBadPulse(){
     try{
       const host=$('diskSurfaces'),wrap=$('badPulseWrap'),sel=$('badMode');if(!host)return;
@@ -11194,8 +11300,8 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
       let total=0;
       host.querySelectorAll('.diskfield').forEach(f=>{
         const svg=f.querySelector(':scope > svg.disk-svg');if(!svg)return;
-        const bad=Array.from(svg.querySelectorAll(BAD_PULSE_SEL)).slice(0,8000);if(!bad.length)return;
-        total+=bad.length;
+        const rawBad=Array.from(svg.querySelectorAll(BAD_PULSE_SEL)).slice(0,8000);if(!rawBad.length)return;
+        total+=rawBad.length;const bad=rawBad.filter(badShown);if(!bad.length)return;
         /* amplitude: full strength for a few bad sectors, fading to a gentle shimmer when most of the side is bad */
         const all=svg.querySelectorAll('.disk-sector,.rec-sec:not([data-id="1"]):not([data-gap="1"])').length||bad.length;
         const fr=Math.min(1,bad.length/all),u=Math.min(1,Math.max(0,(fr-.05)/.45));
@@ -11203,7 +11309,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
         const NS='http://www.w3.org/2000/svg',ov=document.createElementNS(NS,'svg');
         ov.setAttribute('class','bad-pulse');ov.setAttribute('viewBox',svg.getAttribute('viewBox')||'0 0 240 240');ov.setAttribute('aria-hidden','true');ov.style.setProperty('--bp-hi',hi);ov.style.setProperty('--bp-lo',lo);ov.setAttribute('focusable','false');
         const frag=document.createDocumentFragment();
-        for(const p of bad){const d=p.getAttribute('d');if(!d)continue;const q=document.createElementNS(NS,'path');q.setAttribute('d',d);frag.appendChild(q)}
+        const mvp=badShakeMeasurer();let hn=0;for(const p of bad){const d=p.getAttribute('d');if(!d)continue;if(mvp&&hn<1500&&isUnrEl(p)){const m=mvp(d);if(m){hn++;frag.appendChild(badHatchGroup(NS,d,m));continue}}const q=document.createElementNS(NS,'path');q.setAttribute('d',d);frag.appendChild(q)}if(mvp&&mvp.done)mvp.done();
         ov.appendChild(frag);
         ov.style.transformOrigin=svg.style.transformOrigin||'0 0';ov.style.transform=svg.style.transform||'';
         svg.insertAdjacentElement('afterend',ov);
@@ -11211,19 +11317,21 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
         const sh=document.createElementNS(NS,'svg');
         sh.setAttribute('class','bad-shake');sh.setAttribute('viewBox',svg.getAttribute('viewBox')||'0 0 240 240');sh.setAttribute('aria-hidden','true');sh.setAttribute('focusable','false');
         const mv=badShakeMeasurer(),pick=bad.length>BAD_SHAKE_PER_MAX?BAD_SHAKE_PER_MAX/bad.length:1,sfrag=document.createDocumentFragment();
-        bad.forEach((p,i)=>{const d=p.getAttribute('d');if(!d)return;const q=document.createElementNS(NS,'path');q.setAttribute('d',d);
+        let hz=0;bad.forEach((p,i)=>{const d=p.getAttribute('d');if(!d)return;const q=document.createElementNS(NS,'path');q.setAttribute('d',d);let tgt=q;
           const h=Math.imul(i+1,2654435761)>>>0;
           if(((h>>>4)%1000)/1000<pick){
             const m=mv?mv(d):null;
             if(!m){sfrag.appendChild(q);return}
+            const isND=isUnrEl(p)&&hz<1500;
+            tgt=isND?badHatchGroup(NS,d,m):q;if(isND)hz++;
             /* amplitude is a fraction of the sector's own size, limited by its thinner dimension so a thin ring segment never leaves its slot: the ends swing by 18% of min(thickness, length), plus a tangential slide of 12% of it */
             const e=.18*Math.min(m.w,m.L),ang=Math.min(2,Math.atan(e/(m.L/2))*180/Math.PI),sl=.12*Math.min(m.w,m.L);
-            q.setAttribute('class','j');
-            q.style.transformOrigin=m.cx.toFixed(2)+'px '+m.cy.toFixed(2)+'px';
-            q.style.setProperty('--jr',ang.toFixed(3)+'deg');q.style.setProperty('--jx',(m.tx*sl).toFixed(3)+'px');q.style.setProperty('--jy',(m.ty*sl).toFixed(3)+'px');
-            q.style.animationDelay='-'+(((h>>>8)%200)/1000).toFixed(3)+'s';if(h&1)q.style.animationDirection='alternate-reverse';q.style.animationDuration=(.17+((h>>>16)%80)/1000).toFixed(3)+'s';
+            tgt.setAttribute('class',isND?'hz j':'j');
+            tgt.style.transformOrigin=m.cx.toFixed(2)+'px '+m.cy.toFixed(2)+'px';
+            tgt.style.setProperty('--jr',ang.toFixed(3)+'deg');tgt.style.setProperty('--jx',(m.tx*sl).toFixed(3)+'px');tgt.style.setProperty('--jy',(m.ty*sl).toFixed(3)+'px');
+            tgt.style.animationDelay='-'+(((h>>>8)%200)/1000).toFixed(3)+'s';if(h&1)tgt.style.animationDirection='alternate-reverse';tgt.style.animationDuration=(.17+((h>>>16)%80)/1000).toFixed(3)+'s';
           }
-          sfrag.appendChild(q)});
+          sfrag.appendChild(tgt)});
         if(mv&&mv.done)mv.done();
         sh.appendChild(sfrag);
         sh.style.transformOrigin=svg.style.transformOrigin||'0 0';sh.style.transform=svg.style.transform||'';
@@ -11283,7 +11391,7 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
   }
   try{
     $('recAlign').onchange=e=>{recAlign=e.target.checked?'aligned':'rec';renderDiskLayout()};
-    $('unmMode').onchange=e=>{unmMode=e.target.value;refreshUnmappedUI();applyUnmappedOverlay()};
+    $('unmMode').onchange=e=>{unmMode=e.target.value;refreshUnmappedUI();applyUnmappedOverlay();buildBadPulse()};
     $('unmPrev').onclick=()=>unmStep(-1);$('unmNext').onclick=()=>unmStep(1);$('unmExport').onclick=exportUnmapped;
     $('unmRows').onclick=e=>{const tr=e.target.closest&&e.target.closest('tr[data-unm-run]');if(tr)selectUnmRun(Number(tr.dataset.unmRun))};
   }catch(_){}
@@ -11296,9 +11404,9 @@ if(!nomCache||nomCache.d!==disk||nomCache.b!==bytes)nomCache={d:disk,b:bytes,v:n
     if(!rec)$('mapcaption').textContent=REC_CAPTION_LOGICAL;
     return rec;
   }
-  function renderDiskLayoutBase(){const d=disk,host=$('diskSurfaces');host.innerHTML='';host.classList.remove('ufs-layout');$('fileSelection').textContent='Click a file name to highlight its allocated sectors.';if(syncMapMode()){renderRecordedLayout(host);return}if(d&&(d.fsType==='NEXTSTEP_UFS1'||d.fsType==='SUN_TAR')){const total=Math.max(0,Math.min(d.total,Math.floor(bytes.length/d.bps))),g=imageGeometry(d);if(!g){host.innerHTML='<div class="diskside" data-glean-id="ufs-track-geometry-unavailable"><div class="side-title"><span>UFS1 TRACK LAYOUT</span><span>GEOMETRY UNAVAILABLE</span></div><div class="diskfield"><svg class="disk-svg" viewBox="0 0 240 240" role="img" aria-label="UFS1 track geometry unavailable"><circle class="hub" cx="120" cy="120" r="22"/><text class="side-empty" x="120" y="120">NO UFS GEOMETRY</text></svg></div></div>';$("mapstart").textContent='UFS1 track geometry unavailable';$("mapend").textContent='Image sectors remain available in the raw sector inspector';return}const densityLevels=buildSectorDensity(d);const drawCylinders=Math.min(g.cylinders,160),outer=108,inner=24,band=(outer-inner)/drawCylinders;for(let h=0;h<2;h++){let paths='';if(h<g.heads){for(let c=0;c<drawCylinders;c++){const ro=outer-c*band,ri=outer-(c+1)*band;for(let sector=0;sector<g.spt;sector++){const lba=(c*g.heads+h)*g.spt+sector;if(lba>=total)continue;const region=d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors),kind=region?region.kind:'data',a0=-Math.PI/2+sector*2*Math.PI/g.spt,a1=-Math.PI/2+(sector+1)*2*Math.PI/g.spt;const density=densityLevels.get(lba)||{isF6:false,isBadContent:false,nonzero:0,byteCount:d.bps,percent:0};const isBad=density.isBadContent,isFiller=density.isF6;const tooltipBad=isBad?' · Bad sector (red)':'',tooltipF6=isFiller?' · Filler (0xF6)':'';paths+='<path class="disk-sector ufs-map-cell '+kind+(selectedSector===lba?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':'')+'" data-lba="'+lba+'" data-lba-end="'+lba+'" data-glean-id="ufs-track-sector-'+lba+'" aria-label="Cylinder '+c+', head '+h+', sector '+(sector+1)+', LBA '+lba+(region?' · '+region.name:'')+'" data-title="Cylinder '+c+' · head '+h+' · sector '+(sector+1)+' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:'')+tooltipBad+tooltipF6+'" style="fill:transparent !important;" d="'+sectorArc(ri,ro,a0,a1)+'"></path>'}}}const empty=h<g.heads?'':'<text class="side-empty" x="120" y="120">NO HEAD</text>';host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="ufs-disk-head-'+h+'"><div class="side-title"><span>DISK SIDE '+h+'</span><span>HEAD '+h+(h<g.heads?' · '+drawCylinders+' TRACKS':' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<g.heads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+' with '+(h<g.heads?drawCylinders+' tracks and '+g.spt+' sectors per track':'no head')+'">'+paths+empty+'<circle class="hub" cx="120" cy="120" r="22"/><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">CYL / SECTOR</text></svg></div></div>');if(h<g.heads)drawCanvasWedges(h,d,drawCylinders,g.spt,outer,inner,densityLevels,new Set(),g)}$("mapstart").textContent=fmt(total)+' sectors · '+g.cylinders+' cylinders · '+g.heads+' heads · '+g.spt+' sectors/track';$("mapend").textContent='Every wedge is one raw image sector; select a sector to inspect its LBA'+(g.cylinders>drawCylinders?' · first '+drawCylinders+' cylinders shown':'');host.onclick=e=>{const hit=e.target.closest('.ufs-map-cell[data-lba]');if(hit)showSector(Number(hit.dataset.lba))};return}if(trackMapped(d)){const densityLevels=buildSectorDensity(d),g=imageGeometry(d),isForeign=!!d.foreign||!!g.contGeo;for(let h=0;h<2;h++){let paths='';if(h<g.heads){for(let c=0;c<g.cylinders;c++){const count=trackSectorsAt(g,c,h),start=trackStartAt(g,c,h),ro=108-c*84/g.cylinders,ri=108-(c+1)*84/g.cylinders;for(let sector=0;sector<count;sector++){const lba=start+sector,region=d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors),kind=region?region.kind:'data',a0=-Math.PI/2+sector*2*Math.PI/count,a1=-Math.PI/2+(sector+1)*2*Math.PI/count;const density=densityLevels.get(lba)||{isF6:false,isBadContent:false,percent:0,nonzero:0,byteCount:d.bps};const isFiller=density.isF6,isBad=density.isBadContent,tooltipBad=isBad?' · Bad sector (red)':'',tooltipF6=isFiller?' · Filler (0xF6)':'';paths+='<path class="disk-sector mac-map-cell '+kind+(lba===selectedSector?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':'')+'" data-lba="'+lba+'" data-glean-id="mac-sector-'+lba+'" aria-label="Cylinder '+c+', head '+h+', sector '+(sector+1)+' of '+count+', LBA '+lba+(region?' · '+region.name:'')+'" data-title="Cylinder '+c+' · head '+h+' · sector '+(sector+1)+'/'+count+' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:'')+tooltipBad+tooltipF6+'" style="fill:transparent !important;" d="'+sectorArc(ri,ro,a0,a1)+'"></path>'}}}const empty=h<g.heads?'':'<text class="side-empty" x="120" y="120">NO HEAD</text>';host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="mac-disk-head-'+h+'"><div class="side-title"><span>DISK SIDE '+h+'</span><span>HEAD '+h+(h<g.heads?' · '+g.cylinders+' TRACKS':' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<g.heads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="'+(isForeign?'Disk':'Macintosh disk')+' side '+h+' with '+(h<g.heads?g.cylinders+' tracks':'no head')+'">'+paths+empty+'<circle class="hub" cx="120" cy="120" r="22"/><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">'+(isForeign?esc(g.hub||'CYL / SECTOR'):(g.variable?'GCR / LBA':'HD · MFM'))+'</text></svg></div></div>');if(h<g.heads)drawCanvasWedges(h,d,g.cylinders,0,108,24,densityLevels,new Set(),g)}const total=Math.min(d.total,Math.floor(bytes.length/(d.bps||512)));$('mapstart').textContent=isForeign?(d.geo||g).label+' · '+fmt(total)+' sectors × '+fmt(d.bps)+' B':d.mac.label+' · '+g.cylinders+' tracks · '+g.heads+' head'+(g.heads===1?'':'s')+' · '+fmt(total)+' sectors';$('mapend').textContent=isForeign?'Each wedge is one '+d.bps+'-byte logical sector'+(g.variable?' · zoned track lengths':'')+'; select a sector to inspect its LBA.':g.variable?'GCR zone bands: 12 / 11 / 10 / 9 / 8 sectors per track; each wedge is one 512-byte logical sector.':'18 sectors per track · each wedge is one 512-byte logical sector.';host.onclick=e=>{const hit=e.target.closest('.mac-map-cell[data-lba]');if(hit)showSector(Number(hit.dataset.lba))};return}const valid=d&&d.valid&&d.spt>0&&d.heads>0;if(!valid){host.innerHTML=[0,1].map(h=>'<div class="diskside" data-glean-id="disk-side-'+h+'"><div class="side-title"><span>Disk side '+h+'</span><span>GEOMETRY UNAVAILABLE</span></div><div class="diskfield"><svg class="disk-svg" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+' with no decoded geometry"><circle class="track-guide" cx="120" cy="120" r="108"/><circle class="track-guide" cx="120" cy="120" r="75"/><circle class="track-guide" cx="120" cy="120" r="42"/><circle class="hub" cx="120" cy="120" r="21"/><text class="side-empty" x="120" y="120">NO CHS DATA</text></svg></div></div>').join('');$('mapstart').textContent='Geometry unavailable';$('mapend').textContent='Raw sectors remain available below';return}
+  function renderDiskLayoutBase(){const d=disk,host=$('diskSurfaces');host.innerHTML='';host.classList.remove('ufs-layout');$('fileSelection').textContent='Click a file name to highlight its allocated sectors.';if(syncMapMode()){renderRecordedLayout(host);return}if(d&&(d.fsType==='NEXTSTEP_UFS1'||d.fsType==='SUN_TAR')){const total=Math.max(0,Math.min(d.total,Math.floor(bytes.length/d.bps))),g=imageGeometry(d);if(!g){host.innerHTML='<div class="diskside" data-glean-id="ufs-track-geometry-unavailable"><div class="side-title"><span>UFS1 TRACK LAYOUT</span><span>GEOMETRY UNAVAILABLE</span></div><div class="diskfield"><svg class="disk-svg" viewBox="0 0 240 240" role="img" aria-label="UFS1 track geometry unavailable"><circle class="hub" cx="120" cy="120" r="22"/><text class="side-empty" x="120" y="120">NO UFS GEOMETRY</text></svg></div></div>';$("mapstart").textContent='UFS1 track geometry unavailable';$("mapend").textContent='Image sectors remain available in the raw sector inspector';return}const densityLevels=buildSectorDensity(d);const drawCylinders=Math.min(g.cylinders,160),outer=108,inner=24,band=(outer-inner)/drawCylinders;for(let h=0;h<2;h++){let paths='';if(h<g.heads){for(let c=0;c<drawCylinders;c++){const ro=outer-c*band,ri=outer-(c+1)*band;for(let sector=0;sector<g.spt;sector++){const lba=(c*g.heads+h)*g.spt+sector;if(lba>=total)continue;const region=d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors),kind=region?region.kind:'data',a0=-Math.PI/2+sector*2*Math.PI/g.spt,a1=-Math.PI/2+(sector+1)*2*Math.PI/g.spt;const density=densityLevels.get(lba)||{isF6:false,isBadContent:false,nonzero:0,byteCount:d.bps,percent:0};const isBad=density.isBadContent,isFiller=density.isF6;const tooltipBad=density.isMarker?' · Unreadable (marker, hatched red)':isBad?' · Bad sector (red)':'',tooltipF6=isFiller?' · Filler (0xF6)':'';paths+='<path class="disk-sector ufs-map-cell '+kind+(selectedSector===lba?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':'')+'" data-lba="'+lba+'" data-lba-end="'+lba+'" data-glean-id="ufs-track-sector-'+lba+'" aria-label="Cylinder '+c+', head '+h+', sector '+(sector+1)+', LBA '+lba+(region?' · '+region.name:'')+'" data-title="Cylinder '+c+' · head '+h+' · sector '+(sector+1)+' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:'')+tooltipBad+tooltipF6+'" style="fill:transparent !important;" d="'+sectorArc(ri,ro,a0,a1)+'"></path>'}}}const empty=h<g.heads?'':'<text class="side-empty" x="120" y="120">NO HEAD</text>';host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="ufs-disk-head-'+h+'"><div class="side-title"><span>DISK SIDE '+h+'</span><span>HEAD '+h+(h<g.heads?' · '+drawCylinders+' TRACKS':' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<g.heads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+' with '+(h<g.heads?drawCylinders+' tracks and '+g.spt+' sectors per track':'no head')+'">'+paths+empty+'<circle class="hub" cx="120" cy="120" r="22"/><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">CYL / SECTOR</text></svg></div></div>');if(h<g.heads)drawCanvasWedges(h,d,drawCylinders,g.spt,outer,inner,densityLevels,new Set(),g)}$("mapstart").textContent=fmt(total)+' sectors · '+g.cylinders+' cylinders · '+g.heads+' heads · '+g.spt+' sectors/track';$("mapend").textContent='Every wedge is one raw image sector; select a sector to inspect its LBA'+(g.cylinders>drawCylinders?' · first '+drawCylinders+' cylinders shown':'');host.onclick=e=>{const hit=e.target.closest('.ufs-map-cell[data-lba]');if(hit)showSector(Number(hit.dataset.lba))};return}if(trackMapped(d)){const densityLevels=buildSectorDensity(d),g=imageGeometry(d),isForeign=!!d.foreign||!!g.contGeo;for(let h=0;h<2;h++){let paths='';if(h<g.heads){for(let c=0;c<g.cylinders;c++){const count=trackSectorsAt(g,c,h),start=trackStartAt(g,c,h),ro=108-c*84/g.cylinders,ri=108-(c+1)*84/g.cylinders;for(let sector=0;sector<count;sector++){const lba=start+sector,region=d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors),kind=region?region.kind:'data',a0=-Math.PI/2+sector*2*Math.PI/count,a1=-Math.PI/2+(sector+1)*2*Math.PI/count;const density=densityLevels.get(lba)||{isF6:false,isBadContent:false,percent:0,nonzero:0,byteCount:d.bps};const isFiller=density.isF6,isBad=density.isBadContent,tooltipBad=isBad?' · Bad sector (red)':'',tooltipF6=isFiller?' · Filler (0xF6)':'';paths+='<path class="disk-sector mac-map-cell '+kind+(lba===selectedSector?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':'')+'" data-lba="'+lba+'" data-glean-id="mac-sector-'+lba+'" aria-label="Cylinder '+c+', head '+h+', sector '+(sector+1)+' of '+count+', LBA '+lba+(region?' · '+region.name:'')+'" data-title="Cylinder '+c+' · head '+h+' · sector '+(sector+1)+'/'+count+' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:'')+tooltipBad+tooltipF6+'" style="fill:transparent !important;" d="'+sectorArc(ri,ro,a0,a1)+'"></path>'}}}const empty=h<g.heads?'':'<text class="side-empty" x="120" y="120">NO HEAD</text>';host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="mac-disk-head-'+h+'"><div class="side-title"><span>DISK SIDE '+h+'</span><span>HEAD '+h+(h<g.heads?' · '+g.cylinders+' TRACKS':' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<g.heads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="'+(isForeign?'Disk':'Macintosh disk')+' side '+h+' with '+(h<g.heads?g.cylinders+' tracks':'no head')+'">'+paths+empty+'<circle class="hub" cx="120" cy="120" r="22"/><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">'+(isForeign?esc(g.hub||'CYL / SECTOR'):(g.variable?'GCR / LBA':'HD · MFM'))+'</text></svg></div></div>');if(h<g.heads)drawCanvasWedges(h,d,g.cylinders,0,108,24,densityLevels,new Set(),g)}const total=Math.min(d.total,Math.floor(bytes.length/(d.bps||512)));$('mapstart').textContent=isForeign?(d.geo||g).label+' · '+fmt(total)+' sectors × '+fmt(d.bps)+' B':d.mac.label+' · '+g.cylinders+' tracks · '+g.heads+' head'+(g.heads===1?'':'s')+' · '+fmt(total)+' sectors';$('mapend').textContent=isForeign?'Each wedge is one '+d.bps+'-byte logical sector'+(g.variable?' · zoned track lengths':'')+'; select a sector to inspect its LBA.':g.variable?'GCR zone bands: 12 / 11 / 10 / 9 / 8 sectors per track; each wedge is one 512-byte logical sector.':'18 sectors per track · each wedge is one 512-byte logical sector.';host.onclick=e=>{const hit=e.target.closest('.mac-map-cell[data-lba]');if(hit)showSector(Number(hit.dataset.lba))};return}const valid=d&&d.valid&&d.spt>0&&d.heads>0;if(!valid){host.innerHTML=[0,1].map(h=>'<div class="diskside" data-glean-id="disk-side-'+h+'"><div class="side-title"><span>Disk side '+h+'</span><span>GEOMETRY UNAVAILABLE</span></div><div class="diskfield"><svg class="disk-svg" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+' with no decoded geometry"><circle class="track-guide" cx="120" cy="120" r="108"/><circle class="track-guide" cx="120" cy="120" r="75"/><circle class="track-guide" cx="120" cy="120" r="42"/><circle class="hub" cx="120" cy="120" r="21"/><text class="side-empty" x="120" y="120">NO CHS DATA</text></svg></div></div>').join('');$('mapstart').textContent='Geometry unavailable';$('mapend').textContent='Raw sectors remain available below';return}
     const cylinders=Math.max(1,Math.ceil(d.total/(d.spt*d.heads))),drawCylinders=Math.min(cylinders,160),shownSectors=Math.min(d.spt,128),outer=108,inner=24,band=(outer-inner)/drawCylinders,densityLevels=buildSectorDensity(d),badClusters=buildBadClusterSet(d),usedBadSet=badClusters.size?usedBadClusters(d):new Set();
-    for(let h=0;h<2;h++){let paths='';if(h<d.heads){for(let c=0;c<drawCylinders;c++){const ro=outer-c*band,ri=outer-(c+1)*band;for(let s=0;s<shownSectors;s++){const lba=(c*d.heads+h)*d.spt+s;if(lba>=d.total)continue;const region=d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors),kind=region?region.kind:'data',density=densityLevels.get(lba)||{isF6:false,isBadContent:false,percent:0,nonzero:0,byteCount:d.bps};const isFiller=density.isF6,cluster=lba>=d.dataStart?2+Math.floor((lba-d.dataStart)/d.spc):-1,isBad=(badClusters.has(cluster)&&usedBadSet.has(cluster))||density.isBadContent,softBad=!isBad&&badClusters.has(cluster),a0=-Math.PI/2+s*2*Math.PI/d.spt,a1=-Math.PI/2+(s+1)*2*Math.PI/d.spt,tooltipF6=isFiller?' · Filler (0xF6)':'',tooltipBad=isBad?' · Bad sector (red)':softBad?' · Bad cluster marked in the FAT, reads OK (tinted red)':'';paths+='<path class="disk-sector '+kind+(lba===selectedSector?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':'')+'" data-lba="'+lba+'" data-glean-id="disk-sector-'+lba+'" aria-label="Side '+h+', cylinder '+c+', sector '+(s+1)+', LBA '+lba+', '+density.percent+' percent non-zero bytes'+(isBad?', bad sector shown in red':softBad?', bad cluster in the FAT shown tinted red':'')+'" data-title="Side '+h+' · cylinder '+c+' · sector '+(s+1)+' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:'')+tooltipBad+tooltipF6+'" style="fill:transparent !important;" d="'+sectorArc(ri,ro,a0,a1)+'"></path>'}}}
+    for(let h=0;h<2;h++){let paths='';if(h<d.heads){for(let c=0;c<drawCylinders;c++){const ro=outer-c*band,ri=outer-(c+1)*band;for(let s=0;s<shownSectors;s++){const lba=(c*d.heads+h)*d.spt+s;if(lba>=d.total)continue;const region=d.regions.find(r=>lba>=r.start&&lba<r.start+r.sectors),kind=region?region.kind:'data',density=densityLevels.get(lba)||{isF6:false,isBadContent:false,percent:0,nonzero:0,byteCount:d.bps};const isFiller=density.isF6,cluster=lba>=d.dataStart?2+Math.floor((lba-d.dataStart)/d.spc):-1,isBad=(badClusters.has(cluster)&&usedBadSet.has(cluster))||density.isBadContent,softBad=!isBad&&badClusters.has(cluster),a0=-Math.PI/2+s*2*Math.PI/d.spt,a1=-Math.PI/2+(s+1)*2*Math.PI/d.spt,tooltipF6=isFiller?' · Filler (0xF6)':'',tooltipBad=isBad?' · Bad sector (red)':softBad?' · Bad cluster marked in the FAT, reads OK (tinted red)':'';paths+='<path class="disk-sector '+kind+(lba===selectedSector?' selected':'')+(selectedFileSectors.has(lba)?' file-highlight':'')+'" data-lba="'+lba+'"'+(density.isMarker?' data-unr="1"':'')+' data-glean-id="disk-sector-'+lba+'" aria-label="Side '+h+', cylinder '+c+', sector '+(s+1)+', LBA '+lba+', '+density.percent+' percent non-zero bytes'+(isBad?', bad sector shown in red':softBad?', bad cluster in the FAT shown tinted red':'')+'" data-title="Side '+h+' · cylinder '+c+' · sector '+(s+1)+' · LBA '+lba+' · raw non-zero bytes '+density.nonzero+'/'+density.byteCount+' ('+density.percent+'%)'+(region?' · '+region.name:'')+tooltipBad+tooltipF6+'" style="fill:transparent !important;" d="'+sectorArc(ri,ro,a0,a1)+'"></path>'}}}
       const guides=h<d.heads?'':'<text class="side-empty" x="120" y="120">NO HEAD</text>';host.insertAdjacentHTML('beforeend','<div class="diskside" data-glean-id="disk-side-'+h+'"><div class="side-title"><span>Disk side '+h+'</span><span>HEAD '+h+(h<d.heads?' · '+cylinders+' TRACKS':' · NOT PRESENT')+'</span></div><div class="diskfield" style="position:relative;">'+(h<d.heads?'<canvas id="diskCanvas-'+h+'" width="480" height="480" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;"></canvas>':'')+'<svg class="disk-svg" style="position:relative;z-index:1" viewBox="0 0 240 240" role="img" aria-label="Disk side '+h+' showing '+(h<d.heads?cylinders+' concentric tracks and '+d.spt+' sectors per track':'no decoded head')+'">'+paths+guides+'<circle class="hub" cx="120" cy="120" r="22"/><text class="hubtext" x="120" y="119">SIDE '+h+'</text><text class="hubtext" x="120" y="126">CYL / SECTOR</text></svg></div></div>');if(h<d.heads)drawCanvasWedges(h,d,drawCylinders,shownSectors,outer,inner,densityLevels,badClusters,null)}
     $('mapstart').textContent=cylinders+' cylinders · '+d.heads+' head'+(d.heads===1?'':'s');$('mapend').textContent='Select a sector wedge to inspect its LBA'+(cylinders>drawCylinders?' · first '+drawCylinders+' tracks shown':'')+(d.spt>shownSectors?' · first '+shownSectors+' sectors shown':'');host.onclick=e=>{const hit=e.target.closest('.disk-sector[data-lba]');if(!hit)return;const lba=Number(hit.dataset.lba);if(toggleFileFromSector(lba))return;showSector(lba);if(selectedFile&&disk.valid&&lba>=disk.dataStart){const cluster=2+Math.floor((lba-disk.dataStart)/disk.spc);if((selectedFile.chain||[]).includes(cluster))selectCluster(cluster)}};
   }
